@@ -1,0 +1,3 @@
+ALTER TABLE practices
+  ADD COLUMN IF NOT EXISTS ai_summary TEXT,
+  ADD COLUMN IF NOT EXISTS ai_summary_updated_at TIMESTAMPTZ;

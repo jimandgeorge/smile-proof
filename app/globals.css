@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cream: #faf8f3;
+  --cream-dark: #f2ede2;
+  --forest: #1c4535;
+  --forest-light: #2a5e49;
+  --forest-pale: #e8f0ec;
+  --gold: #c9963a;
+  --gold-light: #f5e9d3;
+  --ink: #1a1a18;
+  --ink-mid: #3d3d38;
+  --ink-soft: #7a7a70;
+  --ink-faint: #c8c8be;
+  --shadow-card: 0 2px 16px rgba(28,69,53,0.08), 0 1px 4px rgba(28,69,53,0.04);
+  --shadow-hover: 0 8px 32px rgba(28,69,53,0.14), 0 2px 8px rgba(28,69,53,0.06);
+  --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-cream: var(--cream);
+  --color-cream-dark: var(--cream-dark);
+  --color-forest: var(--forest);
+  --color-forest-light: var(--forest-light);
+  --color-forest-pale: var(--forest-pale);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-ink: var(--ink);
+  --color-ink-mid: var(--ink-mid);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --font-display: var(--font-inter-tight), system-ui, sans-serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  background: var(--cream);
+  color: var(--ink);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+::selection {
+  background: var(--forest);
+  color: white;
 }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ink-faint); border-radius: 3px; }
