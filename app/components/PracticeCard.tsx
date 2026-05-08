@@ -59,7 +59,7 @@ export default function PracticeCard({ practice: p }: { practice: PracticeCardDa
         border: `1.5px solid ${hovered ? 'var(--forest)' : 'var(--cream-dark)'}`,
         padding: '24px 28px',
         cursor: 'pointer',
-        boxShadow: hovered ? 'var(--shadow-hover)' : 'var(--shadow-card)',
+        boxShadow: hovered ? 'var(--shadow-hover)' : 'none',
         transition: 'all var(--transition)',
         position: 'relative',
         overflow: 'hidden',

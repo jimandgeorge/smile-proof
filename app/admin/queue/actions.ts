@@ -1,5 +1,6 @@
 'use server';
 
+import { after } from 'next/server';
 import { createAdminSupabase } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 
@@ -7,15 +8,26 @@ export async function moderateReview(reviewId: string, action: 'publish' | 'hide
   const supabase = createAdminSupabase();
   const statusMap = { publish: 'published', hide: 'hidden', remove: 'removed' } as const;
 
-  const { error } = await supabase
+  const { data: review, error } = await supabase
     .from('reviews')
     .update({
       moderation_status: statusMap[action],
       ...(action === 'publish' ? { published_at: new Date().toISOString() } : {}),
     })
-    .eq('id', reviewId);
+    .eq('id', reviewId)
+    .select('practice_id')
+    .single();
 
   if (error) throw new Error(error.message);
+
+  if (action === 'publish' && review?.practice_id) {
+    const practiceId = review.practice_id;
+    after(async () => {
+      const { maybeRefreshPracticeSummary } = await import('@/lib/ai');
+      await maybeRefreshPracticeSummary(practiceId);
+    });
+  }
+
   revalidatePath('/admin/queue');
 }
 

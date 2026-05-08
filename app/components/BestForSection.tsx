@@ -145,7 +145,7 @@ export function ClinicCard({ clinic }: { clinic: BestForClinic }) {
             transition: 'color 0.15s',
           }}
         >
-          See patient insights
+          {clinic.rating !== null ? 'See patient insights' : 'View practice'}
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
             <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -156,7 +156,15 @@ export function ClinicCard({ clinic }: { clinic: BestForClinic }) {
 }
 
 export default function BestForSection({ title, subtitle, badge, viewAllHref = '/search', clinics }: Props) {
-  if (clinics.length === 0) return null;
+  if (clinics.length === 0) {
+    return (
+      <div style={{ padding: '24px 0', textAlign: 'center' }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--ink-soft)' }}>
+          No clinics yet — we&apos;re adding practices across England.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>

@@ -4,11 +4,11 @@ import { ClinicCard, type BestForClinic } from './BestForSection';
 type Props = {
   clinics: BestForClinic[];
   viewAllHref?: string;
+  title?: string;
+  eyebrow?: string;
 };
 
-export default function TopClinicsSection({ clinics, viewAllHref = '/search' }: Props) {
-  if (clinics.length === 0) return null;
-
+export default function TopClinicsSection({ clinics, viewAllHref = '/search', title = 'Top-rated dentists in your area', eyebrow = 'Top rated' }: Props) {
   return (
     <section className="w-full" style={{ background: 'var(--cream)' }}>
       <div className="mx-auto px-5 py-12 sm:py-16" style={{ maxWidth: 1200 }}>
@@ -20,13 +20,13 @@ export default function TopClinicsSection({ clinics, viewAllHref = '/search' }: 
               className="uppercase mb-2"
               style={{ fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 700, color: 'var(--forest)', letterSpacing: '0.12em' }}
             >
-              Top rated
+              {eyebrow}
             </p>
             <h2
               className="font-bold"
               style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(20px,3vw,26px)', color: 'var(--ink)', letterSpacing: '-0.02em', lineHeight: 1.2 }}
             >
-              Top-rated dentists in your area
+              {title}
             </h2>
           </div>
           <Link
@@ -38,11 +38,17 @@ export default function TopClinicsSection({ clinics, viewAllHref = '/search' }: 
         </div>
 
         {/* 4-col grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {clinics.slice(0, 6).map((clinic) => (
-            <ClinicCard key={clinic.slug} clinic={clinic} />
-          ))}
-        </div>
+        {clinics.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {clinics.slice(0, 6).map((clinic) => (
+              <ClinicCard key={clinic.slug} clinic={clinic} />
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--ink-soft)', textAlign: 'center', padding: '24px 0' }}>
+            No clinics yet — we&apos;re adding practices across England.
+          </p>
+        )}
 
       </div>
     </section>

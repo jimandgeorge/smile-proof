@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { after } from 'next/server';
 import Link from 'next/link';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase';
-import { generatePracticeSummary } from '@/lib/ai';
+import { SUMMARY_MIN_REVIEWS } from '@/lib/ai';
 import ToothScore from '@/app/components/ToothScore';
 import ProfileTabs from './ProfileTabs';
 import PriceTransparencySection from './PriceTransparencySection';
@@ -89,51 +89,19 @@ export default async function PracticePage({ params }: Params) {
     return Math.round(times.reduce((a: number, b: number) => a + b, 0) / times.length);
   })();
 
-  const priceRes = await admin
-    .from('practice_price_summary')
-    .select('*')
-    .eq('practice_id', practice.id);
+  const [priceRes, aiSummaryRes] = await Promise.all([
+    admin.from('practice_price_summary').select('*').eq('practice_id', practice.id),
+    admin.from('practice_ai_summaries').select('summary').eq('practice_id', practice.id).maybeSingle(),
+  ]);
+
   const priceRows: PriceRow[] = (priceRes.data ?? []) as PriceRow[];
-
-  const latestReviewAt = reviews.reduce((max, r: any) => {
-    const d = new Date(r.created_at);
-    return d > max ? d : max;
-  }, new Date(0));
-
-  const SUMMARY_MIN_REVIEWS = 3;
-  const SUMMARY_COOLDOWN_MS = 6 * 60 * 60 * 1000; // 6 hours
-
-  const summaryStale =
-    reviews.length >= SUMMARY_MIN_REVIEWS &&
-    (!practice.ai_summary_updated_at ||
-      (latestReviewAt > new Date(practice.ai_summary_updated_at) &&
-        Date.now() - new Date(practice.ai_summary_updated_at).getTime() > SUMMARY_COOLDOWN_MS));
+  const aiSummary: string | null = aiSummaryRes.data?.summary ?? null;
 
   // Track profile view (fire-and-forget)
   after(async () => {
     const a = createAdminSupabase();
     await a.from('practice_page_views').insert({ practice_id: practice.id });
   });
-
-  if (summaryStale) {
-    after(async () => {
-      const text = await generatePracticeSummary(
-        practice.name,
-        reviews.map((r: any) => ({
-          rating_overall: r.rating_overall,
-          body: r.body,
-          verification_status: r.verification_status,
-        })),
-      );
-      if (text) {
-        const a = createAdminSupabase();
-        await a
-          .from('practices')
-          .update({ ai_summary: text, ai_summary_updated_at: new Date().toISOString() })
-          .eq('id', practice.id);
-      }
-    });
-  }
 
   const overallScore = summary?.avg_overall ?? null;
 
@@ -211,6 +179,14 @@ export default async function PracticePage({ params }: Params) {
                     <polyline points="3,6 5,8.5 9,3.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   Verified
+                </span>
+              )}
+              {practice.is_featured && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#92400e', fontWeight: 700, background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 20, padding: '2px 8px' }}>
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="#f59e0b" aria-hidden>
+                    <path d="M6 1l1.35 2.73 3.01.44-2.18 2.12.52 3.01L6 7.93 3.3 9.3l.52-3.01L1.64 4.17l3.01-.44z" />
+                  </svg>
+                  Featured
                 </span>
               )}
             </div>
@@ -405,41 +381,62 @@ export default async function PracticePage({ params }: Params) {
       {/* AI Review Summary */}
       <section
         style={{
-          background: 'linear-gradient(135deg, var(--forest-pale) 0%, #f0f7f3 100%)',
+          background: practice.is_featured
+            ? 'linear-gradient(135deg, #fffbeb 0%, #fef9e7 100%)'
+            : 'linear-gradient(135deg, var(--forest-pale) 0%, #f0f7f3 100%)',
           borderRadius: 'var(--radius)',
           padding: '20px 24px',
-          border: '1.5px solid rgba(28,69,53,0.15)',
+          border: practice.is_featured
+            ? '1.5px solid #fcd34d'
+            : '1.5px solid rgba(28,69,53,0.15)',
           marginBottom: 24,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: practice.ai_summary ? 12 : 0 }}>
-          <div style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--forest)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: aiSummary ? 12 : 0 }}>
+          <div
+            style={{
+              width: 24, height: 24, borderRadius: 6,
+              background: practice.is_featured ? '#f59e0b' : 'var(--forest)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}
+          >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M2 3h8M2 6h5M2 9h6" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
               <circle cx="10" cy="9" r="1.5" fill="white" />
             </svg>
           </div>
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--forest)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+          <span
+            style={{
+              fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
+              color: practice.is_featured ? '#92400e' : 'var(--forest)',
+            }}
+          >
             AI Review Summary
           </span>
-          {!practice.ai_summary && (
-            <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--ink-soft)', fontFamily: 'var(--font-body)', fontStyle: 'italic' }}>
-              {reviews.length >= SUMMARY_MIN_REVIEWS ? 'Generating…' : `Appears after ${SUMMARY_MIN_REVIEWS} reviews`}
+          {practice.is_featured && aiSummary && (
+            <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 600, color: '#92400e', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 20, padding: '1px 7px' }}>
+              In-depth
             </span>
           )}
         </div>
-        {practice.ai_summary && (
+        {aiSummary ? (
           <p
             style={{
               fontFamily: 'var(--font-display)',
-              fontSize: 15,
-              color: 'var(--ink-mid)',
+              fontSize: practice.is_featured ? 15 : 15,
+              color: practice.is_featured ? '#1c1008' : 'var(--ink-mid)',
               lineHeight: 1.75,
               fontStyle: 'italic',
               margin: 0,
             }}
           >
-            &ldquo;{practice.ai_summary}&rdquo;
+            &ldquo;{aiSummary}&rdquo;
+          </p>
+        ) : (
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.6, margin: 0 }}>
+            {reviews.length === 0
+              ? 'Be the first to share your experience — your review helps other patients make an informed choice.'
+              : 'Insights will appear as more patients leave reviews.'}
           </p>
         )}
       </section>
