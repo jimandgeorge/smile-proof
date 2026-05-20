@@ -1,30 +1,65 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const PILLS = [
-  { label: 'Invisalign',        q: 'Invisalign' },
-  { label: 'Implants',          q: 'Implants' },
-  { label: 'Nervous patients',  q: 'Nervous patients' },
-  { label: 'Whitening',         q: 'Whitening' },
-  { label: 'Emergency',         q: 'Emergency' },
+  { label: 'Invisalign',        q: 'invisalign' },
+  { label: 'Implants',          q: 'implants' },
+  { label: 'Nervous patients',  q: 'nervous' },
+  { label: 'Whitening',         q: 'whitening' },
+  { label: 'Emergency',         q: 'emergency' },
 ];
 
-const STATS = [
-  { value: '834',      label: 'practices' },
-  { value: '4.6★',    label: 'avg rating' },
-  { value: 'Growing', label: 'daily' },
-];
+type HeroStats = {
+  practiceCount: number;
+  avgOverall: number | null;
+  reviewCount: number;
+};
 
-export default function HeroSection() {
+export default function HeroSection({ stats }: { stats?: HeroStats }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     const q = inputRef.current?.value.trim();
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/search');
+  }
+
+  function handleNearMe() {
+    if (locating) return;
+    setLocationError(null);
+
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      setLocationError('Location needs HTTPS or localhost. Try entering your postcode.');
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      setLocationError('Your browser does not support location. Try entering your postcode.');
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        window.location.assign(`/search?lat=${coords.latitude.toFixed(6)}&lng=${coords.longitude.toFixed(6)}&radius=10`);
+      },
+      (err) => {
+        setLocating(false);
+        setLocationError(
+          err.code === err.PERMISSION_DENIED
+            ? 'Location access was denied. Try entering your postcode.'
+            : err.code === err.TIMEOUT
+              ? 'Location timed out. Try again or enter your postcode.'
+              : 'Could not get your location. Try entering your postcode.'
+        );
+      },
+      { enableHighAccuracy: false, maximumAge: 60000, timeout: 12000 }
+    );
   }
 
   return (
@@ -99,7 +134,7 @@ export default function HeroSection() {
           {PILLS.map(({ label, q }) => (
             <a
               key={q}
-              href={`/search?q=${encodeURIComponent(q)}`}
+              href={`/find?treatment=${encodeURIComponent(q)}`}
               className="transition-all hover:bg-white/20"
               style={{
                 fontFamily: 'var(--font-body)',
@@ -150,6 +185,36 @@ export default function HeroSection() {
             }}
           />
           <button
+            type="button"
+            onClick={handleNearMe}
+            disabled={locating}
+            title="Use my location"
+            aria-label="Use my location"
+            className="shrink-0 transition-opacity hover:opacity-80"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 38,
+              height: 38,
+              borderRadius: '50%',
+              border: '1.5px solid #e5e7eb',
+              background: locating ? '#f3f4f6' : 'white',
+              cursor: locating ? 'default' : 'pointer',
+              flexShrink: 0,
+              margin: '5px 0 5px 0',
+              color: locating ? '#9ca3af' : 'var(--forest)',
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 14 14" fill="none" aria-hidden>
+              <circle cx="7" cy="7" r="2.8" stroke="currentColor" strokeWidth="1.4" />
+              <line x1="7" y1="1" x2="7" y2="3.4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              <line x1="7" y1="10.6" x2="7" y2="13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              <line x1="1" y1="7" x2="3.4" y2="7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              <line x1="10.6" y1="7" x2="13" y2="7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+          </button>
+          <button
             type="submit"
             className="shrink-0 font-semibold transition-opacity hover:opacity-90 active:opacity-80"
             style={{
@@ -167,73 +232,93 @@ export default function HeroSection() {
             Search
           </button>
         </form>
+        {locationError && (
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'rgba(255,255,255,0.72)', margin: '-6px 0 16px', maxWidth: 580 }}>
+            {locationError}
+          </p>
+        )}
 
-        {/* Secondary CTA */}
+        {/* Secondary CTAs */}
         <div className="flex items-center gap-3 mb-10 flex-wrap">
-          <span
+          <a
+            href="/find"
+            className="transition-all hover:bg-white/20"
             style={{
               fontFamily: 'var(--font-body)',
               fontSize: 14,
-              color: 'rgba(255,255,255,0.5)',
-            }}
-          >
-            Not sure what you need?
-          </span>
-          <a
-            href="/search"
-            className="transition-all hover:bg-white/15"
-            style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: 13,
-              fontWeight: 600,
-              color: 'rgba(255,255,255,0.85)',
-              border: '1px solid rgba(255,255,255,0.3)',
+              fontWeight: 700,
+              color: '#fff',
+              background: 'rgba(110,231,183,0.18)',
+              border: '1.5px solid rgba(110,231,183,0.4)',
               borderRadius: 999,
-              padding: '6px 16px',
+              padding: '9px 20px',
               textDecoration: 'none',
               whiteSpace: 'nowrap',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
             }}
           >
-            Get matched with a dentist →
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+              <circle cx="7" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.4" />
+              <path d="M2 12c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+            Find my dentist
           </a>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>
+            or browse by treatment below
+          </span>
         </div>
 
         {/* Stats row */}
-        <div className="flex items-center gap-6 sm:gap-10 flex-wrap">
-          {STATS.map(({ value, label }, i) => (
-            <div key={label} className="flex items-center gap-3">
-              {i > 0 && (
-                <span aria-hidden className="hidden sm:block" style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.15)' }} />
-              )}
-              <div>
-                <span
-                  className="block font-bold"
-                  style={{
-                    fontFamily: 'var(--font-display)',
-                    fontSize: 20,
-                    color: '#fff',
-                    letterSpacing: '-0.02em',
-                    lineHeight: 1.1,
-                  }}
-                >
-                  {value}
-                </span>
-                <span
-                  className="block"
-                  style={{
-                    fontFamily: 'var(--font-body)',
-                    fontSize: 11,
-                    color: 'rgba(255,255,255,0.45)',
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {label}
-                </span>
-              </div>
+        {(() => {
+          const liveStats = stats && stats.practiceCount > 0 ? [
+            { value: stats.practiceCount.toLocaleString(), label: 'practices' },
+            { value: stats.avgOverall ? `${stats.avgOverall.toFixed(1)}★` : '—', label: 'avg rating' },
+            { value: stats.reviewCount >= 100 ? stats.reviewCount.toLocaleString() : 'Growing', label: stats.reviewCount >= 100 ? 'reviews' : 'daily' },
+          ] : [
+            { value: '834', label: 'practices' },
+            { value: '4.6★', label: 'avg rating' },
+            { value: 'Growing', label: 'daily' },
+          ];
+          return (
+            <div className="flex items-center gap-6 sm:gap-10 flex-wrap">
+              {liveStats.map(({ value, label }, i) => (
+                <div key={label} className="flex items-center gap-3">
+                  {i > 0 && (
+                    <span aria-hidden className="hidden sm:block" style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.15)' }} />
+                  )}
+                  <div>
+                    <span
+                      className="block font-bold"
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: 20,
+                        color: '#fff',
+                        letterSpacing: '-0.02em',
+                        lineHeight: 1.1,
+                      }}
+                    >
+                      {value}
+                    </span>
+                    <span
+                      className="block"
+                      style={{
+                        fontFamily: 'var(--font-body)',
+                        fontSize: 11,
+                        color: 'rgba(255,255,255,0.45)',
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          );
+        })()}
 
       </div>
     </section>

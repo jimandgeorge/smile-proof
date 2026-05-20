@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { ReviewActions } from './ReviewActions';
 
 type Review = {
@@ -39,12 +40,13 @@ type Props = {
   reviews: Review[];
   practice: Practice;
   practiceSlug: string;
+  services?: { name: string; category: string }[];
 };
 
 const TABS = ['Reviews', 'About & Contact', 'Practice Responses'] as const;
 type Tab = typeof TABS[number];
 
-export default function ProfileTabs({ reviews, practice, practiceSlug }: Props) {
+export default function ProfileTabs({ reviews, practice, practiceSlug, services = [] }: Props) {
   const [active, setActive] = useState<Tab>('Reviews');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
 
@@ -247,11 +249,22 @@ export default function ProfileTabs({ reviews, practice, practiceSlug }: Props) 
                       {r.reviewer_display_name}
                     </div>
                   )}
-                  {r.treatments && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: 'var(--cream-dark)', color: 'var(--ink-soft)' }}>
-                      {r.treatments.name}
-                    </span>
-                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                    {r.treatments && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: 'var(--cream-dark)', color: 'var(--ink-soft)' }}>
+                        {r.treatments.name}
+                      </span>
+                    )}
+                    {r.dentists && (
+                      <Link
+                        href={`/dentist/${r.dentists.slug}`}
+                        style={{ fontSize: 11, color: 'var(--forest)', fontFamily: 'var(--font-body)', fontWeight: 500, textDecoration: 'none' }}
+                        onClick={e => e.stopPropagation()}
+                      >
+                        Seen by {r.dentists.full_name} →
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -425,6 +438,28 @@ export default function ProfileTabs({ reviews, practice, practiceSlug }: Props) 
               </div>
             )}
           </div>
+
+          {services.length > 0 && (
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1.5px solid var(--cream-dark)' }}>
+              <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--ink-soft)', marginBottom: 12 }}>
+                Services offered
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {services.map(s => (
+                  <span
+                    key={s.name}
+                    style={{
+                      fontSize: 13, padding: '5px 12px', borderRadius: 20,
+                      background: 'var(--forest-pale)', color: 'var(--forest)',
+                      fontFamily: 'var(--font-body)', fontWeight: 500,
+                    }}
+                  >
+                    {s.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

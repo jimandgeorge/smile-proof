@@ -9,6 +9,7 @@ import PriceTransparencySection from './PriceTransparencySection';
 import type { PriceRow } from './PriceTransparencySection';
 import AnxietySpotlight from './AnxietySpotlight';
 import ResponseAccountabilitySection from './ResponseAccountabilitySection';
+import PracticeSidebar from './PracticeSidebar';
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -55,6 +56,7 @@ export default async function PracticePage({ params }: Params) {
     avg_cost: number | null;
     avg_cleanliness: number | null;
     avg_anxiety: number | null;
+    avg_treatment_results: number | null;
     review_count: number | null;
     verified_count: number | null;
   } | null;
@@ -89,13 +91,24 @@ export default async function PracticePage({ params }: Params) {
     return Math.round(times.reduce((a: number, b: number) => a + b, 0) / times.length);
   })();
 
-  const [priceRes, aiSummaryRes] = await Promise.all([
+  const [priceRes, aiSummaryRes, nhsSignalRes, servicesRes] = await Promise.all([
     admin.from('practice_price_summary').select('*').eq('practice_id', practice.id),
     admin.from('practice_ai_summaries').select('summary').eq('practice_id', practice.id).maybeSingle(),
+    supabase.from('reviews').select('nhs_status', { count: 'exact', head: false })
+      .eq('practice_id', practice.id)
+      .eq('moderation_status', 'published')
+      .eq('nhs_status', 'yes')
+      .limit(1),
+    admin.from('practice_services').select('services(name, category)').eq('practice_id', practice.id),
   ]);
 
   const priceRows: PriceRow[] = (priceRes.data ?? []) as PriceRow[];
   const aiSummary: string | null = aiSummaryRes.data?.summary ?? null;
+  const patientReportedNhs = (nhsSignalRes.count ?? 0) > 0;
+  const practiceServices = (servicesRes.data ?? [])
+    .map((r: any) => r.services)
+    .filter(Boolean) as { name: string; category: string }[];
+  const nhsAccepting: boolean | null = practice.nhs_accepting ?? (patientReportedNhs ? true : null);
 
   // Track profile view (fire-and-forget)
   after(async () => {
@@ -107,16 +120,19 @@ export default async function PracticePage({ params }: Params) {
 
   const scoreDimensions = summary
     ? [
-        { label: 'Cleanliness', value: summary.avg_cleanliness },
-        { label: 'Pain Management', value: summary.avg_pain },
-        { label: 'Value for Money', value: summary.avg_cost },
-        { label: 'Staff Friendliness', value: summary.avg_communication },
-        { label: 'Anxiety Handling', value: summary.avg_anxiety },
+        { label: 'Staff Friendliness', value: summary.avg_cleanliness },
+        { label: 'Communication',      value: summary.avg_communication },
+        { label: 'Anxiety Handling',   value: summary.avg_anxiety },
+        { label: 'Pain Management',    value: summary.avg_pain },
+        { label: 'Value for Money',    value: summary.avg_cost },
+        { label: 'Treatment Results',  value: summary.avg_treatment_results },
       ]
     : [];
 
+  const earlyInsights = (summary?.review_count ?? 0) > 0 && (summary?.review_count ?? 0) < SUMMARY_MIN_REVIEWS;
+
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8">
+    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 20px 80px' }}>
       {/* Back link */}
       <Link
         href="/"
@@ -141,15 +157,27 @@ export default async function PracticePage({ params }: Params) {
         Back to results
       </Link>
 
+      <div
+        className="practice-profile-grid"
+        style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 28, alignItems: 'start' }}
+      >
+      {/* Left column */}
+      <div>
+
       {/* Practice header card */}
       <div
         className="rounded-2xl bg-white mb-6"
-        style={{ border: '1.5px solid var(--cream-dark)', padding: 32 }}
+        style={{
+          border: `1.5px solid ${practice.claimed_by_user_id ? 'rgba(28,69,53,0.2)' : 'var(--cream-dark)'}`,
+          borderTop: practice.claimed_by_user_id ? '3px solid var(--forest)' : '1.5px solid var(--cream-dark)',
+          padding: practice.claimed_by_user_id ? '30px 32px 32px' : 32,
+          boxShadow: practice.claimed_by_user_id ? '0 2px 12px rgba(28,69,53,0.06)' : 'none',
+        }}
       >
-        <div className="flex items-start gap-5">
-          {/* Avatar */}
+        <div className="practice-profile-header-row flex items-start gap-5">
+          {/* Avatar / logo */}
           <div
-            className="shrink-0 flex items-center justify-center font-bold"
+            className="practice-profile-logo shrink-0 flex items-center justify-center font-bold"
             style={{
               width: 80,
               height: 80,
@@ -158,16 +186,20 @@ export default async function PracticePage({ params }: Params) {
               color: 'var(--forest)',
               fontFamily: 'var(--font-display)',
               fontSize: 32,
+              overflow: 'hidden',
             }}
           >
-            {practice.name.charAt(0).toUpperCase()}
+            {practice.logo_url
+              ? <img src={practice.logo_url} alt={`${practice.name} logo`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : practice.name.charAt(0).toUpperCase()
+            }
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="practice-profile-heading flex-1 min-w-0">
             {/* Name + Verified inline */}
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1
-                className="font-bold leading-tight"
+                className="practice-profile-title font-bold leading-tight"
                 style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--ink)' }}
               >
                 {practice.name}
@@ -179,6 +211,14 @@ export default async function PracticePage({ params }: Params) {
                     <polyline points="3,6 5,8.5 9,3.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   Verified
+                </span>
+              )}
+              {nhsAccepting && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 700, color: '#1d4ed8', background: '#dbeafe', border: '1px solid #93c5fd', borderRadius: 20, padding: '2px 8px' }}>
+                  NHS
+                  {!practice.nhs_accepting && patientReportedNhs && (
+                    <span style={{ fontSize: 10, fontWeight: 400, color: '#3b82f6' }}> · patient reported</span>
+                  )}
                 </span>
               )}
               {practice.is_featured && (
@@ -225,7 +265,7 @@ export default async function PracticePage({ params }: Params) {
           </div>
 
           {overallScore !== null && (
-            <div className="shrink-0 text-center">
+            <div className="practice-profile-score shrink-0 text-center">
               <ToothScore score={Number(overallScore)} />
               <p
                 className="mt-1 uppercase tracking-wide"
@@ -240,20 +280,27 @@ export default async function PracticePage({ params }: Params) {
         {/* Patient Scores */}
         {scoreDimensions.length > 0 && (
           <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid var(--cream-dark)' }}>
-            <h3
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 14,
-                fontWeight: 600,
-                color: 'var(--ink-soft)',
-                marginBottom: 16,
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
-              }}
-            >
-              Patient Scores
-            </h3>
-            <div className="grid grid-cols-2 gap-x-10 gap-y-4">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <h3
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: 'var(--ink-soft)',
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  margin: 0,
+                }}
+              >
+                Patient Experience
+              </h3>
+              {earlyInsights && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#92400e', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 20, padding: '2px 8px' }}>
+                  Early patient insights
+                </span>
+              )}
+            </div>
+            <div className="practice-score-grid grid grid-cols-2 gap-x-10 gap-y-4">
               {scoreDimensions.map(({ label, value }) => (
                 <div key={label} style={{ marginBottom: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -279,103 +326,63 @@ export default async function PracticePage({ params }: Params) {
           </div>
         )}
 
-        {/* Action buttons */}
-        <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
-          <Link
-            href={`/practices/${slug}/review`}
-            style={{
-              padding: '12px 28px',
-              background: 'var(--forest)',
-              color: 'var(--cream)',
-              border: 'none',
-              borderRadius: 8,
-              fontSize: 14,
-              fontWeight: 600,
-              textDecoration: 'none',
-              transition: 'background var(--transition)',
-            }}
-          >
-            Write a Review
-          </Link>
-          {practice.website && (
-            <a
-              href={practice.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '12px 20px',
-                background: 'transparent',
-                color: 'var(--ink-mid)',
-                border: '1.5px solid var(--cream-dark)',
-                borderRadius: 8,
-                fontSize: 14,
-                fontWeight: 500,
-                textDecoration: 'none',
-                transition: 'all var(--transition)',
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <rect x="1" y="3" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" fill="none" />
-                <path d="M8 1h5v5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M13 1L7 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-              </svg>
-              Visit Website
-            </a>
-          )}
-          {isOwner && (
-            <Link
-              href={`/practices/${slug}/dashboard`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '12px 20px',
-                background: 'var(--forest-pale)',
-                color: 'var(--forest)',
-                border: '1.5px solid rgba(28,69,53,0.2)',
-                borderRadius: 8,
-                fontSize: 14,
-                fontWeight: 600,
-                textDecoration: 'none',
-                transition: 'all var(--transition)',
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <rect x="1" y="7" width="3" height="6" rx="1" fill="currentColor" />
-                <rect x="5.5" y="4" width="3" height="9" rx="1" fill="currentColor" />
-                <rect x="10" y="1" width="3" height="12" rx="1" fill="currentColor" />
-              </svg>
-              Manage practice
-            </Link>
-          )}
-          {!practice.claimed_by_user_id && (
-            <Link
-              href={`/practices/${slug}/claim`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '12px 20px',
-                background: 'transparent',
-                color: 'var(--ink-soft)',
-                border: '1.5px solid var(--cream-dark)',
-                borderRadius: 8,
-                fontSize: 14,
-                fontWeight: 500,
-                textDecoration: 'none',
-                transition: 'all var(--transition)',
-              }}
-            >
-              <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                <path d="M7 1l1.5 3 3.5.5-2.5 2.5.5 3.5L7 9 3.5 10.5l.5-3.5L1.5 4.5 5 4z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" fill="none" />
-              </svg>
-              Claim this profile
-            </Link>
-          )}
-        </div>
+        {/* Header action buttons — website + owner dashboard only; conversion CTAs live in the sidebar */}
+        {(practice.website || isOwner) && (
+          <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
+            {practice.website && (
+              <a
+                href={practice.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '11px 18px',
+                  background: 'transparent',
+                  color: 'var(--ink-mid)',
+                  border: '1.5px solid var(--cream-dark)',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <rect x="1" y="3" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" fill="none" />
+                  <path d="M8 1h5v5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M13 1L7 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+                Visit Website
+              </a>
+            )}
+            {isOwner && (
+              <Link
+                href={`/practices/${slug}/dashboard`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '11px 18px',
+                  background: 'var(--forest-pale)',
+                  color: 'var(--forest)',
+                  border: '1.5px solid rgba(28,69,53,0.2)',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <rect x="1" y="7" width="3" height="6" rx="1" fill="currentColor" />
+                  <rect x="5.5" y="4" width="3" height="9" rx="1" fill="currentColor" />
+                  <rect x="10" y="1" width="3" height="12" rx="1" fill="currentColor" />
+                </svg>
+                Manage practice
+              </Link>
+            )}
+          </div>
+        )}
       </div>
 
       {/* AI Review Summary */}
@@ -392,7 +399,7 @@ export default async function PracticePage({ params }: Params) {
           marginBottom: 24,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: aiSummary ? 12 : 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
           <div
             style={{
               width: 24, height: 24, borderRadius: 6,
@@ -423,7 +430,7 @@ export default async function PracticePage({ params }: Params) {
           <p
             style={{
               fontFamily: 'var(--font-display)',
-              fontSize: practice.is_featured ? 15 : 15,
+              fontSize: 15,
               color: practice.is_featured ? '#1c1008' : 'var(--ink-mid)',
               lineHeight: 1.75,
               fontStyle: 'italic',
@@ -432,11 +439,34 @@ export default async function PracticePage({ params }: Params) {
           >
             &ldquo;{aiSummary}&rdquo;
           </p>
+        ) : !practice.claimed_by_user_id && reviews.length > 0 ? (
+          <div>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.6, margin: '0 0 12px' }}>
+              {reviews.length} patient {reviews.length === 1 ? 'review' : 'reviews'} collected — AI insights generate automatically once this profile is claimed or reaches {SUMMARY_MIN_REVIEWS} reviews.
+            </p>
+            <Link
+              href={`/practices/${slug}/claim`}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                fontSize: 13, fontWeight: 700, color: 'var(--forest)',
+                background: 'var(--forest-pale)', border: '1px solid rgba(28,69,53,0.15)',
+                borderRadius: 8, padding: '8px 14px', textDecoration: 'none',
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.3" />
+                <path d="M6 4v4M4 6h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+              Claim to unlock AI insights early
+            </Link>
+          </div>
         ) : (
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.6, margin: 0 }}>
             {reviews.length === 0
               ? 'Be the first to share your experience — your review helps other patients make an informed choice.'
-              : 'Insights will appear as more patients leave reviews.'}
+              : reviews.length < SUMMARY_MIN_REVIEWS
+                ? `${reviews.length} review${reviews.length !== 1 ? 's' : ''} so far — AI insights generate automatically once this practice has ${SUMMARY_MIN_REVIEWS}.`
+                : 'AI insights are being generated — check back shortly.'}
           </p>
         )}
       </section>
@@ -461,6 +491,7 @@ export default async function PracticePage({ params }: Params) {
       <ProfileTabs
         reviews={reviews as any}
         practiceSlug={slug}
+        services={practiceServices}
         practice={{
           name: practice.name,
           address_line1: practice.address_line1,
@@ -474,6 +505,22 @@ export default async function PracticePage({ params }: Params) {
           claimed_by_user_id: practice.claimed_by_user_id ?? null,
         }}
       />
+      </div>{/* end left column */}
+
+      {/* Right sidebar */}
+      <div className="practice-profile-sidebar" style={{ position: 'sticky', top: 80 }}>
+        <PracticeSidebar
+          practiceId={practice.id}
+          practiceSlug={slug}
+          practiceName={practice.name}
+          isClaimed={!!practice.claimed_by_user_id}
+          phone={practice.phone ?? null}
+          email={practice.email ?? null}
+          website={practice.website ?? null}
+        />
+      </div>
+
+      </div>{/* end grid */}
     </main>
   );
 }

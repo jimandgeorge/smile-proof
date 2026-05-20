@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import BrandLogo from './BrandLogo';
 
 const LINKS = {
   patients: [
@@ -14,14 +15,14 @@ const LINKS = {
     { label: 'Why SmileProof',      href: '/for-dentists' },
     { label: 'Claim your practice', href: '/for-dentists#claim' },
     { label: 'Dentist dashboard',   href: '/for-dentists' },
-    { label: 'Contact us',          href: 'mailto:hello@smileproof.co.uk' },
+    { label: 'Contact us',          href: '/contact' },
   ],
   cities: ['London', 'Manchester', 'Birmingham', 'Leeds', 'Bristol', 'Edinburgh'],
   about: [
-    { label: 'How it works',          href: '/about' },
-    { label: 'Trust & verification',  href: '/about' },
-    { label: 'Privacy policy',        href: '/privacy' },
-    { label: 'Terms of use',          href: '/terms' },
+    { label: 'How it works',         href: '/how-it-works' },
+    { label: 'Trust & verification', href: '/trust' },
+    { label: 'Privacy policy',       href: '/privacy' },
+    { label: 'Terms of service',     href: '/terms' },
   ],
 };
 
@@ -73,9 +74,9 @@ export default function Footer() {
           <Link
             href="/"
             className="inline-block mb-3"
-            style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--forest)', letterSpacing: '-0.02em', textDecoration: 'none' }}
+            style={{ textDecoration: 'none' }}
           >
-            Smile<em style={{ fontStyle: 'italic' }}>Proof</em>
+            <BrandLogo size="footer" />
           </Link>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.65, maxWidth: 200 }}>
             Honest dental reviews from real UK patients.

@@ -60,5 +60,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/practices/${slug}/claim/pending`);
   }
 
+  // Redirect to the user's practice dashboard if they have a claimed practice
+  const { data: practice } = await admin
+    .from('practices')
+    .select('slug')
+    .eq('claimed_by_user_id', data.user.id)
+    .limit(1)
+    .maybeSingle();
+
+  if (practice?.slug) {
+    return NextResponse.redirect(`${origin}/practices/${practice.slug}/dashboard`);
+  }
+
   return NextResponse.redirect(`${origin}/`);
 }

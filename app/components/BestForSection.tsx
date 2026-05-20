@@ -9,7 +9,10 @@ export type BestForClinic = {
   rating: number | null;
   location: string;
   insight: string;
+  isAiInsight?: boolean;
   anxietyFriendly?: boolean;
+  isClaimed?: boolean;
+  reviewCount?: number;
 };
 
 type Props = {
@@ -20,138 +23,119 @@ type Props = {
   clinics: BestForClinic[];
 };
 
-function StarIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="#f59e0b" aria-hidden>
-      <path d="M6 1l1.35 2.73 3.01.44-2.18 2.12.52 3.01L6 7.93 3.3 9.3l.52-3.01L1.64 4.17l3.01-.44z" />
-    </svg>
-  );
-}
 
 export function ClinicCard({ clinic }: { clinic: BestForClinic }) {
   const [hovered, setHovered] = useState(false);
-  const initial = clinic.name.charAt(0).toUpperCase();
+  const isClaimed   = !!clinic.isClaimed;
+  const reviewCount = clinic.reviewCount ?? 0;
+  const showAI      = !!clinic.isAiInsight;
+  const stars       = clinic.rating ? Math.round(clinic.rating) : 0;
 
   return (
-    <Link
-      href={`/practices/${clinic.slug}`}
-      style={{ textDecoration: 'none' }}
+    <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      style={{
+        background: 'white',
+        borderRadius: 14,
+        border: `1.5px solid ${hovered ? 'rgba(28,69,53,0.4)' : isClaimed ? 'rgba(28,69,53,0.2)' : 'var(--cream-dark)'}`,
+        padding: '22px 24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 14,
+        boxShadow: hovered ? '0 6px 24px rgba(28,69,53,0.1)' : isClaimed ? '0 2px 10px rgba(28,69,53,0.06)' : 'none',
+        transition: 'border-color 0.15s, box-shadow 0.15s',
+        height: '100%',
+        boxSizing: 'border-box',
+      }}
     >
-      <div
-        className="flex flex-col h-full"
-        style={{
-          borderRadius: 12,
-          border: `1.5px solid ${hovered ? 'var(--forest)' : 'var(--cream-dark)'}`,
-          padding: 16,
-          background: 'white',
-          cursor: 'pointer',
-          transition: 'border-color 0.15s, transform 0.15s',
-          transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
-        }}
-      >
-        {/* Name row */}
-        <div className="flex items-center gap-3 mb-3">
-          <div
-            className="shrink-0 flex items-center justify-center rounded-lg font-bold"
-            style={{
-              width: 36,
-              height: 36,
-              background: 'var(--forest-pale)',
-              fontFamily: 'var(--font-display)',
-              fontSize: 15,
-              color: 'var(--forest)',
-            }}
-          >
-            {initial}
-          </div>
-          <div className="min-w-0">
-            <p
-              className="font-semibold truncate"
-              style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--ink)', lineHeight: 1.3 }}
-            >
-              {clinic.name}
-            </p>
-            <p
-              className="truncate"
-              style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--ink-soft)', lineHeight: 1.4 }}
-            >
-              {clinic.location}
-            </p>
-          </div>
+      {/* Claimed badge */}
+      {isClaimed && (
+        <div>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-body)', color: 'var(--forest)', background: 'var(--forest-pale)', border: '1px solid rgba(28,69,53,0.15)', borderRadius: 20, padding: '3px 9px' }}>
+            <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden>
+              <circle cx="6" cy="6" r="6" fill="var(--forest)" />
+              <polyline points="3,6 5,8.5 9,3.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Claimed
+          </span>
         </div>
+      )}
 
-        {/* Rating */}
-        {clinic.rating !== null && (
-          <div className="flex items-center gap-1.5 mb-3">
-            <StarIcon />
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, color: 'var(--ink)', lineHeight: 1 }}>
-              {clinic.rating.toFixed(1)}
-            </span>
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--ink-faint)' }}>/ 5</span>
-          </div>
-        )}
+      {/* Name + location */}
+      <div>
+        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 800, color: 'var(--ink)', margin: '0 0 4px', lineHeight: 1.2, letterSpacing: '-0.015em' }}>
+          {clinic.name}
+        </h3>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--ink-soft)', margin: 0 }}>
+          {clinic.location}
+        </p>
+      </div>
 
-        {/* Insight line */}
-        <p
-          className="flex-1 mb-4"
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: 13,
-            color: 'var(--ink-soft)',
-            lineHeight: 1.55,
-            borderLeft: '2.5px solid var(--forest-pale)',
-            paddingLeft: 10,
-          }}
-        >
+      {/* Rating row */}
+      {clinic.rating !== null && reviewCount > 0 ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ color: 'var(--gold)', fontSize: 14, letterSpacing: 1 }}>
+            {'★'.repeat(stars)}{'☆'.repeat(Math.max(0, 5 - stars))}
+          </span>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>
+            {clinic.rating.toFixed(1)}
+          </span>
+          <span style={{ color: 'var(--ink-faint)', fontSize: 13 }}>·</span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--ink-soft)' }}>
+            {reviewCount} verified {reviewCount === 1 ? 'review' : 'reviews'}
+          </span>
+        </div>
+      ) : clinic.rating !== null ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ color: 'var(--gold)', fontSize: 14, letterSpacing: 1 }}>
+            {'★'.repeat(stars)}{'☆'.repeat(Math.max(0, 5 - stars))}
+          </span>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>
+            {clinic.rating.toFixed(1)}
+          </span>
+        </div>
+      ) : (
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--ink-faint)', margin: 0 }}>No reviews yet</p>
+      )}
+
+      {/* AI Insight */}
+      {showAI ? (
+        <div style={{ background: 'var(--forest-pale)', border: '1px solid rgba(28,69,53,0.12)', borderRadius: 10, padding: '12px 14px' }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 800, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--forest)', margin: '0 0 6px' }}>
+            AI Insight
+          </p>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--ink-mid)', lineHeight: 1.6, fontStyle: 'italic', margin: 0 }}>
+            &ldquo;{clinic.insight.length > 120 ? clinic.insight.slice(0, 120) + '…' : clinic.insight}&rdquo;
+          </p>
+        </div>
+      ) : (
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--ink-faint)', lineHeight: 1.55, margin: 0 }}>
           {clinic.insight}
         </p>
+      )}
 
-        {/* Anxiety-friendly badge */}
-        {clinic.anxietyFriendly && (
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '3px 8px',
-              borderRadius: 20,
-              background: 'var(--forest-pale)',
-              border: '1px solid rgba(28,69,53,0.2)',
-              fontSize: 11,
-              fontWeight: 600,
-              color: 'var(--forest)',
-              fontFamily: 'var(--font-body)',
-              marginBottom: 10,
-            }}
-          >
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-              <circle cx="6" cy="6" r="5" fill="var(--forest)" />
-              <path d="M3.5 6l1.8 1.8 3.2-3.2" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Anxiety-friendly
-          </div>
-        )}
-
-        {/* CTA */}
-        <div
-          className="flex items-center gap-1"
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: 13,
-            fontWeight: 600,
-            color: hovered ? 'var(--forest)' : 'var(--ink-soft)',
-            transition: 'color 0.15s',
-          }}
-        >
-          {clinic.rating !== null ? 'See patient insights' : 'View practice'}
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+      {/* Tags */}
+      {clinic.anxietyFriendly && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink-mid)', background: 'var(--cream)', border: '1px solid var(--cream-dark)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--font-body)' }}>
+            Anxiety friendly
+          </span>
         </div>
+      )}
+
+      {/* CTAs */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 'auto', paddingTop: 4 }}>
+        {isClaimed && (
+          <Link href={`/practices/${clinic.slug}`} style={{ flex: 1, padding: '10px 14px', background: 'var(--forest)', color: 'white', borderRadius: 9, fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)', textAlign: 'center', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            Book consultation
+          </Link>
+        )}
+        <Link href={`/practices/${clinic.slug}`} style={{ flex: isClaimed ? 'none' : 1, padding: '10px 16px', background: 'white', color: 'var(--forest)', borderRadius: 9, border: '1.5px solid rgba(28,69,53,0.25)', fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)', textAlign: 'center', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+          View profile
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -168,7 +152,7 @@ export default function BestForSection({ title, subtitle, badge, viewAllHref = '
 
   return (
     <div>
-      <div className="flex items-start justify-between gap-4 mb-5">
+      <div className="flex items-start justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h2

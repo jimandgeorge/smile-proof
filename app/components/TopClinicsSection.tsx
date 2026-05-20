@@ -11,10 +11,10 @@ type Props = {
 export default function TopClinicsSection({ clinics, viewAllHref = '/search', title = 'Top-rated dentists in your area', eyebrow = 'Top rated' }: Props) {
   return (
     <section className="w-full" style={{ background: 'var(--cream)' }}>
-      <div className="mx-auto px-5 py-12 sm:py-16" style={{ maxWidth: 1200 }}>
+      <div className="mx-auto px-5 py-16 sm:py-20" style={{ maxWidth: 1200 }}>
 
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 mb-7">
+        <div className="flex items-start justify-between gap-4 mb-8">
           <div>
             <p
               className="uppercase mb-2"

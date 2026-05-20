@@ -4,7 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+function getRedirectBase() {
+  return typeof window !== 'undefined'
+    ? window.location.origin
+    : (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000');
+}
 
 function GoogleIcon() {
   return (
@@ -29,9 +33,10 @@ export default function SignUpPage() {
   const supabase = createClient();
 
   async function handleGoogleSignUp() {
+    const redirectBase = getRedirectBase();
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${SITE_URL}/auth/callback` },
+      options: { redirectTo: `${redirectBase}/auth/callback` },
     });
   }
 
@@ -39,12 +44,13 @@ export default function SignUpPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    const redirectBase = getRedirectBase();
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: name.trim() || undefined },
-        emailRedirectTo: `${SITE_URL}/auth/callback`,
+        emailRedirectTo: `${redirectBase}/auth/callback`,
       },
     });
     if (error) {

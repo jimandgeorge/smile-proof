@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter_Tight, Inter } from "next/font/google";
 import NavBar from "./components/NavBar";
 import ConditionalFooter from "./components/ConditionalFooter";
@@ -16,6 +16,11 @@ const inter = Inter({
   weight: ["300", "400", "500", "600"],
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "SmileProof — UK Dental Reviews",
   description: "Verified patient reviews and real prices for UK dental practices.",
@@ -24,7 +29,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${interTight.variable} ${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-body">
+      <body className="min-h-full flex flex-col font-body" suppressHydrationWarning>
         <NavBar />
         <div className="flex-1">{children}</div>
         <ConditionalFooter />

@@ -6,7 +6,7 @@ type Props = {
 
 export default function MatchCTA({ href = '/for-dentists' }: Props) {
   return (
-    <section className="mx-auto px-5 py-6" style={{ maxWidth: 1200 }}>
+    <section className="mx-auto px-5 py-10 sm:py-12" style={{ maxWidth: 1200 }}>
       <div
         className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5"
         style={{

@@ -14,7 +14,7 @@ export default async function DashboardPage({ params }: Params) {
 
   const { data: practice, error } = await admin
     .from('practices')
-    .select('id, name, city, postcode, practice_type, claimed_by_user_id, subscription_status, ai_insights')
+    .select('*')
     .eq('slug', slug)
     .single();
 
@@ -57,6 +57,8 @@ export default async function DashboardPage({ params }: Params) {
   const rawName: string = user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'there';
   const userName = rawName.split(' ')[0];
   const userInitial = userName[0]?.toUpperCase() ?? '?';
+  const userEmail = user.email ?? '';
+  const isOAuthUser = (user.app_metadata?.provider ?? '') !== 'email';
 
   // Date helpers
   const now = new Date();
@@ -77,6 +79,9 @@ export default async function DashboardPage({ params }: Params) {
     invitesRes,
     allServicesRes,
     practiceServicesRes,
+    enquiriesRes,
+    teamDentistsRes,
+    opportunityInsightsRes,
   ] = await Promise.all([
     admin.from('practice_rating_summary').select('*').eq('practice_id', practice.id).maybeSingle(),
     admin.from('reviews').select(`
@@ -93,6 +98,9 @@ export default async function DashboardPage({ params }: Params) {
     admin.from('review_invites').select('id, patient_email, patient_name, sent_at, review_id').eq('practice_id', practice.id).order('sent_at', { ascending: false }).limit(50),
     admin.from('services').select('id, slug, name, category, sort_order').order('sort_order'),
     admin.from('practice_services').select('service_id').eq('practice_id', practice.id),
+    admin.from('practice_enquiries').select('id, name, email, treatment_interest, message, created_at, read_at').eq('practice_id', practice.id).order('created_at', { ascending: false }).limit(100),
+    admin.from('practice_dentists').select('dentist_id, dentists(id, full_name, gdc_number, specialisms, slug)').eq('practice_id', practice.id).eq('active', true),
+    admin.from('practice_opportunity_insights').select('*').eq('practice_id', practice.id).maybeSingle(),
   ]);
 
   const summary = summaryRes.data;
@@ -119,11 +127,11 @@ export default async function DashboardPage({ params }: Params) {
 
     if (citySummaries && cityTotal >= 2) {
       const dims: { label: string; key: keyof typeof citySummaries[0] }[] = [
-        { label: 'Pain management',  key: 'avg_pain' },
-        { label: 'Staff friendliness', key: 'avg_communication' },
-        { label: 'Value for money',  key: 'avg_cost' },
-        { label: 'Cleanliness',      key: 'avg_cleanliness' },
-        { label: 'Anxiety handling', key: 'avg_anxiety' },
+        { label: 'Staff Friendliness', key: 'avg_cleanliness' },
+        { label: 'Communication',      key: 'avg_communication' },
+        { label: 'Anxiety Handling',   key: 'avg_anxiety' },
+        { label: 'Pain Management',    key: 'avg_pain' },
+        { label: 'Value for Money',    key: 'avg_cost' },
       ];
       for (const { label, key } of dims) {
         const sorted = [...citySummaries]
@@ -164,12 +172,13 @@ export default async function DashboardPage({ params }: Params) {
 
   // Score cards
   const scoreCards = [
-    { label: 'Overall', value: summary?.avg_overall ?? null },
-    { label: 'Pain Management', value: summary?.avg_pain ?? null },
-    { label: 'Communication', value: summary?.avg_communication ?? null },
-    { label: 'Value for Money', value: summary?.avg_cost ?? null },
-    { label: 'Cleanliness', value: summary?.avg_cleanliness ?? null },
-    { label: 'Anxiety Handling', value: summary?.avg_anxiety ?? null },
+    { label: 'Overall',            value: summary?.avg_overall ?? null },
+    { label: 'Staff Friendliness', value: summary?.avg_cleanliness ?? null },
+    { label: 'Communication',      value: summary?.avg_communication ?? null },
+    { label: 'Anxiety Handling',   value: summary?.avg_anxiety ?? null },
+    { label: 'Pain Management',    value: summary?.avg_pain ?? null },
+    { label: 'Value for Money',    value: summary?.avg_cost ?? null },
+    { label: 'Treatment Results',  value: (summary as any)?.avg_treatment_results ?? null },
   ];
 
   // Computed insights
@@ -178,10 +187,7 @@ export default async function DashboardPage({ params }: Params) {
   if (unresponded > 0) {
     insights.push({ type: 'action', text: `${unresponded} review${unresponded !== 1 ? 's' : ''} need${unresponded === 1 ? 's' : ''} a response — responding improves trust scores`, actionLabel: 'Respond now', actionHref: '#' });
   }
-  if (cityRank > 0 && cityRank <= 3) {
-    insights.push({ type: 'info', text: `You're ranked #${cityRank} in ${(practice as any).city} — great work!`, actionLabel: 'See ranking', actionHref: '#' });
-  }
-  if (responseRate < 50 && published.length >= 3) {
+if (responseRate < 50 && published.length >= 3) {
     insights.push({ type: 'warning', text: `Response rate is ${responseRate}% — patients trust practices that reply`, actionLabel: 'View reviews', actionHref: '#' });
   }
 
@@ -190,6 +196,29 @@ export default async function DashboardPage({ params }: Params) {
   const invites = (invitesRes.data ?? []) as { id: string; patient_email: string; patient_name: string | null; sent_at: string; review_id: string | null }[];
   const allServices = (allServicesRes.data ?? []) as { id: string; slug: string; name: string; category: string; sort_order: number }[];
   const practiceServiceIds = (practiceServicesRes.data ?? []).map((ps: any) => ps.service_id as string);
+  const enquiries = (enquiriesRes.data ?? []) as { id: string; name: string; email: string; treatment_interest: string | null; message: string | null; created_at: string; read_at: string | null }[];
+  const teamDentists = (teamDentistsRes.data ?? [])
+    .map((row: any) => row.dentists)
+    .filter(Boolean)
+    .map((d: any) => ({
+      dentistId: d.id as string,
+      fullName: d.full_name as string,
+      gdcNumber: (d.gdc_number as string | null) ?? null,
+      specialisms: (d.specialisms as string[]) ?? [],
+      slug: d.slug as string,
+    }));
+
+  const rawOpp = opportunityInsightsRes.data;
+  const opportunityInsights = rawOpp ? {
+    id:               rawOpp.id as string,
+    generated_at:     rawOpp.generated_at as string,
+    review_count:     rawOpp.review_count as number,
+    strengths:        (rawOpp.strengths ?? []) as any[],
+    weaknesses:       (rawOpp.weaknesses ?? []) as any[],
+    opportunities:    (rawOpp.opportunities ?? []) as any[],
+    category_scores:  (rawOpp.category_scores ?? {}) as Record<string, number>,
+    themes:           (rawOpp.themes ?? []) as any[],
+  } : null;
 
   return (
     <DashboardShell
@@ -201,6 +230,9 @@ export default async function DashboardPage({ params }: Params) {
       practiceType={(practice as any).practice_type ?? null}
       userName={userName}
       userInitial={userInitial}
+      userEmail={userEmail}
+      isOAuthUser={isOAuthUser}
+      logoUrl={(practice as any).logo_url ?? null}
       isPaid={isPaid}
       avgOverall={summary?.avg_overall ?? null}
       reviewCount={summary?.review_count ?? 0}
@@ -220,9 +252,11 @@ export default async function DashboardPage({ params }: Params) {
       pendingReviews={pending as any}
       insights={insights}
       invites={invites}
-      aiInsights={(practice as any).ai_insights ?? null}
       allServices={allServices}
       practiceServiceIds={practiceServiceIds}
+      enquiries={enquiries}
+      teamDentists={teamDentists}
+      opportunityInsights={opportunityInsights}
     />
   );
 }

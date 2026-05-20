@@ -30,35 +30,47 @@ export default async function CityPage({ params, searchParams }: Props) {
   const page = Math.max(1, Number(pageParam) || 1);
   const supabase = await createServerSupabase();
 
-  const [practicesRes, summariesRes] = await Promise.all([
+  const [practicesRes, summariesRes, servicesRes] = await Promise.all([
     supabase
       .from('practices')
-      .select('id, slug, name, city, address_line1, practice_type, website, claimed_by_user_id')
+      .select('id, slug, name, city, address_line1, practice_type, website, claimed_by_user_id, ai_summary')
       .ilike('city', cityName)
       .order('name'),
     supabase
       .from('practice_rating_summary')
-      .select('practice_id, avg_overall, avg_cleanliness, avg_pain, avg_cost, avg_communication, review_count'),
+      .select('practice_id, avg_overall, avg_cleanliness, avg_pain, avg_cost, avg_communication, avg_anxiety, review_count'),
+    supabase
+      .from('practice_services')
+      .select('practice_id, services(slug, name)'),
   ]);
 
   const allPractices = practicesRes.data ?? [];
   if (!allPractices.length) notFound();
 
   const summaryMap: Record<string, any> = {};
-  for (const s of summariesRes.data ?? []) {
-    summaryMap[s.practice_id] = s;
+  for (const s of summariesRes.data ?? []) summaryMap[s.practice_id] = s;
+
+  const servicesByPractice = new Map<string, { slug: string; name: string }[]>();
+  for (const row of (servicesRes.data ?? [])) {
+    const ps = row as any;
+    if (!ps.services) continue;
+    const list = servicesByPractice.get(ps.practice_id) ?? [];
+    list.push(ps.services);
+    servicesByPractice.set(ps.practice_id, list);
   }
 
   const practices: PracticeCardData[] = allPractices.map((p) => {
     const s = summaryMap[p.id];
     return {
       ...p,
-      avg_overall: s?.avg_overall ?? null,
-      review_count: s?.review_count ?? 0,
-      avg_cleanliness: s?.avg_cleanliness ?? null,
-      avg_pain: s?.avg_pain ?? null,
-      avg_cost: s?.avg_cost ?? null,
-      avg_communication: s?.avg_communication ?? null,
+      avg_overall:       s?.avg_overall       ?? null,
+      review_count:      s?.review_count       ?? 0,
+      avg_cleanliness:   s?.avg_cleanliness    ?? null,
+      avg_pain:          s?.avg_pain           ?? null,
+      avg_cost:          s?.avg_cost           ?? null,
+      avg_communication: s?.avg_communication  ?? null,
+      avg_anxiety:       s?.avg_anxiety        ?? null,
+      services:          servicesByPractice.get(p.id) ?? [],
     };
   });
 

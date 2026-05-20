@@ -1,6 +1,5 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = 'SmileProof <hello@smileproof.co.uk>';
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
@@ -78,6 +77,7 @@ export async function sendReviewInviteEmail({
 </body>
 </html>`;
 
+  const resend = new Resend(process.env.RESEND_API_KEY);
   return resend.emails.send({
     from: FROM,
     to,

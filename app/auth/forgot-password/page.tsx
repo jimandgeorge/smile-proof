@@ -4,7 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+function getRedirectBase() {
+  return typeof window !== 'undefined'
+    ? window.location.origin
+    : (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000');
+}
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -18,8 +22,9 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    const redirectBase = getRedirectBase();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${SITE_URL}/auth/reset-password`,
+      redirectTo: `${redirectBase}/auth/reset-password`,
     });
     if (error) {
       setError(error.message);

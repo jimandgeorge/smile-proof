@@ -1,31 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import BrandLogo from './BrandLogo';
+import { createClient } from '@/lib/supabase';
 
 export default function NavBar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setLoggedIn(!!session?.user);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   if (pathname.startsWith('/widget') || pathname.startsWith('/auth/')) return null;
 
   return (
+    <>
     <header
       className="sticky top-0 z-30 border-b"
       style={{ background: 'var(--cream)', borderColor: 'var(--cream-dark)', height: 72 }}
     >
       <div
-        className="mx-auto px-4 sm:px-6 h-full flex items-center justify-between"
-        style={{ maxWidth: 1200 }}
+        className="w-full px-4 sm:px-6 h-full flex items-center justify-between"
       >
         {/* Logo */}
         <Link
           href="/"
           className="shrink-0 select-none"
-          style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--forest)', letterSpacing: '-0.02em', textDecoration: 'none' }}
+          style={{ textDecoration: 'none' }}
         >
-          Smile<em style={{ fontStyle: 'italic' }}>Proof</em>
+          <BrandLogo />
         </Link>
 
         {/* Desktop nav */}
@@ -49,7 +61,7 @@ export default function NavBar() {
           </Link>
 
           <Link
-            href="/search"
+            href="/find"
             className="px-5 py-2 rounded-full text-sm font-semibold transition-opacity hover:opacity-90"
             style={{ fontFamily: 'var(--font-body)', background: 'var(--forest)', color: 'var(--cream)', textDecoration: 'none' }}
           >
@@ -57,13 +69,13 @@ export default function NavBar() {
           </Link>
 
           <Link
-            href="/auth/login"
+            href={loggedIn ? '/auth/logout' : '/auth/login'}
             className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
             style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-soft)', textDecoration: 'none' }}
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--cream-dark)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
-            Sign in
+            {loggedIn ? 'Log out' : 'Sign in'}
           </Link>
         </nav>
 
@@ -92,37 +104,36 @@ export default function NavBar() {
         </button>
       </div>
 
-      {/* Mobile menu */}
+    </header>
+
+      {/* Mobile menu — sibling to header so no sticky/overflow issues */}
       {menuOpen && (
         <div
-          className="md:hidden border-t px-4 py-4 flex flex-col gap-1"
-          style={{ background: 'var(--cream)', borderColor: 'var(--cream-dark)' }}
+          style={{ background: 'var(--cream)', borderTop: '1px solid var(--cream-dark)', borderBottom: '1px solid var(--cream-dark)', position: 'fixed', top: 72, left: 0, right: 0, zIndex: 50, boxShadow: '0 8px 24px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', gap: 4, padding: '16px' }}
         >
           {[
             { href: '/for-dentists', label: 'For dentists' },
             { href: '/search',       label: 'Write a review' },
-            { href: '/auth/login',   label: 'Sign in' },
+            { href: loggedIn ? '/auth/logout' : '/auth/login', label: loggedIn ? 'Log out' : 'Sign in' },
           ].map(({ href, label }) => (
             <Link
               key={href}
               href={href}
-              className="px-4 py-3 rounded-lg text-sm font-medium"
-              style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-soft)', textDecoration: 'none' }}
+              style={{ fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 500, color: 'var(--ink-soft)', textDecoration: 'none', padding: '12px 16px', borderRadius: 10 }}
               onClick={() => setMenuOpen(false)}
             >
               {label}
             </Link>
           ))}
           <Link
-            href="/search"
-            className="mt-1 px-4 py-3 rounded-xl text-sm font-semibold text-center transition-opacity hover:opacity-90"
-            style={{ fontFamily: 'var(--font-body)', background: 'var(--forest)', color: 'var(--cream)', textDecoration: 'none' }}
+            href="/find"
+            style={{ fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 600, color: 'var(--cream)', background: 'var(--forest)', textDecoration: 'none', padding: '12px 16px', borderRadius: 10, textAlign: 'center', marginTop: 4 }}
             onClick={() => setMenuOpen(false)}
           >
             Get matched
           </Link>
         </div>
       )}
-    </header>
+    </>
   );
 }

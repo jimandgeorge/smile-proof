@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+function getRedirectBase() {
+  return typeof window !== 'undefined'
+    ? window.location.origin
+    : (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000');
+}
 
 function GoogleIcon() {
   return (
@@ -29,9 +33,10 @@ export default function LoginPage() {
   const supabase = createClient();
 
   async function handleGoogleSignIn() {
+    const redirectBase = getRedirectBase();
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${SITE_URL}/auth/callback` },
+      options: { redirectTo: `${redirectBase}/auth/callback` },
     });
   }
 
@@ -39,12 +44,19 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push('/');
+      const { data: practice } = await supabase
+        .from('practices')
+        .select('slug')
+        .eq('claimed_by_user_id', authData.user.id)
+        .limit(1)
+        .maybeSingle();
+
+      router.push(practice?.slug ? `/practices/${practice.slug}/dashboard` : '/');
       router.refresh();
     }
   }

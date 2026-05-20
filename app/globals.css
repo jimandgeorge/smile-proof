@@ -12,6 +12,7 @@
   --ink-mid: #3d3d38;
   --ink-soft: #7a7a70;
   --ink-faint: #c8c8be;
+  --radius: 12px;
   --shadow-card: 0 2px 16px rgba(28,69,53,0.08), 0 1px 4px rgba(28,69,53,0.04);
   --shadow-hover: 0 8px 32px rgba(28,69,53,0.14), 0 2px 8px rgba(28,69,53,0.06);
   --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
@@ -38,6 +39,10 @@ html, body {
   color: var(--ink);
 }
 
+a, button, [role="button"], input, select, textarea, label {
+  touch-action: manipulation;
+}
+
 ::selection {
   background: var(--forest);
   color: white;
@@ -46,3 +51,49 @@ html, body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--ink-faint); border-radius: 3px; }
+
+.practice-profile-title {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 860px) {
+  .practice-profile-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .practice-profile-sidebar {
+    position: static !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .practice-profile-header-row {
+    flex-wrap: wrap;
+    gap: 16px !important;
+  }
+
+  .practice-profile-logo {
+    width: 64px !important;
+    height: 64px !important;
+    border-radius: 14px !important;
+    font-size: 26px !important;
+  }
+
+  .practice-profile-heading {
+    flex: 1 1 calc(100% - 80px);
+  }
+
+  .practice-profile-title {
+    font-size: 24px !important;
+  }
+
+  .practice-profile-score {
+    width: 100%;
+    text-align: left !important;
+  }
+
+  .practice-score-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+}

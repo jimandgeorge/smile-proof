@@ -3,7 +3,7 @@ import PricingSection from './PricingSection';
 
 export const metadata = {
   title: 'For Dental Practices | SmileProof',
-  description: 'Claim your free SmileProof listing. Respond to patient reviews, track your reputation, invite patients, and get found by new patients.',
+  description: 'Claim your free SmileProof listing. Respond to patient reviews, track your reputation, invite patients, and get found by new patients. Built for single practices and multi-location dental groups.',
 };
 
 // ── Tiny reusable mockup primitives ──────────────────────────────────────────
@@ -57,7 +57,7 @@ export default function ForDentistsPage() {
             Turn patient reviews into<br /><em>your biggest growth channel</em>
           </h1>
           <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.65)', lineHeight: 1.65, maxWidth: 500, margin: '0 auto 40px' }}>
-            SmileProof gives your practice a verified review profile — and a dashboard to respond, get insights, invite patients, and attract new enquiries.
+            SmileProof gives your practice a verified review profile — and a dashboard to respond, get insights, invite patients, and attract new enquiries. Built for single practices and multi-location dental groups.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link
@@ -85,6 +85,7 @@ export default function ForDentistsPage() {
             '✓ Verified reviews only',
             '✓ Respond publicly',
             '✓ AI-powered insights',
+            '✓ Dental groups supported',
           ].map(t => (
             <span key={t} style={{ fontSize: 13, color: 'var(--ink-soft)', fontWeight: 500 }}>{t}</span>
           ))}
@@ -420,26 +421,32 @@ export default function ForDentistsPage() {
             {
               icon: '◈',
               tier: 'Pro' as const,
-              title: 'Website badge',
+              title: 'Website badge embed',
               body: 'A one-line embed that shows your live SmileProof rating on your own website. Always current.',
             },
             {
               icon: '⬡',
               tier: 'Pro' as const,
-              title: 'AI sentiment themes',
-              body: 'AI surfaces recurring themes across your reviews — strengths to promote, concerns to address.',
-            },
-            {
-              icon: '⬡',
-              tier: 'Featured' as const,
-              title: 'In-depth AI summary',
-              body: 'A longer, richer AI summary shown prominently on your listing — covering treatments, staff, and patient fit.',
+              title: 'AI reputation intelligence',
+              body: 'AI surfaces recurring themes across your reviews — strengths to promote, concerns to address before they cost you patients.',
             },
             {
               icon: '★',
-              tier: 'Featured' as const,
-              title: 'Homepage placement',
-              body: 'Your practice appears in relevant homepage sections — NHS, anxiety-friendly, Invisalign — seen by every visitor.',
+              tier: 'Pro' as const,
+              title: 'Priority placement in treatment searches',
+              body: 'Your practice surfaces first when patients search by treatment — Invisalign, implants, NHS, anxiety-friendly, and more.',
+            },
+            {
+              icon: '◫',
+              tier: 'Group' as const,
+              title: 'Centralised group dashboard',
+              body: 'Manage all your locations from one place — ratings, new reviews, and response status across every practice.',
+            },
+            {
+              icon: '↗',
+              tier: 'Group' as const,
+              title: 'Cross-practice analytics',
+              body: 'See which locations are performing well and where to focus your attention — with group-level trend reports.',
             },
           ] as const).map((b) => {
             const tierStyle =
@@ -447,7 +454,7 @@ export default function ForDentistsPage() {
                 ? { bg: '#f4f1ec', color: '#888', label: 'Free' }
                 : b.tier === 'Pro'
                 ? { bg: 'var(--forest-pale)', color: 'var(--forest)', label: 'Pro' }
-                : { bg: '#fef3c7', color: '#92400e', label: 'Featured' };
+                : { bg: 'rgba(251,191,36,0.12)', color: '#92400e', label: 'Group' };
             return (
               <div key={b.title} style={{ background: 'white', border: '1.5px solid var(--cream-dark)', borderRadius: 'var(--radius)', padding: '20px 20px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -463,6 +470,57 @@ export default function ForDentistsPage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* ── Dental groups callout ─────────────────────────────────────────── */}
+      <section style={{ background: 'linear-gradient(160deg, #0d1f17 0%, #1a3829 100%)', borderTop: '1px solid rgba(251,191,36,0.15)', borderBottom: '1px solid rgba(251,191,36,0.1)' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto', padding: '64px 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 48, alignItems: 'center' }}>
+
+            {/* Text */}
+            <div>
+              <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#fbbf24', marginBottom: 14 }}>
+                For dental groups
+              </span>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(22px,3vw,30px)', fontWeight: 700, color: 'rgba(255,255,255,0.95)', lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: 16 }}>
+                Running more than one practice?
+              </h2>
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, marginBottom: 28 }}>
+                SmileProof works across your whole group — one dashboard, all your locations. See how each practice is performing, spot trends across the group, and manage your reputation from a single place.
+              </p>
+              <a
+                href="mailto:hello@smileproof.co.uk"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.9)',
+                  border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 8,
+                  padding: '12px 24px', fontSize: 14, fontWeight: 600, textDecoration: 'none',
+                }}
+              >
+                Talk to us →
+              </a>
+            </div>
+
+            {/* Feature list */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {[
+                { title: 'Centralised group dashboard', body: 'All your locations — ratings, reviews, and response status — in one place.' },
+                { title: 'Cross-practice analytics', body: 'Group-level reporting with per-location breakdowns. See what\'s working and where to focus.' },
+                { title: 'Group AI sentiment summary', body: 'Understand how your group is perceived across treatments and locations.' },
+                { title: 'Bulk patient invite tools', body: 'Send review invites at scale across all your practices with one workflow.' },
+              ].map(({ title, body }) => (
+                <div key={title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fbbf24', flexShrink: 0, marginTop: 7 }} />
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.9)', marginBottom: 2, fontFamily: 'var(--font-display)' }}>{title}</p>
+                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55 }}>{body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
         </div>
       </section>
 
@@ -512,11 +570,15 @@ export default function ForDentistsPage() {
           {[
             {
               q: 'Is it really free?',
-              a: 'Claiming your listing, responding to reviews, and your basic dashboard are free forever. The patient invite tool, website badge, AI sentiment themes, and extended analytics are Pro (£99/month). Homepage featured placement and in-depth AI summaries are Featured (£149/month).',
+              a: 'Yes — claiming your listing, responding to reviews, and your basic dashboard are free forever. Pro (£99/month) adds the patient invite tool, consultation enquiry capture, AI reputation intelligence, priority treatment search placement, live trust badge, and extended analytics. Group pricing is custom — talk to us.',
+            },
+            {
+              q: 'Do you support multi-location practices?',
+              a: 'Yes. If you run more than one practice, we can set you up with a centralised group dashboard, cross-practice analytics, and reporting across all your locations. Pricing is based on the number of practices. Email hello@smileproof.co.uk to get started.',
             },
             {
               q: 'Can I cancel at any time?',
-              a: 'Yes — no contracts, no lock-in. Cancel Pro or Featured at any time and your account drops back to Free. Your listing, reviews, and responses stay intact.',
+              a: 'Yes — no contracts, no lock-in. Cancel Pro at any time and your account drops back to Starter. Your listing, reviews, and responses all stay intact.',
             },
             {
               q: 'Can I remove negative reviews?',
@@ -528,7 +590,7 @@ export default function ForDentistsPage() {
             },
             {
               q: 'What does the AI summary do?',
-              a: "Once you have enough reviews, SmileProof automatically generates a balanced summary of what patients say about your practice — shown publicly on your listing. Featured practices get a longer, in-depth version.",
+              a: "Once you have enough reviews, SmileProof automatically generates a balanced summary of what patients say about your practice — shown publicly on your listing. Pro practices get a longer, in-depth version that refreshes as new reviews arrive.",
             },
             {
               q: 'What if my practice is not listed?',
@@ -551,12 +613,20 @@ export default function ForDentistsPage() {
         <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.65)', maxWidth: 440, margin: '0 auto 36px', lineHeight: 1.65 }}>
           Claim your listing for free. No credit card. No contracts. Your dashboard is live in under a minute.
         </p>
-        <Link
-          href="/search"
-          style={{ display: 'inline-block', background: 'var(--cream)', color: 'var(--forest)', fontWeight: 700, fontSize: 15, padding: '14px 36px', borderRadius: 50, textDecoration: 'none' }}
-        >
-          Claim your practice free →
-        </Link>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Link
+            href="/search"
+            style={{ display: 'inline-block', background: 'var(--cream)', color: 'var(--forest)', fontWeight: 700, fontSize: 15, padding: '14px 32px', borderRadius: 50, textDecoration: 'none' }}
+          >
+            Claim your practice free →
+          </Link>
+          <a
+            href="mailto:hello@smileproof.co.uk"
+            style={{ display: 'inline-block', background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, fontSize: 15, padding: '14px 28px', borderRadius: 50, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.2)' }}
+          >
+            Dental group? Talk to us
+          </a>
+        </div>
       </section>
 
     </div>

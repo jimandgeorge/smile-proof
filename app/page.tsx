@@ -1,11 +1,12 @@
 import { createServerSupabase } from '@/lib/supabase';
 import HeroSection from './components/HeroSection';
 import InsightsStrip from './components/InsightsStrip';
+import TreatmentPathways from './components/TreatmentPathways';
 import BestForSection from './components/BestForSection';
+import LeadCaptureSection from './components/LeadCaptureSection';
 import TopClinicsSection from './components/TopClinicsSection';
 import MatchCTA from './components/MatchCTA';
-import ReviewCTA from './components/ReviewCTA';
-import ReviewNudge from './components/ReviewNudge';
+import HowItWorksSection from './components/HowItWorksSection';
 import type { PracticeCardData } from './components/PracticeCard';
 import type { BestForClinic } from './components/BestForSection';
 import type { InsightStats } from './components/InsightsStrip';
@@ -38,9 +39,9 @@ export default async function Home() {
   const insightStats: InsightStats = { totalReviews, avgOverall, verifiedPct };
   const reviewedIds = summaries.map((s) => s.practice_id);
 
-  const PRACTICE_SELECT = 'id, name, slug, city, address_line1, practice_type, website, claimed_by_user_id, ai_summary';
+  const PRACTICE_SELECT = 'id, name, slug, city, address_line1, practice_type, website, claimed_by_user_id, ai_summary, nhs_accepting';
 
-  const [reviewedRes, unreviewedRes, practiceServicesRes] = await Promise.all([
+  const [reviewedRes, unreviewedRes, practiceServicesRes, practiceCountRes] = await Promise.all([
     reviewedIds.length > 0
       ? supabase
           .from('practices')
@@ -57,7 +58,11 @@ export default async function Home() {
       .from('practice_services')
       .select('practice_id, services(slug, name)')
       .then(r => r, () => ({ data: null, error: null })),
+    supabase.from('practices').select('id', { count: 'exact', head: true }),
   ]);
+
+  const practiceCount = practiceCountRes.count ?? 0;
+  const heroStats = { practiceCount, avgOverall, reviewCount: totalReviews };
 
   // Group services by practice_id — gracefully empty if migration not yet applied
   const servicesByPractice = new Map<string, { slug: string; name: string }[]>();
@@ -82,6 +87,7 @@ export default async function Home() {
       avg_communication: s?.avg_communication  ?? null,
       avg_anxiety:       s?.avg_anxiety        ?? null,
       ai_summary:        p.ai_summary          ?? null,
+      nhs_accepting:     p.nhs_accepting       ?? null,
       services,
     };
   };
@@ -133,17 +139,26 @@ export default async function Home() {
   const earlyBadge  = 'New platform';
   const signalBadge = 'Early signals';
 
+  const PRACTICE_TYPE_LABELS: Record<string, string> = { nhs: 'NHS', private: 'Private', mixed: 'NHS & private' };
+
   const toBestFor = (p: PracticeCardData, fallback: string): BestForClinic => {
     const serviceNames = (p.services ?? []).map((s: any) => s.name);
-    const insight = p.ai_summary
-      ?? (serviceNames.length > 0 ? serviceNames.slice(0, 3).join(' · ') : fallback);
+    const showAI = !!p.ai_summary && ((p.review_count ?? 0) >= 5 || !!p.claimed_by_user_id);
+    const typeLabel = PRACTICE_TYPE_LABELS[p.practice_type] ?? null;
+    const fallbackParts = [...serviceNames.slice(0, 3), typeLabel].filter(Boolean) as string[];
+    const insight = showAI
+      ? p.ai_summary!
+      : fallbackParts.length > 0 ? fallbackParts.join(' · ') : fallback;
     return {
       name:            p.name,
       slug:            p.slug,
       rating:          p.avg_overall ?? null,
       location:        p.city ?? '',
       insight,
+      isAiInsight:     showAI,
       anxietyFriendly: (p.avg_anxiety ?? 0) >= 4 || (p.services ?? []).some((s: any) => s.slug === 'anxiety-friendly'),
+      isClaimed:       !!p.claimed_by_user_id,
+      reviewCount:     p.review_count ?? 0,
     };
   };
 
@@ -153,13 +168,19 @@ export default async function Home() {
 
   return (
     <div>
-      <HeroSection />
-      <ReviewNudge />
+      <HeroSection stats={heroStats} />
 
+      {/* Trust strip — "Helping patients choose confidently" */}
       <InsightsStrip stats={insightStats} />
 
+      {/* How it works */}
+      <HowItWorksSection />
+
+      {/* Treatment-first navigation */}
+      <TreatmentPathways />
+
       {/* Section 1 — nervous patients / first available section */}
-      <section className="mx-auto px-5 pt-12 sm:pt-16 pb-8" style={{ maxWidth: 1200 }}>
+      <section className="mx-auto px-5 py-16 sm:py-20" style={{ maxWidth: 1200 }}>
         {(() => {
           const anxietyByService = rankByService('anxiety-friendly');
           const eveningByService = rankByService('evening-appointments');
@@ -168,7 +189,7 @@ export default async function Home() {
             return (
               <BestForSection
                 title="Best for nervous patients"
-                subtitle="Practices rated highest for comfort and calm"
+                subtitle="Practices rated highest by patients for comfort and calm"
                 viewAllHref="/search?q=nervous"
                 clinics={topByAnxiety.map(p => toBestFor(p, 'Great for anxious patients, clear communication'))}
               />
@@ -177,7 +198,7 @@ export default async function Home() {
           if (anxietyByService.length > 0) {
             return (
               <BestForSection
-                title={isEarlyStage ? 'Clinics offering support for nervous patients' : 'Anxiety-friendly practices'}
+                title={isEarlyStage ? 'Clinics supporting nervous patients' : 'Anxiety-friendly practices'}
                 subtitle="Practices specialising in nervous and anxious patient care"
                 badge={isEarlyStage ? earlyBadge : signalBadge}
                 viewAllHref="/search?q=nervous"
@@ -188,18 +209,17 @@ export default async function Home() {
           if (eveningByService.length > 0) {
             return (
               <BestForSection
-                title="Clinics with evening appointments"
-                subtitle="Practices open outside standard working hours"
+                title="Clinics with flexible appointments"
+                subtitle="Practices open evenings and weekends"
                 badge={isEarlyStage ? earlyBadge : signalBadge}
                 clinics={eveningByService.map(p => toBestFor(p, 'Flexible appointment times available'))}
               />
             );
           }
-          // Guaranteed fallback: show first practices regardless of reviews or services
           return (
             <BestForSection
               title="Dental practices in England"
-              subtitle="Browse verified dental practices in your area"
+              subtitle="Verified practices — reviewed by real patients"
               badge={earlyBadge}
               viewAllHref="/search"
               clinics={allPractices.slice(0, 3).map(genericFallback)}
@@ -208,10 +228,13 @@ export default async function Home() {
         })()}
       </section>
 
-      <MatchCTA />
+      {/* Mid-page lead capture */}
+      <div id="get-matched">
+        <LeadCaptureSection />
+      </div>
 
-      {/* Section 2 — value / NHS / orthodontics */}
-      <section className="mx-auto px-5 pt-8 pb-12 sm:pb-16" style={{ maxWidth: 1200 }}>
+      {/* Section 2 — value / NHS / Invisalign */}
+      <section className="mx-auto px-5 py-16 sm:py-20" style={{ maxWidth: 1200 }}>
         {(() => {
           const nhsByService        = rankByService(['nhs', 'mixed-nhs-private']);
           const invisalignByService = rankByService('invisalign');
@@ -220,7 +243,7 @@ export default async function Home() {
             return (
               <BestForSection
                 title="Best value for money"
-                subtitle="Top-rated practices for transparent, fair pricing"
+                subtitle="Top-rated practices for transparent, fair pricing — based on patient scores"
                 viewAllHref="/search?q=value"
                 clinics={topByValue.map(p => toBestFor(p, 'Patients highlight great value and cost transparency'))}
               />
@@ -239,14 +262,13 @@ export default async function Home() {
           if (invisalignByService.length > 0) {
             return (
               <BestForSection
-                title="Clinics offering Invisalign"
-                subtitle="Practices providing Invisalign and clear aligner treatment"
+                title="Invisalign-certified practices"
+                subtitle="Practices offering clear aligner treatment — reviewed by real patients"
                 badge={isEarlyStage ? earlyBadge : signalBadge}
-                clinics={invisalignByService.map(p => toBestFor(p, 'Offers Invisalign treatment'))}
+                clinics={invisalignByService.map(p => toBestFor(p, 'Certified Invisalign provider'))}
               />
             );
           }
-          // Guaranteed fallback: show a different slice of practices to avoid repeating section 1
           const morePractices = allPractices.slice(3, 6);
           if (morePractices.length > 0) {
             return (
@@ -259,22 +281,23 @@ export default async function Home() {
               />
             );
           }
-          // If fewer than 4 practices total, section 1 is sufficient — hide section 2
           return null;
         })()}
       </section>
 
-      <ReviewCTA />
-
+      {/* Top rated */}
       <TopClinicsSection
         clinics={
           topRated.length > 0
             ? topRated.map(p => toBestFor(p, 'Highly rated by verified patients'))
             : allPractices.slice(0, 6).map(genericFallback)
         }
-        title={topRated.length > 0 ? 'Top-rated dentists in your area' : 'Practices to explore'}
-        eyebrow={topRated.length > 0 ? 'Top rated' : 'Browse'}
+        title={topRated.length > 0 ? 'Top-rated dentists' : 'Practices to explore'}
+        eyebrow={topRated.length > 0 ? 'Based on patient reviews' : 'Browse'}
       />
+
+      {/* Dentist CTA — at the bottom, out of the patient flow */}
+      <MatchCTA />
     </div>
   );
 }

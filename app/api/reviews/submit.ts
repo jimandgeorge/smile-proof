@@ -19,12 +19,14 @@ const ReviewSchema = z.object({
   rating_cost_transparency: z.coerce.number().int().min(1).max(5).optional().nullable(),
   rating_cleanliness: z.coerce.number().int().min(1).max(5).optional().nullable(),
   rating_anxiety_handling: z.coerce.number().int().min(1).max(5).optional().nullable(),
+  rating_treatment_results: z.coerce.number().int().min(1).max(5).optional().nullable(),
   title: z.string().max(120).optional(),
   body: z.string().min(30).max(4000),
   treatment_date: z.string().optional(), // YYYY-MM-DD
   // Optional price report
   price_amount_pounds: z.coerce.number().positive().optional(),
   price_payment_type: z.enum(['nhs', 'private', 'insurance']).optional(),
+  nhs_status: z.enum(['yes', 'no', 'unsure']).optional(),
 });
 
 export async function submitReview(_prevState: unknown, formData: FormData) {
@@ -52,9 +54,11 @@ export async function submitReview(_prevState: unknown, formData: FormData) {
       rating_cost_transparency: data.rating_cost_transparency ?? null,
       rating_cleanliness: data.rating_cleanliness ?? null,
       rating_anxiety_handling: data.rating_anxiety_handling ?? null,
+      rating_treatment_results: data.rating_treatment_results ?? null,
       title: data.title ?? null,
       body: data.body,
       treatment_date: data.treatment_date ?? null,
+      nhs_status: data.nhs_status ?? null,
     })
     .select('id')
     .single();

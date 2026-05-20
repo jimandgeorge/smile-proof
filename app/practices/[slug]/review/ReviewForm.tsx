@@ -10,6 +10,11 @@ type Practice = { id: string; name: string; city: string; slug: string };
 
 const STEPS = ['Practice', 'Treatment', 'Scores', 'Write', 'Price', 'Submit'] as const;
 
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const THIS_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: 7 }, (_, i) => THIS_YEAR - i);
+const PAYMENT_LABELS: Record<string, string> = { nhs: 'NHS', private: 'Private', insurance: 'Insurance' };
+
 type Scores = {
   rating_overall: number;
   rating_cleanliness: number;
@@ -17,6 +22,7 @@ type Scores = {
   rating_pain_management: number;
   rating_communication: number;
   rating_anxiety_handling: number;
+  rating_treatment_results: number;
 };
 
 type FormState = {
@@ -30,15 +36,17 @@ type FormState = {
   treatment_date: string;
   price_amount: string;
   price_payment_type: 'nhs' | 'private' | 'insurance' | '';
+  nhs_status: 'yes' | 'no' | 'unsure' | '';
   followup_opted_in: boolean;
 };
 
 const SCORE_DIMS: { key: keyof Omit<Scores, 'rating_overall'>; label: string; desc: string }[] = [
-  { key: 'rating_cleanliness',        label: 'Cleanliness',      desc: 'How clean and hygienic was the practice?' },
-  { key: 'rating_cost_transparency',  label: 'Value for Money',  desc: 'Were you happy with the cost?' },
-  { key: 'rating_pain_management',    label: 'Pain Management',  desc: 'Was discomfort well-managed?' },
-  { key: 'rating_communication',      label: 'Staff Friendliness', desc: 'How were you made to feel?' },
-  { key: 'rating_anxiety_handling',   label: 'Anxiety Handling', desc: 'Did the team help with any nerves?' },
+  { key: 'rating_cleanliness',        label: 'Staff Friendliness',  desc: 'How friendly and welcoming was the team?' },
+  { key: 'rating_communication',      label: 'Communication',        desc: 'How well did they explain your treatment?' },
+  { key: 'rating_anxiety_handling',   label: 'Anxiety Handling',     desc: 'Did the team help with any nerves?' },
+  { key: 'rating_pain_management',    label: 'Pain Management',      desc: 'Was discomfort well-managed?' },
+  { key: 'rating_cost_transparency',  label: 'Value for Money',      desc: 'Were you happy with the cost?' },
+  { key: 'rating_treatment_results',  label: 'Treatment Results',    desc: 'How happy are you with the outcome?' },
 ];
 
 function StarRating({
@@ -163,7 +171,7 @@ export function ReviewForm({
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>({
     treatment_id: '',
-    scores: { rating_overall: 0, rating_cleanliness: 0, rating_cost_transparency: 0, rating_pain_management: 0, rating_communication: 0, rating_anxiety_handling: 0 },
+    scores: { rating_overall: 0, rating_cleanliness: 0, rating_cost_transparency: 0, rating_pain_management: 0, rating_communication: 0, rating_anxiety_handling: 0, rating_treatment_results: 0 },
     title: '',
     body: '',
     reviewer_display_name: '',
@@ -172,6 +180,7 @@ export function ReviewForm({
     treatment_date: '',
     price_amount: '',
     price_payment_type: '',
+    nhs_status: '',
     followup_opted_in: false,
   });
 
@@ -326,7 +335,11 @@ export function ReviewForm({
                   <button
                     key={type}
                     type="button"
-                    onClick={() => setForm((f) => ({ ...f, price_payment_type: f.price_payment_type === type ? '' : type }))}
+                    onClick={() => setForm((f) => ({
+                      ...f,
+                      price_payment_type: f.price_payment_type === type ? '' : type,
+                      nhs_status: type === 'nhs' ? 'yes' : f.nhs_status,
+                    }))}
                     style={{
                       flex: 1, padding: '10px 0', borderRadius: 8, border: '1.5px solid',
                       borderColor: form.price_payment_type === type ? 'var(--forest)' : 'var(--cream-dark)',
@@ -334,10 +347,39 @@ export function ReviewForm({
                       cursor: 'pointer', fontSize: 13, fontFamily: 'var(--font-body)',
                       fontWeight: form.price_payment_type === type ? 600 : 400,
                       color: form.price_payment_type === type ? 'var(--forest)' : 'var(--ink-mid)',
-                      textTransform: 'capitalize', transition: 'all var(--transition)',
+                      transition: 'all var(--transition)',
                     }}
                   >
-                    {type}
+                    {PAYMENT_LABELS[type]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* NHS availability */}
+            <div>
+              <label style={LABEL_STYLE}>Was this practice accepting NHS patients?</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {([
+                  { value: 'yes',    label: 'Yes' },
+                  { value: 'no',     label: 'No' },
+                  { value: 'unsure', label: 'Not sure' },
+                ] as const).map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, nhs_status: f.nhs_status === value ? '' : value }))}
+                    style={{
+                      flex: 1, padding: '10px 0', borderRadius: 8, border: '1.5px solid',
+                      borderColor: form.nhs_status === value ? 'var(--forest)' : 'var(--cream-dark)',
+                      background: form.nhs_status === value ? 'var(--forest-pale)' : 'white',
+                      cursor: 'pointer', fontSize: 13, fontFamily: 'var(--font-body)',
+                      fontWeight: form.nhs_status === value ? 600 : 400,
+                      color: form.nhs_status === value ? 'var(--forest)' : 'var(--ink-mid)',
+                      transition: 'all var(--transition)',
+                    }}
+                  >
+                    {label}
                   </button>
                 ))}
               </div>
@@ -363,12 +405,35 @@ export function ReviewForm({
             {/* Date */}
             <div>
               <label style={LABEL_STYLE}>Date of treatment</label>
-              <input
-                type="month"
-                value={form.treatment_date}
-                onChange={(e) => setForm((f) => ({ ...f, treatment_date: e.target.value ? e.target.value + '-01' : '' }))}
-                style={INPUT_STYLE}
-              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <select
+                  value={form.treatment_date ? form.treatment_date.split('-')[1] ?? '' : ''}
+                  onChange={(e) => {
+                    const year = form.treatment_date ? form.treatment_date.split('-')[0] : THIS_YEAR.toString();
+                    setForm((f) => ({ ...f, treatment_date: e.target.value ? `${year}-${e.target.value}` : '' }));
+                  }}
+                  style={{ ...INPUT_STYLE, flex: 1 }}
+                >
+                  <option value="">Month</option>
+                  {MONTHS.map((name, i) => {
+                    const val = String(i + 1).padStart(2, '0');
+                    return <option key={val} value={val}>{name}</option>;
+                  })}
+                </select>
+                <select
+                  value={form.treatment_date ? form.treatment_date.split('-')[0] ?? '' : ''}
+                  onChange={(e) => {
+                    const month = form.treatment_date ? (form.treatment_date.split('-')[1] ?? '01') : '01';
+                    setForm((f) => ({ ...f, treatment_date: e.target.value ? `${e.target.value}-${month}` : '' }));
+                  }}
+                  style={{ ...INPUT_STYLE, flex: '0 0 110px' }}
+                >
+                  <option value="">Year</option>
+                  {YEARS.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* NHS band info */}
@@ -444,12 +509,14 @@ export function ReviewForm({
             <input type="hidden" name="rating_pain_management" value={form.scores.rating_pain_management} />
             <input type="hidden" name="rating_communication" value={form.scores.rating_communication} />
             <input type="hidden" name="rating_anxiety_handling" value={form.scores.rating_anxiety_handling} />
+            <input type="hidden" name="rating_treatment_results" value={form.scores.rating_treatment_results} />
             <input type="hidden" name="title" value={form.title} />
             <input type="hidden" name="body" value={form.body} />
             <input type="hidden" name="reviewer_display_name" value={form.anonymous ? '' : form.reviewer_display_name} />
-            {form.treatment_date && <input type="hidden" name="treatment_date" value={form.treatment_date} />}
+            {form.treatment_date && <input type="hidden" name="treatment_date" value={form.treatment_date + '-01'} />}
             {form.price_amount && <input type="hidden" name="price_amount_pounds" value={form.price_amount} />}
             {form.price_payment_type && <input type="hidden" name="price_payment_type" value={form.price_payment_type} />}
+            {form.nhs_status && <input type="hidden" name="nhs_status" value={form.nhs_status} />}
             <input type="hidden" name="followup_opted_in" value={String(form.followup_opted_in)} />
 
             <div style={{ marginBottom: 16 }}>
