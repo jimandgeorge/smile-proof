@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { requestClaim } from './actions';
+import { requestClaim, verifyWebsiteClaim } from './actions';
 
 type Step = 1 | 2 | 3;
 type Method = 'email' | 'website' | 'manual';
@@ -135,17 +135,21 @@ export function ClaimForm({
   practiceName,
   practiceCity,
   practiceSlug,
+  practiceWebsite,
 }: {
   practiceId: string;
   practiceName: string;
   practiceCity: string;
   practiceSlug: string;
+  practiceWebsite: string | null;
 }) {
   const [step, setStep] = useState<Step>(1);
   const [method, setMethod] = useState<Method>('email');
   const [email, setEmail] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState(practiceWebsite ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const snippet = `<meta name="smileproof-verification" content="sp-${practiceId}" />`;
 
   function initials(name: string) {
     return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -260,7 +264,6 @@ export function ClaimForm({
 
   // ── Step 2: Verify ownership ─────────────────────────────────────────────
   if (step === 2) {
-    const isManualOrWebsite = method === 'website' || method === 'manual';
     return (
       <div>
         <button
@@ -332,15 +335,102 @@ export function ClaimForm({
             </form>
           )}
 
-          {isManualOrWebsite && (
+          {method === 'website' && (
+            <form onSubmit={async e => {
+              e.preventDefault();
+              setSubmitting(true);
+              setError(null);
+              const res = await verifyWebsiteClaim(practiceId, email, websiteUrl);
+              if (res.error) { setError(res.error); setSubmitting(false); }
+              else setStep(3);
+              setSubmitting(false);
+            }}>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 8, fontFamily: 'var(--font-body)' }}>
+                1. Add this to your homepage &lt;head&gt;
+              </label>
+              <div style={{ position: 'relative', marginBottom: 16 }}>
+                <code style={{
+                  display: 'block', background: 'var(--cream)', border: '1.5px solid var(--cream-dark)',
+                  borderRadius: 8, padding: '12px 44px 12px 14px', fontSize: 12,
+                  fontFamily: 'monospace', color: 'var(--ink)', wordBreak: 'break-all', lineHeight: 1.6,
+                }}>
+                  {snippet}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText(snippet)}
+                  title="Copy"
+                  style={{
+                    position: 'absolute', top: 10, right: 10, background: 'none', border: 'none',
+                    cursor: 'pointer', color: 'var(--ink-soft)', padding: 4,
+                  }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
+                    <rect x="7" y="7" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M13 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </div>
+
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 8, fontFamily: 'var(--font-body)' }}>
+                2. Your website URL
+              </label>
+              <input
+                type="url"
+                required
+                value={websiteUrl}
+                onChange={e => setWebsiteUrl(e.target.value)}
+                placeholder="https://yourpractice.co.uk"
+                style={{
+                  width: '100%', border: '1.5px solid var(--cream-dark)', borderRadius: 8,
+                  padding: '10px 14px', fontSize: 14, fontFamily: 'var(--font-body)', color: 'var(--ink)',
+                  outline: 'none', background: 'white', boxSizing: 'border-box', marginBottom: 8,
+                }}
+              />
+
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 8, marginTop: 12, fontFamily: 'var(--font-body)' }}>
+                3. Your email address
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@yourpractice.co.uk"
+                style={{
+                  width: '100%', border: '1.5px solid var(--cream-dark)', borderRadius: 8,
+                  padding: '10px 14px', fontSize: 14, fontFamily: 'var(--font-body)', color: 'var(--ink)',
+                  outline: 'none', background: 'white', boxSizing: 'border-box', marginBottom: 16,
+                }}
+              />
+
+              {error && (
+                <p style={{ fontSize: 13, color: '#c0392b', background: '#fdf2f2', border: '1px solid #f5c6cb', borderRadius: 8, padding: '10px 14px', marginBottom: 16 }}>
+                  {error}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={submitting}
+                style={{
+                  width: '100%', padding: '14px', borderRadius: 10,
+                  background: submitting ? 'var(--ink-faint)' : 'var(--forest)',
+                  color: 'white', border: 'none', fontSize: 15, fontWeight: 700,
+                  fontFamily: 'var(--font-body)', cursor: submitting ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {submitting ? 'Checking your site…' : 'Verify and claim →'}
+              </button>
+            </form>
+          )}
+
+          {method === 'manual' && (
             <div>
               <div style={{ background: 'var(--cream)', border: '1px solid var(--cream-dark)', borderRadius: 8, padding: '14px 16px', marginBottom: 20, fontSize: 13, color: 'var(--ink-soft)', fontFamily: 'var(--font-body)', lineHeight: 1.5 }}>
-                {method === 'website'
-                  ? 'Website verification is coming soon. In the meantime, please use email or request manual review.'
-                  : "Email us with your GDC number or practice documentation and we’ll verify you within 2–3 business days."}
+                Email us with your GDC number or practice documentation and we'll verify you within 2–3 business days.
               </div>
               <a
-                href={`mailto:hello@smileproof.co.uk?subject=Practice claim — ${encodeURIComponent(practiceName)}&body=Hi, I'd like to claim ${encodeURIComponent(practiceName)} via ${method === 'manual' ? 'manual review' : 'website verification'}.`}
+                href={`mailto:hello@smileproof.co.uk?subject=Practice claim — ${encodeURIComponent(practiceName)}&body=Hi, I'd like to claim ${encodeURIComponent(practiceName)} via manual review.`}
                 style={{
                   display: 'block', width: '100%', padding: '14px', borderRadius: 10,
                   background: 'var(--forest)', color: 'white', fontSize: 15, fontWeight: 700,

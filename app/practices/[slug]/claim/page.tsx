@@ -11,7 +11,7 @@ export default async function ClaimPage({ params }: Params) {
 
   const { data: practice } = await supabase
     .from('practices')
-    .select('id, name, city, postcode, claimed_by_user_id')
+    .select('id, name, city, postcode, website, claimed_by_user_id')
     .eq('slug', slug)
     .single();
 
@@ -62,6 +62,7 @@ export default async function ClaimPage({ params }: Params) {
         practiceName={practice.name}
         practiceCity={`${practice.city}${practice.postcode ? `, ${practice.postcode}` : ''}`}
         practiceSlug={slug}
+        practiceWebsite={(practice as any).website ?? null}
       />
     </main>
   );
