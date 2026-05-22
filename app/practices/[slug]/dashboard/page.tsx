@@ -11,7 +11,14 @@ export default async function DashboardPage({ params }: Params) {
   const supabase = await createServerSupabase();
 
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: { session } } = await supabase.auth.getSession();
+  // getSession() returns null when the access token in cookies is expired,
+  // even though getUser() succeeds (it auto-refreshes internally).
+  // Fall back to refreshSession() which uses the long-lived refresh token.
+  let { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    const { data } = await supabase.auth.refreshSession();
+    session = data.session;
+  }
 
   const { data: practice, error } = await admin
     .from('practices')

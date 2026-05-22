@@ -309,13 +309,18 @@ export default function DashboardShell({
   const [accessToken, setAccessToken] = useState(initialAccessToken);
 
   useEffect(() => {
-    import('@/lib/supabase').then(({ createClient }) => {
-      const supabase = createClient();
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-        if (session?.access_token) setAccessToken(session.access_token);
-      });
-      return () => subscription.unsubscribe();
-    });
+    // Refresh the token every 50 minutes (tokens expire after 1 hour).
+    // Also listen for auth state changes (e.g. sign-out).
+    async function refreshToken() {
+      const res = await fetch('/api/auth/token');
+      if (res.ok) {
+        const { access_token } = await res.json();
+        if (access_token) setAccessToken(access_token);
+      }
+    }
+    refreshToken();
+    const interval = setInterval(refreshToken, 50 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
   const unreadEnquiries = enquiries.filter(e => !e.read_at).length;
 
