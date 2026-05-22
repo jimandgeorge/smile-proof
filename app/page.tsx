@@ -13,6 +13,9 @@ import type { InsightStats } from './components/InsightsStrip';
 
 const HOME_LIMIT = 40;
 
+const stripHeading = (s: string | null | undefined) =>
+  s ? s.replace(/^#+\s+[^\n]*\n+/, '').trim() || null : null;
+
 // ── Thresholds (configurable) ─────────────────────────────────────────────
 const PLATFORM_REVIEW_THRESHOLD = 20; // below this → service-based sections
 const MIN_REVIEWS_FOR_SECTION   = 5;  // per-practice minimum for review ranking
@@ -91,7 +94,7 @@ export default async function Home() {
       avg_cost:          s?.avg_cost           ?? null,
       avg_communication: s?.avg_communication  ?? null,
       avg_anxiety:       s?.avg_anxiety        ?? null,
-      ai_summary:        aiSummaryMap[p.id] ?? p.ai_summary ?? null,
+      ai_summary:        stripHeading(aiSummaryMap[p.id] ?? p.ai_summary ?? null),
       nhs_accepting:     p.nhs_accepting       ?? null,
       services,
     };

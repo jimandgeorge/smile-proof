@@ -4,6 +4,9 @@ import PracticeCard, { PracticeCardData } from '@/app/components/PracticeCard';
 import LocationButton from './LocationButton';
 
 const PAGE_SIZE = 20;
+
+const stripHeading = (s: string | null | undefined) =>
+  s ? s.replace(/^#+\s+[^\n]*\n+/, '').trim() || null : null;
 const UK_POSTCODE_FULL    = /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/i;
 const UK_POSTCODE_OUTWARD = /^[A-Z]{1,2}\d[A-Z\d]?$/i;
 
@@ -93,7 +96,7 @@ async function searchByPostcodePrefix(outwardCode: string): Promise<PracticeCard
       avg_cost:          s?.avg_cost           ?? null,
       avg_communication: s?.avg_communication  ?? null,
       avg_anxiety:       s?.avg_anxiety        ?? null,
-      ai_summary:        aiSummaryMap[p.id] ?? (p as any).ai_summary ?? null,
+      ai_summary:        stripHeading(aiSummaryMap[p.id] ?? (p as any).ai_summary) ?? null,
       services:          servicesByPractice.get(p.id) ?? [],
     };
   });
@@ -140,7 +143,7 @@ async function searchByText(query: string): Promise<PracticeCardData[]> {
       avg_cost:          s?.avg_cost           ?? null,
       avg_communication: s?.avg_communication  ?? null,
       avg_anxiety:       s?.avg_anxiety        ?? null,
-      ai_summary:        aiSummaryMap[p.id] ?? (p as any).ai_summary ?? null,
+      ai_summary:        stripHeading(aiSummaryMap[p.id] ?? (p as any).ai_summary) ?? null,
       services:          servicesByPractice.get(p.id) ?? [],
     };
   });
