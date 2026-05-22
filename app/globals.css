@@ -13,7 +13,7 @@
   --ink-soft: #7a7a70;
   --ink-faint: #c8c8be;
   --radius: 12px;
-  --shadow-card: 0 2px 16px rgba(28,69,53,0.08), 0 1px 4px rgba(28,69,53,0.04);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.05);
   --shadow-hover: 0 8px 32px rgba(28,69,53,0.14), 0 2px 8px rgba(28,69,53,0.06);
   --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
