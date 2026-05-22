@@ -140,6 +140,8 @@ export async function generatePracticeSummary(
     ],
   });
 
-  const text = response.content.find((b) => b.type === 'text');
-  return text?.text ?? null;
+  const raw = response.content.find((b) => b.type === 'text')?.text ?? null;
+  if (!raw) return null;
+  // Strip any leading markdown heading lines (e.g. "# Patient Reviews Summary\n")
+  return raw.replace(/^#+\s+[^\n]*\n+/, '').trim() || null;
 }
