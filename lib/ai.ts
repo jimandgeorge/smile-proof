@@ -95,16 +95,19 @@ export async function maybeRefreshPracticeSummary(practiceId: string): Promise<v
   const text = await generatePracticeSummary(practiceResult.data.name, reviews, isFeatured);
   if (!text) return;
 
-  await admin.from('practice_ai_summaries').upsert(
-    {
-      practice_id: practiceId,
-      summary: text,
-      review_count_at_generation: reviewCount,
-      last_generated_at: new Date().toISOString(),
-      generated_for_featured: isFeatured,
-    },
-    { onConflict: 'practice_id' },
-  );
+  await Promise.all([
+    admin.from('practice_ai_summaries').upsert(
+      {
+        practice_id: practiceId,
+        summary: text,
+        review_count_at_generation: reviewCount,
+        last_generated_at: new Date().toISOString(),
+        generated_for_featured: isFeatured,
+      },
+      { onConflict: 'practice_id' },
+    ),
+    admin.from('practices').update({ ai_summary: text }).eq('id', practiceId),
+  ]);
 }
 
 export async function generatePracticeSummary(
