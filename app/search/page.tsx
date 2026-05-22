@@ -47,9 +47,14 @@ function extractOutwardCode(postcode: string): string {
   return spaceIdx > 0 ? upper.slice(0, spaceIdx) : upper.slice(0, 4);
 }
 
+async function fetchAiSummaryMap(supabase: Awaited<ReturnType<typeof createServerSupabase>>) {
+  const { data } = await supabase.from('practice_ai_summaries').select('practice_id, summary');
+  return Object.fromEntries((data ?? []).map((r: any) => [r.practice_id, r.summary as string]));
+}
+
 async function searchByPostcodePrefix(outwardCode: string): Promise<PracticeCardData[]> {
   const supabase = await createServerSupabase();
-  const [practicesRes, summariesRes, servicesRes] = await Promise.all([
+  const [practicesRes, summariesRes, servicesRes, aiSummaryMap] = await Promise.all([
     supabase
       .from('practices')
       .select('id, slug, name, city, address_line1, practice_type, website, claimed_by_user_id, ai_summary')
@@ -62,6 +67,7 @@ async function searchByPostcodePrefix(outwardCode: string): Promise<PracticeCard
     supabase
       .from('practice_services')
       .select('practice_id, services(slug, name)'),
+    fetchAiSummaryMap(supabase),
   ]);
 
   const summaryMap: Record<string, any> = {};
@@ -87,6 +93,7 @@ async function searchByPostcodePrefix(outwardCode: string): Promise<PracticeCard
       avg_cost:          s?.avg_cost           ?? null,
       avg_communication: s?.avg_communication  ?? null,
       avg_anxiety:       s?.avg_anxiety        ?? null,
+      ai_summary:        aiSummaryMap[p.id] ?? (p as any).ai_summary ?? null,
       services:          servicesByPractice.get(p.id) ?? [],
     };
   });
@@ -94,7 +101,7 @@ async function searchByPostcodePrefix(outwardCode: string): Promise<PracticeCard
 
 async function searchByText(query: string): Promise<PracticeCardData[]> {
   const supabase = await createServerSupabase();
-  const [practicesRes, summariesRes, servicesRes] = await Promise.all([
+  const [practicesRes, summariesRes, servicesRes, aiSummaryMap] = await Promise.all([
     supabase
       .from('practices')
       .select('id, slug, name, city, address_line1, practice_type, website, claimed_by_user_id, ai_summary')
@@ -107,6 +114,7 @@ async function searchByText(query: string): Promise<PracticeCardData[]> {
     supabase
       .from('practice_services')
       .select('practice_id, services(slug, name)'),
+    fetchAiSummaryMap(supabase),
   ]);
 
   const summaryMap: Record<string, any> = {};
@@ -132,6 +140,7 @@ async function searchByText(query: string): Promise<PracticeCardData[]> {
       avg_cost:          s?.avg_cost           ?? null,
       avg_communication: s?.avg_communication  ?? null,
       avg_anxiety:       s?.avg_anxiety        ?? null,
+      ai_summary:        aiSummaryMap[p.id] ?? (p as any).ai_summary ?? null,
       services:          servicesByPractice.get(p.id) ?? [],
     };
   });

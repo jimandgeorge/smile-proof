@@ -41,7 +41,7 @@ export default async function Home() {
 
   const PRACTICE_SELECT = 'id, name, slug, city, address_line1, practice_type, website, claimed_by_user_id, ai_summary, nhs_accepting';
 
-  const [reviewedRes, unreviewedRes, practiceServicesRes, practiceCountRes] = await Promise.all([
+  const [reviewedRes, unreviewedRes, practiceServicesRes, practiceCountRes, aiSummariesRes] = await Promise.all([
     reviewedIds.length > 0
       ? supabase
           .from('practices')
@@ -59,10 +59,15 @@ export default async function Home() {
       .select('practice_id, services(slug, name)')
       .then(r => r, () => ({ data: null, error: null })),
     supabase.from('practices').select('id', { count: 'exact', head: true }),
+    supabase.from('practice_ai_summaries').select('practice_id, summary'),
   ]);
 
   const practiceCount = practiceCountRes.count ?? 0;
   const heroStats = { practiceCount, avgOverall, reviewCount: totalReviews };
+
+  const aiSummaryMap = Object.fromEntries(
+    (aiSummariesRes.data ?? []).map((r: any) => [r.practice_id, r.summary as string])
+  );
 
   // Group services by practice_id — gracefully empty if migration not yet applied
   const servicesByPractice = new Map<string, { slug: string; name: string }[]>();
@@ -86,7 +91,7 @@ export default async function Home() {
       avg_cost:          s?.avg_cost           ?? null,
       avg_communication: s?.avg_communication  ?? null,
       avg_anxiety:       s?.avg_anxiety        ?? null,
-      ai_summary:        p.ai_summary          ?? null,
+      ai_summary:        aiSummaryMap[p.id] ?? p.ai_summary ?? null,
       nhs_accepting:     p.nhs_accepting       ?? null,
       services,
     };
