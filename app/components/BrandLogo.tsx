@@ -5,7 +5,7 @@ type BrandLogoProps = {
 };
 
 export default function BrandLogo({ size = 'nav' }: BrandLogoProps) {
-  const width = size === 'nav' ? 170 : 145;
+  const width = size === 'nav' ? 153 : 145;
   const height = Math.round(width * 370 / 2000);
 
   return (
