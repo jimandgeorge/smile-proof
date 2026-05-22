@@ -43,7 +43,7 @@ export function ClinicCard({ clinic }: { clinic: BestForClinic }) {
         display: 'flex',
         flexDirection: 'column',
         gap: 14,
-        boxShadow: hovered ? '0 6px 24px rgba(28,69,53,0.1)' : isClaimed ? '0 2px 10px rgba(28,69,53,0.06)' : 'none',
+        boxShadow: hovered ? 'var(--shadow-hover)' : isClaimed ? 'var(--shadow-card)' : 'none',
         transition: 'border-color 0.15s, box-shadow 0.15s',
         height: '100%',
         boxSizing: 'border-box',
