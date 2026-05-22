@@ -3,6 +3,7 @@
 import { useState, useContext } from 'react';
 import { respondToReview, generateReviewResponse } from './actions';
 import { AccessTokenContext } from './token-context';
+import { Sun, Lock } from 'lucide-react';
 
 export function ResponseForm({
   reviewId,
@@ -88,9 +89,7 @@ export function ResponseForm({
               fontFamily: 'var(--font-body)', cursor: generating ? 'not-allowed' : 'pointer',
             }}
           >
-            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-              <path d="M6 1v2M6 9v2M1 6h2M9 6h2M2.5 2.5l1.4 1.4M8.1 8.1l1.4 1.4M2.5 9.5l1.4-1.4M8.1 3.9l1.4-1.4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-            </svg>
+            <Sun size={11} strokeWidth={1.3} />
             {generating ? 'Generating…' : 'Generate with AI'}
           </button>
         ) : (
@@ -106,10 +105,7 @@ export function ResponseForm({
               textDecoration: 'none',
             }}
           >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+            <Lock size={10} strokeWidth={2} />
             AI replies — Pro
           </a>
         )}

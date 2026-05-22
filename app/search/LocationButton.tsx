@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Crosshair } from 'lucide-react';
 
 export default function LocationButton({ radius = 10 }: { radius?: number }) {
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
@@ -65,13 +66,7 @@ export default function LocationButton({ radius = 10 }: { radius?: number }) {
         transition: 'all 0.15s',
       }}
     >
-      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
-        <circle cx="7" cy="7" r="3" stroke="currentColor" strokeWidth="1.4" />
-        <line x1="7" y1="1" x2="7" y2="3.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-        <line x1="7" y1="10.8" x2="7" y2="13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-        <line x1="1" y1="7" x2="3.2" y2="7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-        <line x1="10.8" y1="7" x2="13" y2="7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      </svg>
+      <Crosshair size={13} strokeWidth={1.5} aria-hidden />
       {state === 'loading' ? 'Locating...' : 'Use my location'}
     </button>
   );

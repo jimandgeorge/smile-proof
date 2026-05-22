@@ -3,6 +3,7 @@
 import { useState, useTransition, useContext } from 'react';
 import { generateOpportunityInsights } from './actions';
 import type { OpportunityInsightData } from './actions';
+import { CheckCircle, AlertTriangle, Star } from 'lucide-react';
 import { AccessTokenContext } from './token-context';
 
 type Props = {
@@ -57,10 +58,7 @@ function StrengthCard({ text, category, mentionCount }: { text: string; category
       borderRadius: 10, padding: '14px 16px',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-          <circle cx="7" cy="7" r="6.5" fill="#16a34a" />
-          <path d="M4.5 7l1.8 1.8 3.2-3.2" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <CheckCircle size={14} strokeWidth={1.4} style={{ color: '#16a34a' }} aria-hidden />
         <span style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', fontFamily: 'var(--font-body)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           {CATEGORY_LABELS[category] ?? category}
         </span>
@@ -84,10 +82,7 @@ function WeaknessCard({ text, category, pctMentions }: { text: string; category:
       borderRadius: 10, padding: '14px 16px',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-          <path d="M7 1.5L13 12.5H1L7 1.5z" fill="#d97706" />
-          <path d="M7 5.5v3M7 10v.5" stroke="white" strokeWidth="1.3" strokeLinecap="round" />
-        </svg>
+        <AlertTriangle size={14} strokeWidth={1.3} style={{ color: '#d97706' }} aria-hidden />
         <span style={{ fontSize: 11, fontWeight: 700, color: '#92400e', fontFamily: 'var(--font-body)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           {CATEGORY_LABELS[category] ?? category}
         </span>
@@ -220,9 +215,7 @@ export default function OpportunitiesTab({ practiceId, practiceSlug, reviewCount
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 20px',
           }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M12 3l1.8 5.5H19l-4.6 3.3 1.7 5.5L12 14l-4.1 3.3 1.7-5.5L5 8.5h5.2z" stroke="var(--forest)" strokeWidth="1.5" strokeLinejoin="round" />
-            </svg>
+            <Star size={24} strokeWidth={1.5} style={{ color: 'var(--forest)' }} aria-hidden />
           </div>
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, color: 'var(--ink)', marginBottom: 10 }}>
             Generate your practice intelligence report
@@ -329,10 +322,7 @@ export default function OpportunitiesTab({ practiceId, practiceSlug, reviewCount
           background: '#fffbeb', border: '1px solid #fde68a',
           borderRadius: 10, padding: '10px 14px', marginBottom: 20,
         }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-            <path d="M7 1.5L13 12.5H1L7 1.5z" fill="#d97706" />
-            <path d="M7 5.5v3M7 10v.5" stroke="white" strokeWidth="1.3" strokeLinecap="round" />
-          </svg>
+          <AlertTriangle size={14} strokeWidth={1.3} style={{ color: '#d97706' }} aria-hidden />
           <p style={{ fontSize: 13, color: '#92400e', fontFamily: 'var(--font-body)', margin: 0, flex: 1 }}>
             {newReviewsSince} new review{newReviewsSince !== 1 ? 's' : ''} since your last report — refresh for updated insights.
           </p>

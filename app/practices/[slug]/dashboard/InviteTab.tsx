@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition, useRef, useContext } from 'react';
+import { CheckCircle } from 'lucide-react';
 import { sendReviewInvite } from './actions';
 import { AccessTokenContext } from './token-context';
 
@@ -105,10 +106,7 @@ export default function InviteTab({ practiceId, practiceSlug, practiceName, invi
             )}
             {success && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: D.accent, marginBottom: 12, fontFamily: 'var(--font-body)', fontWeight: 600 }}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <circle cx="8" cy="8" r="7" fill={D.accentPale} stroke={D.accent} strokeWidth="1.3" />
-                  <path d="M5 8l2.5 2.5L12 5.5" stroke={D.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <CheckCircle size={16} strokeWidth={1.5} style={{ color: D.accent }} />
                 Invite sent successfully!
               </div>
             )}

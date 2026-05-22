@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Eye, EyeOff, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 
 export default function ResetPasswordPage() {
@@ -82,9 +83,7 @@ export default function ResetPasswordPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 24px',
               }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                  <polyline points="20,6 9,17 4,12" stroke="var(--forest)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <Check size={28} strokeWidth={2} style={{ color: 'var(--forest)' }} />
               </div>
               <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 800, color: 'var(--ink)', margin: '0 0 12px', letterSpacing: '-0.02em' }}>
                 Password updated.
@@ -136,17 +135,7 @@ export default function ResetPasswordPage() {
                       onClick={() => setShowPassword(p => !p)}
                       style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--ink-faint)', display: 'flex' }}
                     >
-                      {showPassword ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                          <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
-                      ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                          <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
-                        </svg>
-                      )}
+                      {showPassword ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
                     </button>
                   </div>
                 </div>

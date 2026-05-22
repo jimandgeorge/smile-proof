@@ -3,6 +3,7 @@
 import { useState, useTransition, useContext } from 'react';
 import { generatePracticeIntelligence } from './actions';
 import type { OpportunityInsightData, SentimentTheme } from './actions';
+import { AlertTriangle, Info, ArrowRight, CheckCircle, Star } from 'lucide-react';
 import { AccessTokenContext } from './token-context';
 
 const D = {
@@ -65,12 +66,10 @@ function ConfidenceBanner({ count }: { count: number }) {
       border: `1px solid ${isLow ? 'rgba(251,191,36,0.18)' : D.border}`,
       borderRadius: 10, padding: '11px 14px', marginBottom: 20,
     }}>
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden style={{ flexShrink: 0, marginTop: 1 }}>
-        {isLow
-          ? <><path d="M7 1.5L13 12.5H1L7 1.5z" fill={D.gold} /><path d="M7 5v3M7 9.5v.5" stroke="#0d0d12" strokeWidth="1.2" strokeLinecap="round" /></>
-          : <><circle cx="7" cy="7" r="6" stroke={D.faint} strokeWidth="1.3" /><path d="M7 5v3M7 9v.5" stroke={D.faint} strokeWidth="1.3" strokeLinecap="round" /></>
-        }
-      </svg>
+      {isLow
+        ? <AlertTriangle size={14} strokeWidth={1.2} style={{ flexShrink: 0, marginTop: 1, color: D.gold }} aria-hidden />
+        : <Info size={14} strokeWidth={1.3} style={{ flexShrink: 0, marginTop: 1, color: D.faint }} aria-hidden />
+      }
       <div>
         <span style={{ fontSize: 12, fontWeight: 700, color: isLow ? D.gold : D.soft, fontFamily: 'var(--font-body)' }}>
           {isLow ? 'Low confidence' : 'Early-stage insight'}
@@ -98,9 +97,7 @@ function NextStepCard({ recommendation, rationale, evidence }: {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <div style={{ width: 18, height: 18, borderRadius: 5, background: D.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden>
-            <path d="M1.5 4.5h6M4.5 1.5l3 3-3 3" stroke="#0d0d12" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <ArrowRight size={9} strokeWidth={1.3} style={{ color: '#0d0d12' }} aria-hidden />
         </div>
         <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: D.accent, fontFamily: 'var(--font-body)' }}>
           Recommended next step
@@ -191,8 +188,8 @@ function SignalCard({ type, category, text, stat, statLabel, quote }: {
     <div style={{ background: `${alpha}0.05)`, border: `1px solid ${alpha}0.14)`, borderRadius: 10, padding: '14px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
         {isS
-          ? <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden><circle cx="6" cy="6" r="5.5" fill={`${alpha}0.18)`} /><path d="M3.5 6l1.5 1.5 3-3" stroke={col} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          : <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden><path d="M6 1L11.5 11H.5L6 1z" fill={`${alpha}0.18)`} /><path d="M6 4.5v2.5M6 8.5v.5" stroke={col} strokeWidth="1.2" strokeLinecap="round" /></svg>
+          ? <CheckCircle size={12} strokeWidth={1.3} style={{ color: col }} aria-hidden />
+          : <AlertTriangle size={12} strokeWidth={1.2} style={{ color: col }} aria-hidden />
         }
         <span style={{ fontSize: 11, fontWeight: 700, color: col, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-body)', flex: 1 }}>
           {CATEGORY_LABELS[category] ?? category}
@@ -301,9 +298,7 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
         </div>
         <div style={{ background: D.card, border: `1.5px solid ${D.border}`, borderRadius: 14, padding: '48px 40px', textAlign: 'center' }}>
           <div style={{ width: 52, height: 52, borderRadius: 13, background: D.accentPale, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M12 3l1.8 5.5H19l-4.6 3.3 1.7 5.5L12 14l-4.1 3.3 1.7-5.5L5 8.5h5.2z" stroke={D.accent} strokeWidth="1.5" strokeLinejoin="round" />
-            </svg>
+            <Star size={22} strokeWidth={1.5} style={{ color: D.accent }} aria-hidden />
           </div>
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 700, color: D.text, marginBottom: 8 }}>Generate your practice report</h3>
           <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.65, maxWidth: 380, margin: '0 auto 24px' }}>
@@ -369,7 +364,7 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
 
       {isStale && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)', borderRadius: 10, padding: '10px 14px', marginBottom: 20 }}>
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden><path d="M6.5 1.5L12.5 12H.5L6.5 1.5z" fill={D.gold} /><path d="M6.5 5v2.5M6.5 9.5v.5" stroke="#0d0d12" strokeWidth="1.2" strokeLinecap="round" /></svg>
+          <AlertTriangle size={13} strokeWidth={1.2} style={{ color: D.gold }} aria-hidden />
           <p style={{ fontSize: 13, color: D.gold, fontFamily: 'var(--font-body)', margin: 0, flex: 1 }}>
             {newSince} new review{newSince !== 1 ? 's' : ''} since this report — refresh to include them.
           </p>

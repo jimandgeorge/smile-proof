@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { submitPractice } from './actions';
+import { Check, ChevronLeft } from 'lucide-react';
 
 export const metadata = { title: 'Add a dental practice | SmileProof' };
 
@@ -26,9 +27,7 @@ export default async function AddPracticePage({
             className="mx-auto mb-5 flex items-center justify-center rounded-full"
             style={{ width: 56, height: 56, background: 'var(--forest-pale)' }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M5 12l4 4 10-10" stroke="var(--forest)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <Check size={24} strokeWidth={2.5} style={{ color: 'var(--forest)' }} />
           </div>
           <h1
             className="font-bold mb-2"
@@ -58,9 +57,7 @@ export default async function AddPracticePage({
         className="inline-flex items-center gap-1.5 text-sm mb-6"
         style={{ color: 'var(--ink-soft)' }}
       >
-        <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-          <path d="M13 4l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <ChevronLeft size={14} strokeWidth={2} />
         Back to search
       </Link>
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Mail, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 
 function getRedirectBase() {
@@ -69,9 +70,7 @@ export default function ForgotPasswordPage() {
             {['Secure reset link', 'Expires after 1 hour', 'No account needed to browse'].map(item => (
               <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(245,158,11,0.2)', border: '1.5px solid rgba(245,158,11,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-                    <polyline points="2,5 4,7.5 8,2.5" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <Check size={9} strokeWidth={1.5} style={{ color: '#f59e0b' }} />
                 </div>
                 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-body)' }}>{item}</span>
               </div>
@@ -93,10 +92,7 @@ export default function ForgotPasswordPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 24px',
               }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="var(--forest)" strokeWidth="1.5" strokeLinecap="round" />
-                  <polyline points="22,6 12,13 2,6" stroke="var(--forest)" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
+                <Mail size={28} strokeWidth={1.5} style={{ color: 'var(--forest)' }} />
               </div>
               <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 800, color: 'var(--ink)', margin: '0 0 12px', letterSpacing: '-0.02em' }}>
                 Check your inbox.

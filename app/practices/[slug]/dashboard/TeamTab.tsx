@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useContext } from 'react';
 import Link from 'next/link';
+import { Trash2, UserPlus } from 'lucide-react';
 import { addDentistToTeam, removeDentistFromPractice, updateDentistRecord } from './actions';
 import { AccessTokenContext } from './token-context';
 
@@ -128,9 +129,7 @@ function DentistCard({
             title="Remove from practice"
             style={{ width: 32, height: 32, borderRadius: 6, border: `1.5px solid ${D.border}`, background: D.card2, cursor: removing ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: removing ? D.faint : '#dc2626' }}
           >
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-              <path d="M2 3.5h10M5 3.5V2h4v1.5M5.5 6v4M8.5 6v4M3 3.5l.7 8h6.6l.7-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <Trash2 size={13} strokeWidth={1.5} />
           </button>
         </div>
       </div>
@@ -271,11 +270,7 @@ export default function TeamTab({ practiceId, practiceSlug, initialDentists }: P
         {dentists.length === 0 ? (
           <div style={{ background: D.card, border: `1.5px solid ${D.border}`, borderRadius: 12, padding: '48px 24px', textAlign: 'center' }}>
             <div style={{ width: 48, height: 48, borderRadius: '50%', background: D.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <circle cx="9" cy="7" r="3.5" stroke={D.soft} strokeWidth="1.5" />
-                <path d="M2 20c0-3.9 3.1-7 7-7" stroke={D.soft} strokeWidth="1.5" strokeLinecap="round" />
-                <path d="M17 13v6M14 16h6" stroke={D.soft} strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+              <UserPlus size={20} strokeWidth={1.5} style={{ color: D.soft }} />
             </div>
             <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600, color: D.text, marginBottom: 6 }}>No dentists yet</p>
             <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.6, maxWidth: 280, margin: '0 auto' }}>

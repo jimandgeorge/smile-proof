@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { requestClaim, verifyWebsiteClaim } from './actions';
+import { Mail, Globe, FileText, Star, Check, ChevronLeft, Copy } from 'lucide-react';
 
 type Step = 1 | 2 | 3;
 type Method = 'email' | 'website' | 'manual';
@@ -32,33 +33,19 @@ const METHODS: { id: Method; label: string; desc: string; icon: React.ReactNode 
     id: 'email',
     label: 'Email',
     desc: "We'll send a code to your practice email address.",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-        <path d="M3 6l7 5 7-5M3 6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      </svg>
-    ),
+    icon: <Mail size={16} strokeWidth={1.5} />,
   },
   {
     id: 'website',
     label: 'Website',
     desc: 'Add a small HTML snippet to your homepage to confirm ownership.',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M10 2c-2.5 3-2.5 13 0 16M10 2c2.5 3 2.5 13 0 16M2 10h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
+    icon: <Globe size={16} strokeWidth={1.5} />,
   },
   {
     id: 'manual',
     label: 'Manual review',
     desc: 'Submit documentation and our team will verify within 2–3 business days.',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-        <rect x="4" y="2" width="12" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M7 7h6M7 11h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
+    icon: <FileText size={16} strokeWidth={1.5} />,
   },
 ];
 
@@ -211,9 +198,7 @@ export function ClaimForm({
             width: 48, height: 48, borderRadius: 12, background: 'var(--forest-pale)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20,
           }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.3L12 17l-6.2 4.2 2.4-7.3L2 9.4h7.6L12 2z" stroke="var(--forest)" strokeWidth="1.6" strokeLinejoin="round" />
-            </svg>
+            <Star size={22} strokeWidth={1.6} style={{ color: 'var(--forest)' }} />
           </div>
 
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 800, color: 'var(--ink)', margin: '0 0 10px', letterSpacing: '-0.02em' }}>
@@ -231,9 +216,7 @@ export function ClaimForm({
                   width: 20, height: 20, borderRadius: '50%', flexShrink: 0, marginTop: 1,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <polyline points="2.5,8 6,11.5 13.5,4" stroke="var(--forest)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <Check size={16} strokeWidth={1.8} style={{ color: 'var(--forest)' }} />
                 </div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--font-body)', marginBottom: 1 }}>{title}</div>
@@ -270,9 +253,7 @@ export function ClaimForm({
           onClick={() => setStep(1)}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: 'var(--ink-soft)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 20, fontFamily: 'var(--font-body)' }}
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <ChevronLeft size={14} strokeWidth={1.5} />
           Back
         </button>
 
@@ -365,10 +346,7 @@ export function ClaimForm({
                     cursor: 'pointer', color: 'var(--ink-soft)', padding: 4,
                   }}
                 >
-                  <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                    <rect x="7" y="7" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M13 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
+                  <Copy size={15} strokeWidth={1.5} />
                 </button>
               </div>
 
@@ -459,9 +437,7 @@ export function ClaimForm({
           width: 56, height: 56, borderRadius: '50%', background: 'var(--forest-pale)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px',
         }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z" stroke="var(--forest)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <Mail size={24} strokeWidth={1.5} style={{ color: 'var(--forest)' }} />
         </div>
         <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ink)', marginBottom: 10, letterSpacing: '-0.02em' }}>
           Check your inbox

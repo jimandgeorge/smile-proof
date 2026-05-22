@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createAdminSupabase } from '@/lib/supabase';
+import { CheckCircle, Info, ChevronLeft } from 'lucide-react';
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -21,10 +22,7 @@ export default async function ClaimPendingPage({ params }: Params) {
     return (
       <main style={{ maxWidth: 480, margin: '0 auto', padding: '80px 24px', textAlign: 'center' }}>
         <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--forest-pale)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="var(--forest)" strokeWidth="1.5" />
-            <polyline points="7,12 10,15 17,9" stroke="var(--forest)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <CheckCircle size={24} strokeWidth={1.5} style={{ color: 'var(--forest)' }} />
         </div>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, color: 'var(--ink)', marginBottom: 12 }}>
           Your claim was approved
@@ -45,10 +43,7 @@ export default async function ClaimPendingPage({ params }: Params) {
   return (
     <main style={{ maxWidth: 480, margin: '0 auto', padding: '80px 24px', textAlign: 'center' }}>
       <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#fff8ed', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="#d97706" strokeWidth="1.5" />
-          <path d="M12 7v5M12 16v.5" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
+        <Info size={24} strokeWidth={1.5} style={{ color: '#d97706' }} />
       </div>
       <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, color: 'var(--ink)', marginBottom: 12 }}>
         Claim under review
@@ -63,9 +58,7 @@ export default async function ClaimPendingPage({ params }: Params) {
         href={`/practices/${slug}`}
         style={{ fontSize: 13, color: 'var(--forest)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-body)' }}
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <ChevronLeft size={14} strokeWidth={1.5} />
         Back to practice profile
       </Link>
     </main>

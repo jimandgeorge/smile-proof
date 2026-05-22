@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Lock } from 'lucide-react';
 
 type MonthlyPoint = { month: string; count: number; avgScore: number | null };
 
@@ -43,10 +44,7 @@ export default function MetricsDashboard({ isPaid, practiceSlug, responseRate, c
           backdropFilter: 'blur(2px)',
         }}>
           <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--forest-pale)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="11" width="18" height="11" rx="2" stroke="var(--forest)" strokeWidth="1.8" fill="none" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="var(--forest)" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
+            <Lock size={18} strokeWidth={1.8} style={{ color: 'var(--forest)' }} />
           </div>
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginBottom: 4 }}>

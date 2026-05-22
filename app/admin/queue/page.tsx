@@ -1,5 +1,6 @@
 import { createAdminSupabase } from '@/lib/supabase';
 import { moderateReview, approvePracticeSubmission, rejectPracticeSubmission, approveClaim, rejectClaim } from './actions';
+import { CheckCircle } from 'lucide-react';
 
 export default async function QueuePage({
   searchParams,
@@ -117,10 +118,7 @@ export default async function QueuePage({
                         </span>
                         {r.verification_status === 'verified' && (
                           <span style={{ fontSize: 11, color: 'var(--forest)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                              <circle cx="6" cy="6" r="6" fill="var(--forest)" />
-                              <polyline points="3,6 5,8.5 9,3.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
+                            <CheckCircle size={10} strokeWidth={1.5} style={{ color: 'var(--forest)' }} />
                             Verified
                           </span>
                         )}

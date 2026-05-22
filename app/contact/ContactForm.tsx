@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Check } from 'lucide-react';
 
 const ENQUIRY_TYPES = [
   { value: '', label: 'Select an enquiry type…' },
@@ -69,9 +70,7 @@ export default function ContactForm() {
     return (
       <div style={{ textAlign: 'center', padding: '48px 24px' }}>
         <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--forest-pale)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path d="M5 13l4 4L19 7" stroke="var(--forest)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <Check size={22} strokeWidth={2} style={{ color: 'var(--forest)' }} aria-hidden />
         </div>
         <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ink)', marginBottom: 10, letterSpacing: '-0.02em' }}>
           Message received
