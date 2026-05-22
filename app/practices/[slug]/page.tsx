@@ -103,7 +103,9 @@ export default async function PracticePage({ params }: Params) {
   ]);
 
   const priceRows: PriceRow[] = (priceRes.data ?? []) as PriceRow[];
-  const aiSummary: string | null = aiSummaryRes.data?.summary ?? null;
+  const aiSummary: string | null = aiSummaryRes.data?.summary
+    ? aiSummaryRes.data.summary.replace(/^#+\s+[^\n]*\n+/, '').trim() || null
+    : null;
   const patientReportedNhs = (nhsSignalRes.count ?? 0) > 0;
   const practiceServices = (servicesRes.data ?? [])
     .map((r: any) => r.services)
