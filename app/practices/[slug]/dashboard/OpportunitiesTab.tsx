@@ -189,7 +189,9 @@ export default function OpportunitiesTab({ practiceId, practiceSlug, reviewCount
   const handleGenerate = () => {
     setError('');
     startTransition(async () => {
-      const result = await generateOpportunityInsights(practiceId, practiceSlug);
+      const { createClient } = await import('@/lib/supabase');
+      const token = (await createClient().auth.getSession()).data.session?.access_token ?? '';
+      const result = await generateOpportunityInsights(token, practiceId, practiceSlug);
       if (result.error) { setError(result.error); return; }
       if (result.insights) setInsights(result.insights);
     });
