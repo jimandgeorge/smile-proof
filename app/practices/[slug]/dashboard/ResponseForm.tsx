@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { respondToReview, generateReviewResponse } from './actions';
+import { AccessTokenContext } from './token-context';
 
 export function ResponseForm({
   reviewId,
@@ -30,17 +31,12 @@ export function ResponseForm({
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-
-  async function getToken() {
-    const { createClient } = await import('@/lib/supabase');
-    return (await createClient().auth.getSession()).data.session?.access_token ?? '';
-  }
+  const accessToken = useContext(AccessTokenContext);
 
   async function handleGenerate() {
     setGenerating(true);
     setError(null);
-    const token = await getToken();
-    const res = await generateReviewResponse(token, reviewBody, reviewTitle, rating, practiceName, practiceId);
+    const res = await generateReviewResponse(accessToken, reviewBody, reviewTitle, rating, practiceName, practiceId);
     if (res.error) setError(res.error);
     else if (res.text) setBody(res.text);
     setGenerating(false);
@@ -50,8 +46,7 @@ export function ResponseForm({
     e.preventDefault();
     setPending(true);
     setError(null);
-    const token = await getToken();
-    const res = await respondToReview(token, reviewId, practiceId, body, practiceSlug);
+    const res = await respondToReview(accessToken, reviewId, practiceId, body, practiceSlug);
     if (res?.error) setError(res.error);
     else { setSaved(true); setOpen(false); }
     setPending(false);

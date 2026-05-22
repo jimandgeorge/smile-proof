@@ -11,6 +11,7 @@ export default async function DashboardPage({ params }: Params) {
   const supabase = await createServerSupabase();
 
   const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
 
   const { data: practice, error } = await admin
     .from('practices')
@@ -257,6 +258,7 @@ if (responseRate < 50 && published.length >= 3) {
       enquiries={enquiries}
       teamDentists={teamDentists}
       opportunityInsights={opportunityInsights}
+      initialAccessToken={session?.access_token ?? ''}
     />
   );
 }

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useContext } from 'react';
 import { generateOpportunityInsights } from './actions';
 import type { OpportunityInsightData } from './actions';
+import { AccessTokenContext } from './token-context';
 
 type Props = {
   practiceId: string;
@@ -182,6 +183,7 @@ export default function OpportunitiesTab({ practiceId, practiceSlug, reviewCount
   const [insights, setInsights] = useState<OpportunityInsightData | null>(initialInsights);
   const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
+  const accessToken = useContext(AccessTokenContext);
 
   const isStale = insights != null && reviewCount > insights.review_count;
   const newReviewsSince = insights ? reviewCount - insights.review_count : 0;
@@ -189,9 +191,7 @@ export default function OpportunitiesTab({ practiceId, practiceSlug, reviewCount
   const handleGenerate = () => {
     setError('');
     startTransition(async () => {
-      const { createClient } = await import('@/lib/supabase');
-      const token = (await createClient().auth.getSession()).data.session?.access_token ?? '';
-      const result = await generateOpportunityInsights(token, practiceId, practiceSlug);
+      const result = await generateOpportunityInsights(accessToken, practiceId, practiceSlug);
       if (result.error) { setError(result.error); return; }
       if (result.insights) setInsights(result.insights);
     });

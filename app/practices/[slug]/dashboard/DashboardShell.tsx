@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext, createContext } from 'react';
 import Link from 'next/link';
 import { ResponseForm } from './ResponseForm';
 import RatingChart from './RatingChart';
@@ -9,6 +9,7 @@ import TeamTab, { type TeamDentist } from './TeamTab';
 import PracticeIntelligenceTab from './PracticeIntelligenceTab';
 import type { OpportunityInsightData } from './actions';
 import { markEnquiriesRead, updatePracticeServices, unclaimPractice } from './actions';
+import { AccessTokenContext } from './token-context';
 
 const D = {
   bg: '#0d0d12', sidebar: '#09090d', card: '#13131a', card2: '#1a1a24',
@@ -53,6 +54,7 @@ type Props = {
   enquiries: Enquiry[];
   teamDentists: TeamDentist[];
   opportunityInsights: OpportunityInsightData | null;
+  initialAccessToken: string;
 };
 
 type Tab = 'overview' | 'reviews' | 'intelligence' | 'profile' | 'invites' | 'enquiries' | 'team' | 'settings';
@@ -301,8 +303,20 @@ export default function DashboardShell({
   dimensionRanks,
   allServices, practiceServiceIds,
   enquiries, teamDentists, opportunityInsights,
+  initialAccessToken,
 }: Props) {
   const [tab, setTab] = useState<Tab>('overview');
+  const [accessToken, setAccessToken] = useState(initialAccessToken);
+
+  useEffect(() => {
+    import('@/lib/supabase').then(({ createClient }) => {
+      const supabase = createClient();
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+        if (session?.access_token) setAccessToken(session.access_token);
+      });
+      return () => subscription.unsubscribe();
+    });
+  }, []);
   const unreadEnquiries = enquiries.filter(e => !e.read_at).length;
 
   const viewsDelta = profileViewsPrev30d > 0
@@ -347,6 +361,7 @@ export default function DashboardShell({
   ];
 
   return (
+    <AccessTokenContext.Provider value={accessToken}>
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 72px)', background: D.bg }}>
 
       {/* ── Sidebar ── */}
@@ -488,22 +503,20 @@ export default function DashboardShell({
         </div>
       </div>
     </div>
+    </AccessTokenContext.Provider>
   );
 }
 
 // ── Enquiries tab ─────────────────────────────────────────────────────────────
 function EnquiriesTab({ practiceId, enquiries }: { practiceId: string; enquiries: Enquiry[] }) {
   const [items, setItems] = useState<Enquiry[]>(enquiries);
+  const accessToken = useContext(AccessTokenContext);
 
   // Mark all unread enquiries as read when the tab opens
   useEffect(() => {
     if (enquiries.some((e: Enquiry) => !e.read_at)) {
-      Promise.resolve().then(async () => {
-        const { createClient } = await import('@/lib/supabase');
-        const token = (await createClient().auth.getSession()).data.session?.access_token ?? '';
-        markEnquiriesRead(token, practiceId).then(() => {
-          setItems(prev => prev.map(e => ({ ...e, read_at: e.read_at ?? new Date().toISOString() })));
-        });
+      markEnquiriesRead(accessToken, practiceId).then(() => {
+        setItems(prev => prev.map(e => ({ ...e, read_at: e.read_at ?? new Date().toISOString() })));
       });
     }
   }, []);
@@ -1054,14 +1067,13 @@ function ProfileTab({ practiceName, practiceCity, practiceSlug, practiceId, allS
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoMsg, setLogoMsg] = useState<string | null>(null);
+  const accessToken = useContext(AccessTokenContext);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://smileproof.co.uk';
 
   async function handleSaveServices() {
     setSaving(true);
     setSaveMsg(null);
-    const { createClient } = await import('@/lib/supabase');
-    const token = (await createClient().auth.getSession()).data.session?.access_token ?? '';
-    const result = await updatePracticeServices(token, practiceId, practiceSlug, Array.from(selectedServices));
+    const result = await updatePracticeServices(accessToken, practiceId, practiceSlug, Array.from(selectedServices));
     setSaveMsg(result.error ?? 'Saved');
     setSaving(false);
   }
@@ -1315,6 +1327,7 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
   const [unclaimConfirm, setUnclaimConfirm] = useState(false);
   const [unclaiming, setUnclaiming] = useState(false);
   const [unclaimMsg, setUnclaimMsg] = useState<string | null>(null);
+  const accessToken = useContext(AccessTokenContext);
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
@@ -1349,9 +1362,7 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
   async function handleUnclaim() {
     setUnclaiming(true);
     setUnclaimMsg(null);
-    const { createClient } = await import('@/lib/supabase');
-    const token = (await createClient().auth.getSession()).data.session?.access_token ?? '';
-    const result = await unclaimPractice(token, practiceId, practiceSlug);
+    const result = await unclaimPractice(accessToken, practiceId, practiceSlug);
     if (result.error) { setUnclaimMsg(result.error); setUnclaiming(false); }
     // on success the server redirects away
   }

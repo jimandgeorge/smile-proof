@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useContext } from 'react';
 import { generatePracticeIntelligence } from './actions';
 import type { OpportunityInsightData, SentimentTheme } from './actions';
+import { AccessTokenContext } from './token-context';
 
 const D = {
   bg: '#0d0d12', sidebar: '#09090d', card: '#13131a', card2: '#1a1a24',
@@ -276,6 +277,7 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
   const [insights, setInsights] = useState<OpportunityInsightData | null>(initialInsights);
   const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
+  const accessToken = useContext(AccessTokenContext);
 
   const isStale = insights != null && reviewCount > insights.review_count;
   const newSince = insights ? reviewCount - insights.review_count : 0;
@@ -283,9 +285,7 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
   const handleGenerate = () => {
     setError('');
     startTransition(async () => {
-      const { createClient } = await import('@/lib/supabase');
-      const token = (await createClient().auth.getSession()).data.session?.access_token ?? '';
-      const result = await generatePracticeIntelligence(token, practiceId, practiceSlug);
+      const result = await generatePracticeIntelligence(accessToken, practiceId, practiceSlug);
       if (result.error) { setError(result.error); return; }
       if (result.insights) setInsights(result.insights);
     });

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useTransition, useRef } from 'react';
+import { useState, useTransition, useRef, useContext } from 'react';
 import { sendReviewInvite } from './actions';
+import { AccessTokenContext } from './token-context';
 
 const D = {
   bg: '#0d0d12', sidebar: '#09090d', card: '#13131a', card2: '#1a1a24',
@@ -29,6 +30,7 @@ type Props = {
 export default function InviteTab({ practiceId, practiceSlug, practiceName, invites: initial }: Props) {
   const [invites, setInvites] = useState<Invite[]>(initial);
   const [isPending, startTransition] = useTransition();
+  const accessToken = useContext(AccessTokenContext);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -39,9 +41,7 @@ export default function InviteTab({ practiceId, practiceSlug, practiceName, invi
     setError(null);
     setSuccess(false);
     startTransition(async () => {
-      const { createClient } = await import('@/lib/supabase');
-      const token = (await createClient().auth.getSession()).data.session?.access_token ?? '';
-      const result = await sendReviewInvite(token, practiceId, practiceSlug, practiceName, data);
+      const result = await sendReviewInvite(accessToken, practiceId, practiceSlug, practiceName, data);
       if (result.error) {
         setError(result.error);
       } else {
