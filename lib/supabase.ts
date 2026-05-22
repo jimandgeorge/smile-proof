@@ -22,13 +22,21 @@ export function createAdminSupabase() {
 }
 
 // Validate a JWT access token from the browser and return the user.
-// Use this in server actions — Next.js 16 server function requests don't
-// forward browser cookies, so we pass the token explicitly from the client.
+// Falls back to cookie-based auth if the token is missing or stale.
 export async function getUserFromToken(accessToken: string) {
-  if (!accessToken?.trim()) return null;
-  const admin = createAdminSupabase();
-  const { data: { user } } = await admin.auth.getUser(accessToken);
-  return user ?? null;
+  if (accessToken?.trim()) {
+    const admin = createAdminSupabase();
+    const { data: { user } } = await admin.auth.getUser(accessToken);
+    if (user) return user;
+  }
+  // Fallback: read session from cookies (works in server actions in Next.js 15+)
+  try {
+    const supabase = await createServerSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    return user ?? null;
+  } catch {
+    return null;
+  }
 }
 
 // Server client — for server components and route handlers (NOT server actions).
