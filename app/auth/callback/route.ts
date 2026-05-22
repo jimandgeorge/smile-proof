@@ -48,16 +48,18 @@ export async function GET(request: NextRequest) {
       await admin
         .from('practices')
         .update({
-          claim_pending_user_id: data.user.id,
-          claim_pending_email: data.user.email,
-          claim_pending_at: new Date().toISOString(),
+          claimed_by_user_id: data.user.id,
+          claimed_at: new Date().toISOString(),
+          claim_pending_user_id: null,
+          claim_pending_email: null,
+          claim_pending_at: null,
         })
         .eq('id', claimId)
         .is('claimed_by_user_id', null);
     }
 
     const slug = practice?.slug ?? '';
-    return NextResponse.redirect(`${origin}/practices/${slug}/claim/pending`);
+    return NextResponse.redirect(`${origin}/practices/${slug}/dashboard`);
   }
 
   // Redirect to the user's practice dashboard if they have a claimed practice
