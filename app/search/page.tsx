@@ -290,7 +290,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
       )}
 
       {(!q || practices.length === 0) && !error && (
-        <div style={{ background: 'var(--forest-pale)', border: '1px solid rgba(28,69,53,0.15)', borderRadius: 12, padding: '14px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div style={{ background: 'var(--forest-pale)', border: '1px solid rgba(28,69,53,0.15)', borderRadius: 12, padding: '14px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <p style={{ fontSize: 14, color: 'var(--ink-mid)' }}>
             Can't find your dentist?{' '}
             <span style={{ color: 'var(--ink-soft)' }}>Practices outside England may not be listed yet.</span>

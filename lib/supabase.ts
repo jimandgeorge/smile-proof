@@ -21,7 +21,17 @@ export function createAdminSupabase() {
   );
 }
 
-// Server client — for server components, server actions, and route handlers.
+// Validate a JWT access token from the browser and return the user.
+// Use this in server actions — Next.js 16 server function requests don't
+// forward browser cookies, so we pass the token explicitly from the client.
+export async function getUserFromToken(accessToken: string) {
+  if (!accessToken?.trim()) return null;
+  const admin = createAdminSupabase();
+  const { data: { user } } = await admin.auth.getUser(accessToken);
+  return user ?? null;
+}
+
+// Server client — for server components and route handlers (NOT server actions).
 // Reads/writes auth cookies so RLS policies see the right user.
 export async function createServerSupabase() {
   const { cookies } = await import('next/headers');

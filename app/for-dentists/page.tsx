@@ -94,7 +94,7 @@ export default function ForDentistsPage() {
 
       {/* ── Feature 1: Overview dashboard ────────────────────────────────── */}
       <section id="features" style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 24px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 56, alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 56, alignItems: 'center' }}>
 
           {/* Text */}
           <div>
@@ -153,7 +153,7 @@ export default function ForDentistsPage() {
       {/* ── Feature 2: Reviews ───────────────────────────────────────────── */}
       <section style={{ background: 'var(--cream)', borderTop: '1px solid var(--cream-dark)', borderBottom: '1px solid var(--cream-dark)' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 56, alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 56, alignItems: 'center' }}>
 
             {/* Mockup — left on desktop */}
             <div style={{ background: '#f4f1ec', borderRadius: 16, padding: 20, boxShadow: '0 8px 32px rgba(28,69,53,0.12)', border: '1px solid #e0d9d0' }}>
@@ -225,7 +225,7 @@ export default function ForDentistsPage() {
 
       {/* ── Feature 3: AI Insights ───────────────────────────────────────── */}
       <section style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 24px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 56, alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 56, alignItems: 'center' }}>
 
           {/* Text */}
           <div>
@@ -295,7 +295,7 @@ export default function ForDentistsPage() {
       {/* ── Feature 4: Get Reviews + Profile ────────────────────────────── */}
       <section style={{ background: 'var(--cream)', borderTop: '1px solid var(--cream-dark)', borderBottom: '1px solid var(--cream-dark)' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 56, alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 56, alignItems: 'start' }}>
 
             {/* Mockup */}
             <div>

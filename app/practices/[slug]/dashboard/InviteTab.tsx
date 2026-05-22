@@ -39,7 +39,9 @@ export default function InviteTab({ practiceId, practiceSlug, practiceName, invi
     setError(null);
     setSuccess(false);
     startTransition(async () => {
-      const result = await sendReviewInvite(practiceId, practiceSlug, practiceName, data);
+      const { createClient } = await import('@/lib/supabase');
+      const token = (await createClient().auth.getSession()).data.session?.access_token ?? '';
+      const result = await sendReviewInvite(token, practiceId, practiceSlug, practiceName, data);
       if (result.error) {
         setError(result.error);
       } else {

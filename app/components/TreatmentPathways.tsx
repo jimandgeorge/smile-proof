@@ -1,31 +1,33 @@
 'use client';
 
-// q = find-flow treatment ID; fallback = search query if no find-flow match
+import { useRef } from 'react';
+
 const TREATMENTS = [
+  {
+    q: 'checkup',
+    label: 'Check-up & clean',
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M12 3C9 3 6 5.5 6 9c0 4.5 3 8 6 12 3-4 6-7.5 6-12 0-3.5-3-6-6-6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M9 9h6M12 6v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
   {
     q: 'invisalign',
     label: 'Invisalign',
-    desc: 'Clear aligners from certified providers',
-    color: 'var(--forest-pale)',
-    iconColor: 'var(--forest)',
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path d="M4 6c0-1.1.9-2 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z"
-          stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-        <path d="M4 14c0-1.1.9-2 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2z"
-          stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-        <path d="M9 6v4M9 14v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M4 6c0-1.1.9-2 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M4 14c0-1.1.9-2 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
       </svg>
     ),
   },
   {
     q: 'implants',
     label: 'Implants',
-    desc: 'Permanent tooth replacement',
-    color: '#fef9ee',
-    iconColor: '#b45309',
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
         <path d="M12 3v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         <circle cx="12" cy="16" r="4" stroke="currentColor" strokeWidth="1.5" />
         <path d="M9 3h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -35,13 +37,9 @@ const TREATMENTS = [
   {
     q: 'nervous',
     label: 'Nervous patients',
-    desc: 'Anxiety-friendly, patient care',
-    color: '#f5f0ff',
-    iconColor: '#7c3aed',
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path d="M12 21C12 21 4 14 4 9a8 8 0 0 1 16 0c0 5-8 12-8 12z"
-          stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M12 21C12 21 4 14 4 9a8 8 0 0 1 16 0c0 5-8 12-8 12z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
         <path d="M9 10l1.5 1.5L15 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
@@ -49,134 +47,119 @@ const TREATMENTS = [
   {
     q: 'whitening',
     label: 'Whitening',
-    desc: 'Professional brightening treatments',
-    color: '#fffbeb',
-    iconColor: '#d97706',
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
         <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"
-          stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     ),
   },
   {
     q: 'emergency',
     label: 'Emergency',
-    desc: 'Same-day urgent dental care',
-    color: '#fff5f5',
-    iconColor: '#dc2626',
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-        <path d="M2 17l10 5 10-5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-        <path d="M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M12 3v9M12 15v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="12" cy="20" r="1" fill="currentColor" stroke="currentColor" strokeWidth="1" />
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    q: 'nhs',
+    label: 'NHS dentist',
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M12 2L3 7v6c0 5.25 3.75 10.15 9 11.35C17.25 23.15 21 18.25 21 13V7L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M9 12h6M12 9v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    q: 'veneers',
+    label: 'Veneers',
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M5 7h14l-1.5 10a2 2 0 0 1-2 1.5h-7a2 2 0 0 1-2-1.5L5 7z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M3 7h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     ),
   },
 ];
 
+const SCROLL_BY = 320;
+
 export default function TreatmentPathways() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (dir: 'left' | 'right') => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: dir === 'right' ? SCROLL_BY : -SCROLL_BY, behavior: 'smooth' });
+    }
+  };
+
   return (
     <section style={{ background: 'white', borderBottom: '1px solid var(--cream-dark)' }}>
-      <div className="mx-auto px-5 py-16 sm:py-20" style={{ maxWidth: 1200 }}>
+      <div className="mx-auto px-5" style={{ maxWidth: 1200, paddingTop: 28, paddingBottom: 28 }}>
 
-        <div style={{ marginBottom: 32 }}>
-          <p style={{
-            fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 700,
-            letterSpacing: '0.12em', textTransform: 'uppercase',
-            color: 'var(--forest)', marginBottom: 8,
-          }}>
-            Browse by treatment
-          </p>
-          <h2 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(20px, 3vw, 26px)',
-            fontWeight: 700, color: 'var(--ink)',
-            letterSpacing: '-0.02em', lineHeight: 1.25, margin: 0,
-          }}>
+        {/* Header row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(16px,2vw,20px)', fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.02em', margin: 0 }}>
             What are you looking for?
           </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              onClick={() => scroll('left')}
+              aria-label="Scroll left"
+              style={{ width: 34, height: 34, borderRadius: '50%', border: '1.5px solid var(--cream-dark)', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--ink-soft)', flexShrink: 0 }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+            <button
+              onClick={() => scroll('right')}
+              aria-label="Scroll right"
+              style={{ width: 34, height: 34, borderRadius: '50%', border: '1.5px solid var(--cream-dark)', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--ink-soft)', flexShrink: 0 }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+            <a
+              href="/find"
+              style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, color: 'var(--ink)', border: '1.5px solid var(--cream-dark)', borderRadius: 20, padding: '6px 16px', textDecoration: 'none', whiteSpace: 'nowrap', background: 'white' }}
+            >
+              See more
+            </a>
+          </div>
         </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
-          gap: 12,
-        }}
-          className="treatment-grid"
+        {/* Scrollable row */}
+        <div
+          ref={scrollRef}
+          className="treatment-scroll"
+          style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 4 }}
         >
-          {TREATMENTS.map(({ q, label, desc, color, iconColor, icon }) => (
+          {TREATMENTS.map(({ q, label, icon }) => (
             <a
               key={q}
               href={`/find?treatment=${encodeURIComponent(q)}`}
-              style={{
-                display: 'flex', flexDirection: 'column', gap: 10,
-                padding: '18px 16px',
-                background: 'white',
-                border: '1.5px solid var(--cream-dark)',
-                borderRadius: 14,
-                textDecoration: 'none',
-                transition: 'border-color 0.15s, box-shadow 0.15s',
-                cursor: 'pointer',
-              }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '16px 12px', minWidth: 96, flexShrink: 0, textDecoration: 'none', borderRadius: 12, border: '1.5px solid transparent', transition: 'border-color 0.15s, background 0.15s', color: 'var(--ink)' }}
               onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = iconColor;
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.06)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'var(--cream-dark)';
+                (e.currentTarget as HTMLElement).style.background = 'var(--cream)';
               }}
               onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'var(--cream-dark)';
-                (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+                (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
+                (e.currentTarget as HTMLElement).style.background = 'transparent';
               }}
             >
-              <div style={{
-                width: 44, height: 44, borderRadius: 12,
-                background: color, display: 'flex',
-                alignItems: 'center', justifyContent: 'center',
-                color: iconColor, flexShrink: 0,
-              }}>
-                {icon}
-              </div>
-              <div>
-                <p style={{
-                  fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 700,
-                  color: 'var(--ink)', margin: '0 0 3px',
-                }}>
-                  {label}
-                </p>
-                <p style={{
-                  fontFamily: 'var(--font-body)', fontSize: 12,
-                  color: 'var(--ink-soft)', margin: 0, lineHeight: 1.4,
-                }}>
-                  {desc}
-                </p>
-              </div>
-              <div style={{
-                marginTop: 'auto',
-                display: 'flex', alignItems: 'center', gap: 4,
-                fontSize: 12, fontWeight: 600, color: iconColor,
-                fontFamily: 'var(--font-body)',
-              }}>
-                Find matches
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M2.5 6h7M7 3.5L9.5 6 7 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
+              <div style={{ color: 'var(--ink)' }}>{icon}</div>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 500, color: 'var(--ink)', textAlign: 'center', lineHeight: 1.3 }}>
+                {label}
+              </span>
             </a>
           ))}
         </div>
 
-        <style>{`
-          @media (max-width: 768px) {
-            .treatment-grid {
-              grid-template-columns: repeat(2, 1fr) !important;
-            }
-            .treatment-grid > a:last-child {
-              grid-column: 1 / -1;
-            }
-          }
-        `}</style>
-
+        <style>{`.treatment-scroll::-webkit-scrollbar { display: none; }`}</style>
       </div>
     </section>
   );

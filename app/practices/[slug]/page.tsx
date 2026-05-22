@@ -521,6 +521,24 @@ export default async function PracticePage({ params }: Params) {
       </div>
 
       </div>{/* end grid */}
+
+      <style>{`
+        .practice-profile-grid {
+          grid-template-columns: minmax(0, 1fr) 300px;
+        }
+        @media (max-width: 768px) {
+          .practice-profile-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .practice-profile-header-row {
+            flex-direction: column;
+          }
+          .practice-profile-logo {
+            width: 60px !important;
+            height: 60px !important;
+          }
+        }
+      `}</style>
     </main>
   );
 }

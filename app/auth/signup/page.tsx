@@ -65,10 +65,10 @@ export default function SignUpPage() {
     <div style={{ display: 'flex', minHeight: '100vh' }}>
 
       {/* ── Left panel (identical to login) ── */}
-      <div style={{
+      <div className="auth-left-panel" style={{
         width: 400, flexShrink: 0, background: 'var(--forest)',
         position: 'relative', overflow: 'hidden',
-        display: 'flex', flexDirection: 'column', padding: '40px 40px 48px',
+        flexDirection: 'column', padding: '40px 40px 48px',
       }}>
         <div style={{ position: 'absolute', top: -120, right: -100, width: 420, height: 420, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', top: 80, right: -180, width: 360, height: 360, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />

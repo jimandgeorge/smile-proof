@@ -283,7 +283,9 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
   const handleGenerate = () => {
     setError('');
     startTransition(async () => {
-      const result = await generatePracticeIntelligence(practiceId, practiceSlug);
+      const { createClient } = await import('@/lib/supabase');
+      const token = (await createClient().auth.getSession()).data.session?.access_token ?? '';
+      const result = await generatePracticeIntelligence(token, practiceId, practiceSlug);
       if (result.error) { setError(result.error); return; }
       if (result.insights) setInsights(result.insights);
     });

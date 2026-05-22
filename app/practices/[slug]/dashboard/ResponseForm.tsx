@@ -31,10 +31,16 @@ export function ResponseForm({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  async function getToken() {
+    const { createClient } = await import('@/lib/supabase');
+    return (await createClient().auth.getSession()).data.session?.access_token ?? '';
+  }
+
   async function handleGenerate() {
     setGenerating(true);
     setError(null);
-    const res = await generateReviewResponse(reviewBody, reviewTitle, rating, practiceName, practiceId);
+    const token = await getToken();
+    const res = await generateReviewResponse(token, reviewBody, reviewTitle, rating, practiceName, practiceId);
     if (res.error) setError(res.error);
     else if (res.text) setBody(res.text);
     setGenerating(false);
@@ -44,7 +50,8 @@ export function ResponseForm({
     e.preventDefault();
     setPending(true);
     setError(null);
-    const res = await respondToReview(reviewId, practiceId, body, practiceSlug);
+    const token = await getToken();
+    const res = await respondToReview(token, reviewId, practiceId, body, practiceSlug);
     if (res?.error) setError(res.error);
     else { setSaved(true); setOpen(false); }
     setPending(false);

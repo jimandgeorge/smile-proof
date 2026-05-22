@@ -8,6 +8,7 @@ import InviteTab, { type Invite } from './InviteTab';
 import TeamTab, { type TeamDentist } from './TeamTab';
 import PracticeIntelligenceTab from './PracticeIntelligenceTab';
 import type { OpportunityInsightData } from './actions';
+import { markEnquiriesRead, updatePracticeServices, unclaimPractice } from './actions';
 
 const D = {
   bg: '#0d0d12', sidebar: '#09090d', card: '#13131a', card2: '#1a1a24',
@@ -497,8 +498,10 @@ function EnquiriesTab({ practiceId, enquiries }: { practiceId: string; enquiries
   // Mark all unread enquiries as read when the tab opens
   useEffect(() => {
     if (enquiries.some((e: Enquiry) => !e.read_at)) {
-      import('./actions').then(({ markEnquiriesRead }) => {
-        markEnquiriesRead(practiceId).then(() => {
+      Promise.resolve().then(async () => {
+        const { createClient } = await import('@/lib/supabase');
+        const token = (await createClient().auth.getSession()).data.session?.access_token ?? '';
+        markEnquiriesRead(token, practiceId).then(() => {
           setItems(prev => prev.map(e => ({ ...e, read_at: e.read_at ?? new Date().toISOString() })));
         });
       });
@@ -1056,8 +1059,9 @@ function ProfileTab({ practiceName, practiceCity, practiceSlug, practiceId, allS
   async function handleSaveServices() {
     setSaving(true);
     setSaveMsg(null);
-    const { updatePracticeServices } = await import('./actions');
-    const result = await updatePracticeServices(practiceId, practiceSlug, Array.from(selectedServices));
+    const { createClient } = await import('@/lib/supabase');
+    const token = (await createClient().auth.getSession()).data.session?.access_token ?? '';
+    const result = await updatePracticeServices(token, practiceId, practiceSlug, Array.from(selectedServices));
     setSaveMsg(result.error ?? 'Saved');
     setSaving(false);
   }
@@ -1345,8 +1349,9 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
   async function handleUnclaim() {
     setUnclaiming(true);
     setUnclaimMsg(null);
-    const { unclaimPractice } = await import('./actions');
-    const result = await unclaimPractice(practiceId, practiceSlug);
+    const { createClient } = await import('@/lib/supabase');
+    const token = (await createClient().auth.getSession()).data.session?.access_token ?? '';
+    const result = await unclaimPractice(token, practiceId, practiceSlug);
     if (result.error) { setUnclaimMsg(result.error); setUnclaiming(false); }
     // on success the server redirects away
   }

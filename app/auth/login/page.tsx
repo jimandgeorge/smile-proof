@@ -65,10 +65,10 @@ export default function LoginPage() {
     <div style={{ display: 'flex', minHeight: '100vh' }}>
 
       {/* ── Left panel ── */}
-      <div style={{
+      <div className="auth-left-panel" style={{
         width: 400, flexShrink: 0, background: 'var(--forest)',
         position: 'relative', overflow: 'hidden',
-        display: 'flex', flexDirection: 'column', padding: '40px 40px 48px',
+        flexDirection: 'column', padding: '40px 40px 48px',
       }}>
         {/* Decorative circles */}
         <div style={{ position: 'absolute', top: -120, right: -100, width: 420, height: 420, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />

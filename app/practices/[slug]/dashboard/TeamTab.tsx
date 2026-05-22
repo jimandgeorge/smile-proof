@@ -227,11 +227,17 @@ export default function TeamTab({ practiceId, practiceSlug, initialDentists }: P
     setCustom('');
   };
 
+  async function getToken() {
+    const { createClient } = await import('@/lib/supabase');
+    return (await createClient().auth.getSession()).data.session?.access_token ?? '';
+  }
+
   const handleAdd = () => {
     if (!name.trim()) { setError('Name is required.'); return; }
     setError('');
     startTransition(async () => {
-      const result = await addDentistToTeam(practiceId, name.trim(), gdc.trim() || null, specs, practiceSlug);
+      const token = await getToken();
+      const result = await addDentistToTeam(token, practiceId, name.trim(), gdc.trim() || null, specs, practiceSlug);
       if (result.error) { setError(result.error); return; }
       if (result.dentist) {
         setDentists(prev => [...prev, result.dentist!]);
@@ -242,13 +248,15 @@ export default function TeamTab({ practiceId, practiceSlug, initialDentists }: P
 
   const handleRemove = (dentistId: string) => {
     startTransition(async () => {
-      await removeDentistFromPractice(practiceId, dentistId, practiceSlug);
+      const token = await getToken();
+      await removeDentistFromPractice(token, practiceId, dentistId, practiceSlug);
       setDentists(prev => prev.filter(d => d.dentistId !== dentistId));
     });
   };
 
   const handleSave = (dentistId: string) => async (gdcNumber: string, specialisms: string[]) => {
-    await updateDentistRecord(dentistId, gdcNumber || null, specialisms, practiceSlug);
+    const token = await getToken();
+    await updateDentistRecord(token, dentistId, gdcNumber || null, specialisms, practiceSlug);
     setDentists(prev => prev.map(d => d.dentistId === dentistId ? { ...d, gdcNumber: gdcNumber || null, specialisms } : d));
   };
 

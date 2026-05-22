@@ -1,17 +1,16 @@
 'use server';
 
-import { createAdminSupabase, createServerSupabase } from '@/lib/supabase';
+import { createAdminSupabase, getUserFromToken } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import Anthropic from '@anthropic-ai/sdk';
-import { sendReviewInviteEmail } from '@/lib/email';
+import { sendReviewInviteEmail, sendResponseNotificationEmail } from '@/lib/email';
 import { z } from 'zod';
 
-export async function respondToReview(reviewId: string, practiceId: string, body: string, practiceSlug: string) {
+export async function respondToReview(accessToken: string, reviewId: string, practiceId: string, body: string, practiceSlug: string) {
   if (!body.trim()) return { error: 'Response cannot be empty.' };
 
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getUserFromToken(accessToken);
   if (!user) return { error: 'You must be logged in to respond.' };
 
   const admin = createAdminSupabase();
@@ -32,19 +31,45 @@ export async function respondToReview(reviewId: string, practiceId: string, body
   );
 
   if (error) return { error: error.message };
+
+  // Notify the reviewer — fire and forget, don't block on failure
+  const { data: review } = await admin
+    .from('reviews')
+    .select('reviewer_email, reviewer_display_name, title, body')
+    .eq('id', reviewId)
+    .single();
+
+  const { data: practiceInfo } = await admin
+    .from('practices')
+    .select('name')
+    .eq('id', practiceId)
+    .single();
+
+  if (review && practiceInfo) {
+    sendResponseNotificationEmail({
+      to: review.reviewer_email,
+      reviewerName: review.reviewer_display_name ?? null,
+      practiceName: practiceInfo.name,
+      practiceSlug,
+      reviewTitle: review.title ?? null,
+      reviewBody: review.body,
+      responseBody: body.trim(),
+    }).catch(() => {});
+  }
+
   revalidatePath(`/practices/${practiceSlug}/dashboard`);
   return { success: true };
 }
 
 export async function generateReviewResponse(
+  accessToken: string,
   reviewBody: string,
   reviewTitle: string | null,
   rating: number,
   practiceName: string,
   practiceId: string,
 ): Promise<{ text?: string; error?: string }> {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getUserFromToken(accessToken);
   if (!user) return { error: 'You must be logged in.' };
 
   const admin = createAdminSupabase();
@@ -84,7 +109,7 @@ export async function generateReviewResponse(
     return { error: `AI error: ${e?.message ?? 'Unknown error'}` };
   }
 
-  const text = message.content.find((b: any) => b.type === 'text')?.text ?? '';
+  const text = (message.content.find((b: any) => b.type === 'text') as any)?.text ?? '';
   if (!text) return { error: 'No response generated.' };
   return { text };
 }
@@ -97,11 +122,11 @@ export type SentimentTheme = {
 };
 
 export async function generateSentimentThemes(
+  accessToken: string,
   practiceId: string,
   practiceSlug: string,
 ): Promise<{ themes?: SentimentTheme[]; error?: string }> {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getUserFromToken(accessToken);
   if (!user) return { error: 'You must be logged in.' };
 
   const admin = createAdminSupabase();
@@ -201,11 +226,11 @@ const OPPORTUNITIES_COOLDOWN_FREE_MS = 6 * 60 * 60 * 1000;  // 6 hours
 const OPPORTUNITIES_COOLDOWN_PAID_MS = 60 * 60 * 1000;       // 1 hour
 
 export async function generateOpportunityInsights(
+  accessToken: string,
   practiceId: string,
   practiceSlug: string,
 ): Promise<{ insights?: OpportunityInsightData; error?: string }> {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getUserFromToken(accessToken);
   if (!user) return { error: 'You must be logged in.' };
 
   const admin = createAdminSupabase();
@@ -333,11 +358,11 @@ ${reviewText}`;
 }
 
 export async function generatePracticeIntelligence(
+  accessToken: string,
   practiceId: string,
   practiceSlug: string,
 ): Promise<{ insights?: OpportunityInsightData; error?: string }> {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getUserFromToken(accessToken);
   if (!user) return { error: 'You must be logged in.' };
 
   const admin = createAdminSupabase();
@@ -477,12 +502,12 @@ ${reviewText}`;
 }
 
 export async function updatePracticeServices(
+  accessToken: string,
   practiceId: string,
   practiceSlug: string,
   serviceIds: string[],
 ): Promise<{ success?: true; error?: string }> {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getUserFromToken(accessToken);
   if (!user) return { error: 'You must be logged in.' };
 
   const admin = createAdminSupabase();
@@ -512,11 +537,11 @@ export async function updatePracticeServices(
 }
 
 export async function unclaimPractice(
+  accessToken: string,
   practiceId: string,
   practiceSlug: string,
 ): Promise<{ error?: string }> {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getUserFromToken(accessToken);
   if (!user) return { error: 'You must be logged in.' };
 
   const admin = createAdminSupabase();
@@ -541,12 +566,12 @@ export async function unclaimPractice(
 }
 
 export async function savePracticeLogoUrl(
+  accessToken: string,
   practiceId: string,
   practiceSlug: string,
   logoUrl: string,
 ): Promise<{ success?: true; error?: string }> {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getUserFromToken(accessToken);
   if (!user) return { error: 'You must be logged in.' };
 
   const admin = createAdminSupabase();
@@ -577,13 +602,13 @@ const InviteSchema = z.object({
 });
 
 export async function sendReviewInvite(
+  accessToken: string,
   practiceId: string,
   practiceSlug: string,
   practiceName: string,
   formData: FormData,
 ): Promise<{ success?: true; error?: string }> {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getUserFromToken(accessToken);
   if (!user) return { error: 'You must be logged in.' };
 
   const admin = createAdminSupabase();
@@ -628,9 +653,8 @@ export async function sendReviewInvite(
   return { success: true };
 }
 
-export async function markEnquiriesRead(practiceId: string): Promise<{ error?: string }> {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+export async function markEnquiriesRead(accessToken: string, practiceId: string): Promise<{ error?: string }> {
+  const user = await getUserFromToken(accessToken);
   if (!user) return { error: 'Unauthorized' };
 
   const admin = createAdminSupabase();
@@ -649,9 +673,8 @@ export async function markEnquiriesRead(practiceId: string): Promise<{ error?: s
 
 // ── Team management ────────────────────────────────────────────────────────────
 
-async function verifyPracticeOwner(practiceId: string) {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+async function verifyPracticeOwner(accessToken: string, practiceId: string) {
+  const user = await getUserFromToken(accessToken);
   if (!user) return null;
   const admin = createAdminSupabase();
   const { data: practice } = await admin.from('practices').select('claimed_by_user_id').eq('id', practiceId).single();
@@ -665,13 +688,14 @@ function toSlug(name: string, gdc: string | null): string {
 }
 
 export async function addDentistToTeam(
+  accessToken: string,
   practiceId: string,
   fullName: string,
   gdcNumber: string | null,
   specialisms: string[],
   practiceSlug: string,
 ): Promise<{ dentist?: { dentistId: string; fullName: string; gdcNumber: string | null; specialisms: string[]; slug: string }; error?: string }> {
-  const user = await verifyPracticeOwner(practiceId);
+  const user = await verifyPracticeOwner(accessToken, practiceId);
   if (!user) return { error: 'Unauthorised.' };
 
   const admin = createAdminSupabase();
@@ -718,11 +742,12 @@ export async function addDentistToTeam(
 }
 
 export async function removeDentistFromPractice(
+  accessToken: string,
   practiceId: string,
   dentistId: string,
   practiceSlug: string,
 ): Promise<{ error?: string }> {
-  const user = await verifyPracticeOwner(practiceId);
+  const user = await verifyPracticeOwner(accessToken, practiceId);
   if (!user) return { error: 'Unauthorised.' };
 
   const admin = createAdminSupabase();
@@ -736,18 +761,18 @@ export async function removeDentistFromPractice(
 }
 
 export async function updateDentistRecord(
+  accessToken: string,
   dentistId: string,
   gdcNumber: string | null,
   specialisms: string[],
   practiceSlug: string,
 ): Promise<{ error?: string }> {
+  const user = await getUserFromToken(accessToken);
+  if (!user) return { error: 'Unauthorised.' };
+
   const admin = createAdminSupabase();
 
   // Verify caller owns a practice linked to this dentist
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Unauthorised.' };
-
   const { data: link } = await admin.from('practice_dentists')
     .select('practices(claimed_by_user_id)')
     .eq('dentist_id', dentistId)
