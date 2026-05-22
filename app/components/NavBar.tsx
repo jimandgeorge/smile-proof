@@ -68,15 +68,28 @@ export default function NavBar() {
             Get matched
           </Link>
 
-          <Link
-            href={loggedIn ? '/auth/logout' : '/auth/login'}
-            className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
-            style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-soft)', textDecoration: 'none' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--cream-dark)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-          >
-            {loggedIn ? 'Log out' : 'Sign in'}
-          </Link>
+          {loggedIn && (
+            <>
+              <Link
+                href="/dashboard"
+                className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-soft)', textDecoration: 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--cream-dark)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                My dashboard
+              </Link>
+              <Link
+                href="/auth/logout"
+                className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-soft)', textDecoration: 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--cream-dark)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                Log out
+              </Link>
+            </>
+          )}
         </nav>
 
         {/* Mobile hamburger */}
@@ -114,7 +127,10 @@ export default function NavBar() {
           {[
             { href: '/for-dentists', label: 'For dentists' },
             { href: '/search',       label: 'Write a review' },
-            { href: loggedIn ? '/auth/logout' : '/auth/login', label: loggedIn ? 'Log out' : 'Sign in' },
+            ...(loggedIn ? [
+              { href: '/dashboard',    label: 'My dashboard' },
+              { href: '/auth/logout',  label: 'Log out' },
+            ] : []),
           ].map(({ href, label }) => (
             <Link
               key={href}
