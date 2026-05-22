@@ -80,7 +80,7 @@ export default function NavBar() {
               >
                 My dashboard
               </Link>
-              <Link
+              <a
                 href="/auth/logout"
                 className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
                 style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-soft)', textDecoration: 'none' }}
@@ -88,7 +88,7 @@ export default function NavBar() {
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 Log out
-              </Link>
+              </a>
             </>
           )}
         </nav>
@@ -119,7 +119,6 @@ export default function NavBar() {
             { href: '/search',       label: 'Write a review' },
             ...(loggedIn ? [
               { href: '/dashboard',    label: 'My dashboard' },
-              { href: '/auth/logout',  label: 'Log out' },
             ] : []),
           ].map(({ href, label }) => (
             <Link
@@ -131,6 +130,15 @@ export default function NavBar() {
               {label}
             </Link>
           ))}
+          {loggedIn && (
+            <a
+              href="/auth/logout"
+              style={{ fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 500, color: 'var(--ink-soft)', textDecoration: 'none', padding: '12px 16px', borderRadius: 10 }}
+              onClick={() => setMenuOpen(false)}
+            >
+              Log out
+            </a>
+          )}
           <Link
             href="/find"
             style={{ fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 600, color: 'var(--cream)', background: 'var(--forest)', textDecoration: 'none', padding: '12px 16px', borderRadius: 10, textAlign: 'center', marginTop: 4 }}
