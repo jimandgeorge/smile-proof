@@ -149,7 +149,7 @@ export default async function Home() {
   const toBestFor = (p: PracticeCardData, fallback: string): BestForClinic => {
     const serviceNames = (p.services ?? []).map((s: any) => s.name);
     const showAI = !!p.ai_summary && ((p.review_count ?? 0) >= 5 || !!p.claimed_by_user_id);
-    const typeLabel = PRACTICE_TYPE_LABELS[p.practice_type] ?? null;
+    const typeLabel = (!!p.claimed_by_user_id) ? (PRACTICE_TYPE_LABELS[p.practice_type] ?? null) : null;
     const fallbackParts = [...serviceNames.slice(0, 3), typeLabel].filter(Boolean) as string[];
     const insight = showAI
       ? p.ai_summary!

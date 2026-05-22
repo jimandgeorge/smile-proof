@@ -57,7 +57,7 @@ export default function PracticeCard({ practice: p }: { practice: PracticeCardDa
   const isClaimed   = !!p.claimed_by_user_id;
   const reviewCount = p.review_count ?? 0;
   const showAI      = !!p.ai_summary && (reviewCount >= 5 || isClaimed);
-  const typeLabel   = PRACTICE_TYPE_LABELS[p.practice_type] ?? null;
+  const typeLabel   = isClaimed ? (PRACTICE_TYPE_LABELS[p.practice_type] ?? null) : null;
 
   const tags: string[] = [
     ...(p.services ?? []).slice(0, 3).map(s => s.name),
