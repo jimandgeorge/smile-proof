@@ -119,6 +119,12 @@ export default async function Home() {
 
   const isEarlyStage = totalReviews < PLATFORM_REVIEW_THRESHOLD;
 
+  // Practices with at least one verified review — always shown first when available
+  const verifiedPractices = reviewed
+    .filter(p => (summaryMap[p.id] as any)?.verified_count > 0)
+    .sort((a, b) => (b.avg_overall ?? 0) - (a.avg_overall ?? 0))
+    .slice(0, 3);
+
   // Rating-based pools (used when !isEarlyStage)
   const wellReviewed = reviewed.filter(p => (p.review_count ?? 0) >= MIN_REVIEWS_FOR_SECTION);
   const topByAnxiety = [...wellReviewed].sort((a, b) => (b.avg_anxiety ?? 0) - (a.avg_anxiety ?? 0)).slice(0, 3);
@@ -187,12 +193,22 @@ export default async function Home() {
       {/* Treatment-first navigation */}
       <TreatmentPathways />
 
-      {/* Section 1 — nervous patients / first available section */}
+      {/* Section 1 — verified practices, then rating-based, then service-based */}
       <section className="mx-auto px-5 py-16 sm:py-20" style={{ maxWidth: 1200 }}>
         {(() => {
           const anxietyByService = rankByService('anxiety-friendly');
           const eveningByService = rankByService('evening-appointments');
 
+          if (verifiedPractices.length >= MIN_SECTION_SIZE) {
+            return (
+              <BestForSection
+                title="Verified practices"
+                subtitle="Practices reviewed and verified by real patients"
+                viewAllHref="/search"
+                clinics={verifiedPractices.map(p => toBestFor(p, 'Reviewed by verified patients'))}
+              />
+            );
+          }
           if (!isEarlyStage && topByAnxiety.length >= MIN_SECTION_SIZE) {
             return (
               <BestForSection
@@ -206,7 +222,7 @@ export default async function Home() {
           if (anxietyByService.length > 0) {
             return (
               <BestForSection
-                title={isEarlyStage ? 'Clinics supporting nervous patients' : 'Anxiety-friendly practices'}
+                title="Anxiety-friendly practices"
                 subtitle="Practices specialising in nervous and anxious patient care"
                 badge={isEarlyStage ? earlyBadge : signalBadge}
                 viewAllHref="/search?q=nervous"
@@ -227,7 +243,7 @@ export default async function Home() {
           return (
             <BestForSection
               title="Dental practices in England"
-              subtitle="Verified practices — reviewed by real patients"
+              subtitle="Reviewed by real patients"
               badge={earlyBadge}
               viewAllHref="/search"
               clinics={allPractices.slice(0, 3).map(genericFallback)}
