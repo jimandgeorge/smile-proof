@@ -76,7 +76,7 @@ export default function SignUpPage() {
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {['12,400+ verified reviews', 'Scores on 5 key dimensions', 'NHS & private practices'].map(item => (
+            {['Rated on pain, value, anxiety & more', 'Reviews verified by real patients', 'NHS & private practices across England'].map(item => (
               <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(245,158,11,0.2)', border: '1.5px solid rgba(245,158,11,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Check size={9} strokeWidth={1.5} style={{ color: '#f59e0b' }} />
