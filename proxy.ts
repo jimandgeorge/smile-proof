@@ -1,7 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { hashAdminPassword } from '@/lib/adminHash';
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Admin auth guard
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login' && pathname !== '/admin/logout') {
+    const password = process.env.ADMIN_PASSWORD;
+    if (!password) {
+      return NextResponse.redirect(new URL('/admin/login', request.url));
+    }
+    const cookie = request.cookies.get('admin_session')?.value;
+    const expected = await hashAdminPassword(password);
+    if (!cookie || cookie !== expected) {
+      const url = new URL('/admin/login', request.url);
+      url.searchParams.set('next', pathname);
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Supabase session refresh
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -21,7 +40,6 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refreshes the session token if expired so server components always see a valid session
   await supabase.auth.getUser();
 
   return response;
