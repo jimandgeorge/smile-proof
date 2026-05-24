@@ -2,11 +2,11 @@
 
 import { after } from 'next/server';
 import { createAdminSupabase } from '@/lib/supabase';
-import { requireAdmin } from '@/lib/admin';
+import { requireAdminSession } from '@/lib/admin';
 import { revalidatePath } from 'next/cache';
 
 export async function moderateReview(reviewId: string, action: 'publish' | 'hide' | 'remove') {
-  await requireAdmin();
+  await requireAdminSession();
   const supabase = createAdminSupabase();
   const statusMap = { publish: 'published', hide: 'hidden', remove: 'removed' } as const;
 
@@ -34,7 +34,7 @@ export async function moderateReview(reviewId: string, action: 'publish' | 'hide
 }
 
 export async function approvePracticeSubmission(submissionId: string) {
-  await requireAdmin();
+  await requireAdminSession();
   const supabase = createAdminSupabase();
 
   const { data: sub, error: fetchErr } = await supabase
@@ -91,7 +91,7 @@ export async function approvePracticeSubmission(submissionId: string) {
 }
 
 export async function rejectPracticeSubmission(submissionId: string) {
-  await requireAdmin();
+  await requireAdminSession();
   const supabase = createAdminSupabase();
 
   await supabase
@@ -103,7 +103,7 @@ export async function rejectPracticeSubmission(submissionId: string) {
 }
 
 export async function approveClaim(practiceId: string) {
-  await requireAdmin();
+  await requireAdminSession();
   const supabase = createAdminSupabase();
 
   const { data: practice } = await supabase
@@ -130,7 +130,7 @@ export async function approveClaim(practiceId: string) {
 }
 
 export async function rejectClaim(practiceId: string) {
-  await requireAdmin();
+  await requireAdminSession();
   const supabase = createAdminSupabase();
 
   const { error } = await supabase
