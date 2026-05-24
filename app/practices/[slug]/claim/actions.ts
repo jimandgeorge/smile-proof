@@ -55,13 +55,16 @@ export async function verifyWebsiteClaim(practiceId: string, email: string, webs
     return { error: 'Verification tag not found. Make sure the snippet is in the <head> of your homepage and the page has been saved.' };
   }
 
-  // Tag confirmed — send magic link
+  // Tag confirmed — record pending claim then send magic link
+  await admin
+    .from('practices')
+    .update({ claim_pending_email: email, claim_pending_at: new Date().toISOString() })
+    .eq('id', practiceId);
+
   const supabase = await createServerSupabase();
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?claim=${practiceId}`,
-    },
+    options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback` },
   });
 
   if (error) return { error: error.message };
@@ -69,7 +72,6 @@ export async function verifyWebsiteClaim(practiceId: string, email: string, webs
 }
 
 export async function requestClaim(practiceId: string, email: string) {
-  // Check practice exists and isn't already claimed
   const admin = createAdminSupabase();
   const { data: practice } = await admin
     .from('practices')
@@ -80,12 +82,16 @@ export async function requestClaim(practiceId: string, email: string) {
   if (!practice) return { error: 'Practice not found.' };
   if (practice.claimed_by_user_id) return { error: 'This practice has already been claimed.' };
 
+  // Record pending claim before sending OTP so the callback can look it up by email
+  await admin
+    .from('practices')
+    .update({ claim_pending_email: email, claim_pending_at: new Date().toISOString() })
+    .eq('id', practiceId);
+
   const supabase = await createServerSupabase();
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?claim=${practiceId}`,
-    },
+    options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback` },
   });
 
   if (error) return { error: error.message };

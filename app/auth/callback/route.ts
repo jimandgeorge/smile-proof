@@ -5,7 +5,6 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   const reviewId = searchParams.get('review');
-  const claimId = searchParams.get('claim');
 
   if (!code) {
     return NextResponse.redirect(`${origin}/?error=missing_code`);
@@ -36,28 +35,27 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/reviews/${reviewId}/verified`);
   }
 
-  // Queue a practice claim for admin approval
-  if (claimId) {
-    const { data: practice } = await admin
+  // Queue a practice claim for admin approval — look up by email since PKCE drops URL params
+  const { data: pendingPractice } = await admin
+    .from('practices')
+    .select('id, slug, claimed_by_user_id')
+    .eq('claim_pending_email', data.user.email!)
+    .is('claimed_by_user_id', null)
+    .order('claim_pending_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (pendingPractice) {
+    await admin
       .from('practices')
-      .select('slug, claimed_by_user_id')
-      .eq('id', claimId)
-      .single();
+      .update({
+        claim_pending_user_id: data.user.id,
+        claim_pending_at: new Date().toISOString(),
+      })
+      .eq('id', pendingPractice.id)
+      .is('claimed_by_user_id', null);
 
-    if (practice && !practice.claimed_by_user_id) {
-      await admin
-        .from('practices')
-        .update({
-          claim_pending_user_id: data.user.id,
-          claim_pending_email: data.user.email,
-          claim_pending_at: new Date().toISOString(),
-        })
-        .eq('id', claimId)
-        .is('claimed_by_user_id', null);
-    }
-
-    const slug = practice?.slug ?? '';
-    const next = encodeURIComponent(`/practices/${slug}/claim?submitted=1`);
+    const next = encodeURIComponent(`/practices/${pendingPractice.slug}/claim?submitted=1`);
     return NextResponse.redirect(`${origin}/auth/set-password?next=${next}`);
   }
 
