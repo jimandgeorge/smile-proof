@@ -69,7 +69,7 @@ export default function NavBar() {
             Get matched
           </Link>
 
-          {loggedIn && (
+          {loggedIn ? (
             <>
               <Link
                 href="/dashboard"
@@ -90,6 +90,14 @@ export default function NavBar() {
                 Log out
               </a>
             </>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="px-4 py-2 rounded-full text-sm font-semibold border transition-colors"
+              style={{ fontFamily: 'var(--font-body)', color: 'var(--forest)', borderColor: 'rgba(28,69,53,0.3)', textDecoration: 'none', background: 'white' }}
+            >
+              Sign in
+            </Link>
           )}
         </nav>
 
@@ -130,7 +138,7 @@ export default function NavBar() {
               {label}
             </Link>
           ))}
-          {loggedIn && (
+          {loggedIn ? (
             <a
               href="/auth/logout"
               style={{ fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 500, color: 'var(--ink-soft)', textDecoration: 'none', padding: '12px 16px', borderRadius: 10 }}
@@ -138,6 +146,14 @@ export default function NavBar() {
             >
               Log out
             </a>
+          ) : (
+            <Link
+              href="/auth/login"
+              style={{ fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 600, color: 'var(--forest)', textDecoration: 'none', padding: '12px 16px', borderRadius: 10, border: '1.5px solid rgba(28,69,53,0.25)', textAlign: 'center' }}
+              onClick={() => setMenuOpen(false)}
+            >
+              Sign in
+            </Link>
           )}
           <Link
             href="/find"
