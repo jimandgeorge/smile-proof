@@ -28,7 +28,7 @@ export default function SignUpPage() {
     setLoading(true);
     setError(null);
     const redirectBase = getRedirectBase();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -38,6 +38,9 @@ export default function SignUpPage() {
     });
     if (error) {
       setError(error.message);
+      setLoading(false);
+    } else if (data.user && data.user.identities && data.user.identities.length === 0) {
+      setError('An account with this email already exists. Please sign in instead.');
       setLoading(false);
     } else {
       setDone(true);

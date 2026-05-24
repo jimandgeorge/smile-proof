@@ -111,7 +111,7 @@ export default function Footer() {
           © {new Date().getFullYear()} SmileProof. All rights reserved.
         </p>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--ink-soft)' }}>
-          Built for UK patients 🇬🇧
+          Built for UK patients
         </p>
       </div>
 

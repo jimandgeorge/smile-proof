@@ -482,7 +482,7 @@ export default function DashboardShell({
           {tab === 'enquiries' && <EnquiriesTab practiceId={practiceId} enquiries={enquiries} />}
           {tab === 'team' && <TeamTab practiceId={practiceId} practiceSlug={practiceSlug} initialDentists={teamDentists} />}
           {tab === 'profile' && <ProfileTab practiceName={practiceName} practiceCity={practiceCity} practiceSlug={practiceSlug} practiceId={practiceId} allServices={allServices} practiceServiceIds={practiceServiceIds} initialLogoUrl={logoUrl} />}
-          {tab === 'settings' && <SettingsTab userEmail={userEmail} isOAuthUser={isOAuthUser} practiceId={practiceId} practiceSlug={practiceSlug} practiceName={practiceName} />}
+          {tab === 'settings' && <SettingsTab userEmail={userEmail} isOAuthUser={isOAuthUser} practiceId={practiceId} practiceSlug={practiceSlug} practiceName={practiceName} isPaid={isPaid} />}
         </div>
       </div>
     </div>
@@ -1279,10 +1279,62 @@ function ProfileTab({ practiceName, practiceCity, practiceSlug, practiceId, allS
   );
 }
 
+// ── Billing section ───────────────────────────────────────────────────────────
+function BillingSection({ isPaid, practiceSlug }: { isPaid: boolean; practiceSlug: string }) {
+  const [loading, setLoading] = useState(false);
+
+  async function openPortal() {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: practiceSlug }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '24px 28px', marginBottom: 16 }}>
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: D.text, margin: '0 0 16px', letterSpacing: '-0.01em' }}>Billing</h3>
+      {isPaid ? (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: D.accent, background: D.accentPale, border: '1px solid rgba(52,211,153,0.25)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--font-body)' }}>Pro plan active</span>
+          </div>
+          <button
+            onClick={openPortal}
+            disabled={loading}
+            style={{ padding: '9px 20px', borderRadius: 8, border: `1.5px solid ${D.border}`, background: D.card2, color: D.mid, fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', cursor: loading ? 'not-allowed' : 'pointer' }}
+          >
+            {loading ? 'Opening…' : 'Manage billing'}
+          </button>
+        </div>
+      ) : (
+        <div>
+          <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: '0 0 14px' }}>
+            You&apos;re on the free plan.
+          </p>
+          <a
+            href={`/practices/${practiceSlug}/upgrade`}
+            style={{ display: 'inline-block', padding: '9px 20px', borderRadius: 8, background: D.accent, color: 'white', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', textDecoration: 'none' }}
+          >
+            Upgrade to Pro
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Settings tab ──────────────────────────────────────────────────────────────
-function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practiceName }: {
+function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practiceName, isPaid }: {
   userEmail: string; isOAuthUser: boolean;
-  practiceId: string; practiceSlug: string; practiceName: string;
+  practiceId: string; practiceSlug: string; practiceName: string; isPaid: boolean;
 }) {
   const [pwCurrent, setPwCurrent] = useState('');
   const [pwNew, setPwNew] = useState('');
@@ -1349,6 +1401,8 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }}>
       <div>
+      {/* Billing */}
+      <BillingSection isPaid={isPaid} practiceSlug={practiceSlug} />
       {/* Account */}
       <Section title="Account">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, background: D.card2, marginBottom: 16, border: `1px solid ${D.border}` }}>

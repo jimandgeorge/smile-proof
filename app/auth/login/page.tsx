@@ -189,9 +189,8 @@ export default function LoginPage() {
           </form>
 
           <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--ink-soft)', fontFamily: 'var(--font-body)', margin: '20px 0 10px' }}>
-            Don't have an account?{' '}
             <Link href="/auth/signup" style={{ fontWeight: 700, color: 'var(--ink)', textDecoration: 'none' }}>
-              Sign up free
+              Claim your practice
             </Link>
           </p>
           <p style={{ textAlign: 'center', margin: 0 }}>
