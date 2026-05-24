@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/reviews/${reviewId}/verified`);
   }
 
-  // Complete a practice claim
+  // Queue a practice claim for admin approval
   if (claimId) {
     const { data: practice } = await admin
       .from('practices')
@@ -48,18 +48,16 @@ export async function GET(request: NextRequest) {
       await admin
         .from('practices')
         .update({
-          claimed_by_user_id: data.user.id,
-          claimed_at: new Date().toISOString(),
-          claim_pending_user_id: null,
-          claim_pending_email: null,
-          claim_pending_at: null,
+          claim_pending_user_id: data.user.id,
+          claim_pending_email: data.user.email,
+          claim_pending_at: new Date().toISOString(),
         })
         .eq('id', claimId)
         .is('claimed_by_user_id', null);
     }
 
     const slug = practice?.slug ?? '';
-    return NextResponse.redirect(`${origin}/practices/${slug}/dashboard`);
+    return NextResponse.redirect(`${origin}/practices/${slug}/claim?submitted=1`);
   }
 
   // Redirect to the user's practice dashboard if they have a claimed practice

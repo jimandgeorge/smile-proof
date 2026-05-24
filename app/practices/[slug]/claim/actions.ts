@@ -6,12 +6,37 @@ export async function verifyWebsiteClaim(practiceId: string, email: string, webs
   const admin = createAdminSupabase();
   const { data: practice } = await admin
     .from('practices')
-    .select('id, name, claimed_by_user_id')
+    .select('id, name, website, claimed_by_user_id')
     .eq('id', practiceId)
     .single();
 
   if (!practice) return { error: 'Practice not found.' };
   if (practice.claimed_by_user_id) return { error: 'This practice has already been claimed.' };
+
+  // Validate URL scheme and that it matches the practice's stored domain
+  let parsed: URL;
+  try {
+    parsed = new URL(websiteUrl);
+  } catch {
+    return { error: 'Invalid URL.' };
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    return { error: 'URL must use http or https.' };
+  }
+  if (practice.website) {
+    let storedHostname: string;
+    try {
+      storedHostname = new URL(
+        practice.website.startsWith('http') ? practice.website : `https://${practice.website}`
+      ).hostname.replace(/^www\./, '');
+    } catch {
+      storedHostname = '';
+    }
+    const suppliedHostname = parsed.hostname.replace(/^www\./, '');
+    if (storedHostname && suppliedHostname !== storedHostname) {
+      return { error: 'The URL must match the website address on your practice profile.' };
+    }
+  }
 
   // Fetch the practice website and look for the verification meta tag
   let html: string;

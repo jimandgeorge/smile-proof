@@ -1,4 +1,6 @@
+import { notFound } from 'next/navigation';
 import { createAdminSupabase } from '@/lib/supabase';
+import { isAdmin } from '@/lib/admin';
 import { moderateReview, approvePracticeSubmission, rejectPracticeSubmission, approveClaim, rejectClaim } from './actions';
 import { CheckCircle } from 'lucide-react';
 
@@ -7,6 +9,8 @@ export default async function QueuePage({
 }: {
   searchParams: Promise<{ section?: string; status?: string }>;
 }) {
+  if (!(await isAdmin())) notFound();
+
   const { section = 'reviews', status = 'pending' } = await searchParams;
   const supabase = createAdminSupabase();
   const isPractices = section === 'practices';

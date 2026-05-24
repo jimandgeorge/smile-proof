@@ -439,7 +439,7 @@ export function ReviewForm({
             {/* NHS band info */}
             {form.price_payment_type === 'nhs' && (
               <div style={{ background: 'var(--forest-pale)', border: '1px solid rgba(28,69,53,0.15)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--forest)', fontFamily: 'var(--font-body)', lineHeight: 1.5 }}>
-                NHS Band 1 = £26.80 · Band 2 = £73.50 · Band 3 = £284.30 (2024/25 rates)
+                NHS Band 1 = £27.90 · Band 2 = £76.60 · Band 3 = £332.10 (from 1 April 2026)
               </div>
             )}
           </div>
