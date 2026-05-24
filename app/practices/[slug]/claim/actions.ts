@@ -1,6 +1,14 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase';
+
+async function getSiteUrl(): Promise<string> {
+  const h = await headers();
+  const proto = h.get('x-forwarded-proto') ?? 'https';
+  const host  = h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3000';
+  return `${proto}://${host}`;
+}
 
 export async function verifyWebsiteClaim(practiceId: string, email: string, websiteUrl: string) {
   const admin = createAdminSupabase();
@@ -61,10 +69,11 @@ export async function verifyWebsiteClaim(practiceId: string, email: string, webs
     .update({ claim_pending_email: email, claim_pending_at: new Date().toISOString() })
     .eq('id', practiceId);
 
+  const siteUrl = await getSiteUrl();
   const supabase = await createServerSupabase();
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback` },
+    options: { emailRedirectTo: `${siteUrl}/auth/callback` },
   });
 
   if (error) return { error: error.message };
@@ -88,10 +97,11 @@ export async function requestClaim(practiceId: string, email: string) {
     .update({ claim_pending_email: email, claim_pending_at: new Date().toISOString() })
     .eq('id', practiceId);
 
+  const siteUrl = await getSiteUrl();
   const supabase = await createServerSupabase();
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback` },
+    options: { emailRedirectTo: `${siteUrl}/auth/callback` },
   });
 
   if (error) return { error: error.message };
