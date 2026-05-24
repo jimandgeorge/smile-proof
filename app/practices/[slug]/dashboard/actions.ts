@@ -540,7 +540,7 @@ export async function unclaimPractice(
   accessToken: string,
   practiceId: string,
   practiceSlug: string,
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; success?: true }> {
   const user = await getUserFromToken(accessToken);
   if (!user) return { error: 'You must be logged in.' };
 
@@ -555,14 +555,23 @@ export async function unclaimPractice(
     return { error: 'You do not own this practice.' };
   }
 
-  const { error } = await admin
+  const { error: unclaimErr } = await admin
     .from('practices')
-    .update({ claimed_by_user_id: null })
+    .update({
+      claimed_by_user_id:     null,
+      claimed_at:             null,
+      stripe_customer_id:     null,
+      stripe_subscription_id: null,
+      subscription_status:    'free',
+      subscription_plan:      'free',
+    })
     .eq('id', practiceId);
 
-  if (error) return { error: error.message };
+  if (unclaimErr) return { error: unclaimErr.message };
 
-  redirect(`/practices/${practiceSlug}`);
+  await admin.auth.admin.deleteUser(user.id);
+
+  return { success: true };
 }
 
 export async function savePracticeLogoUrl(

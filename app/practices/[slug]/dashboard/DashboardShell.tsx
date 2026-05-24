@@ -1381,8 +1381,14 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
     setUnclaiming(true);
     setUnclaimMsg(null);
     const result = await unclaimPractice(accessToken, practiceId, practiceSlug);
-    if (result.error) { setUnclaimMsg(result.error); setUnclaiming(false); }
-    // on success the server redirects away
+    if (result.error) {
+      setUnclaimMsg(result.error);
+      setUnclaiming(false);
+    } else {
+      const { createClient } = await import('@/lib/supabase');
+      await createClient().auth.signOut();
+      window.location.href = '/';
+    }
   }
 
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -1488,7 +1494,7 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
       <div style={{ background: 'rgba(220,38,38,0.07)', border: '1.5px solid rgba(220,38,38,0.25)', borderRadius: 12, padding: '24px 28px' }}>
         <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: '#f87171', margin: '0 0 8px', letterSpacing: '-0.01em' }}>Danger zone</h3>
         <p style={{ fontSize: 13, color: 'rgba(248,113,113,0.7)', fontFamily: 'var(--font-body)', lineHeight: 1.6, margin: '0 0 14px' }}>
-          Unclaiming <strong>{practiceName}</strong> will remove your access to this dashboard and revert the listing to unverified. This cannot be undone from here — you would need to re-claim the practice.
+          This will unclaim <strong>{practiceName}</strong>, delete your account, and sign you out. The listing will revert to unverified. This cannot be undone.
         </p>
         {!unclaimConfirm ? (
           <button
