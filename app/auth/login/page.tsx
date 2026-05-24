@@ -64,16 +64,16 @@ export default function LoginPage() {
           </p>
 
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 800, color: 'white', lineHeight: 1.15, letterSpacing: '-0.02em', margin: '0 0 16px' }}>
-            Real reviews.<br />
-            <em style={{ fontStyle: 'italic' }}>Real patients.</em>
+            Your practice.<br />
+            <em style={{ fontStyle: 'italic' }}>Your reputation.</em>
           </h2>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65, fontFamily: 'var(--font-body)', margin: '0 0 32px', maxWidth: 280 }}>
-            Rated on what actually matters — pain, cleanliness, value, and outcomes. Not just a star.
+            Manage your listing, respond to patient reviews, and see how your practice is performing.
           </p>
 
           {/* Bullets */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 0 }}>
-            {['Rated on pain, value, anxiety & more', 'Reviews verified by real patients', 'NHS & private practices across England'].map(item => (
+            {['Respond to patient reviews', 'Track ratings and profile views', 'Invite patients to leave reviews'].map(item => (
               <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(245,158,11,0.2)', border: '1.5px solid rgba(245,158,11,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Check size={9} strokeWidth={1.5} style={{ color: '#f59e0b' }} />
@@ -91,15 +91,15 @@ export default function LoginPage() {
           borderRadius: 12, padding: '20px 20px 18px',
         }}>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', fontStyle: 'italic', lineHeight: 1.65, fontFamily: 'var(--font-body)', margin: '0 0 14px' }}>
-            "Finally a review site that tells me whether the treatment actually hurt — not just how pretty the waiting room was."
+            "Since claiming our profile we&apos;ve seen a real uptick in new patients — they mention reading our reviews before booking."
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(245,158,11,0.15)', border: '1.5px solid rgba(245,158,11,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b', fontFamily: 'var(--font-display)' }}>R</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b', fontFamily: 'var(--font-display)' }}>J</span>
             </div>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'white', fontFamily: 'var(--font-body)' }}>Rachel T.</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-body)' }}>Verified reviewer</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'white', fontFamily: 'var(--font-body)' }}>James K.</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-body)' }}>Practice owner, Leeds</div>
             </div>
           </div>
         </div>
@@ -109,10 +109,10 @@ export default function LoginPage() {
       <div style={{ flex: 1, background: 'var(--cream)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
         <div style={{ width: '100%', maxWidth: 400 }}>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 800, color: 'var(--ink)', margin: '0 0 8px', letterSpacing: '-0.02em' }}>
-            Welcome back.
+            Practice dashboard
           </h1>
           <p style={{ fontSize: 14, color: 'var(--ink-soft)', margin: '0 0 28px', fontFamily: 'var(--font-body)' }}>
-            Sign in to write reviews and track your dental care.
+            Sign in to manage your listing and respond to patient reviews.
           </p>
 
           {/* Form */}
@@ -188,14 +188,10 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--ink-soft)', fontFamily: 'var(--font-body)', margin: '20px 0 10px' }}>
-            <Link href="/auth/signup" style={{ fontWeight: 700, color: 'var(--ink)', textDecoration: 'none' }}>
-              Claim your practice
-            </Link>
-          </p>
-          <p style={{ textAlign: 'center', margin: 0 }}>
-            <Link href="/" style={{ fontSize: 13, color: 'var(--ink-faint)', fontFamily: 'var(--font-body)', textDecoration: 'underline', textUnderlineOffset: 2 }}>
-              Continue browsing as guest
+          <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--ink-soft)', fontFamily: 'var(--font-body)', margin: '20px 0 0' }}>
+            Not yet listed?{' '}
+            <Link href="/search" style={{ fontWeight: 700, color: 'var(--ink)', textDecoration: 'none' }}>
+              Find and claim your practice
             </Link>
           </p>
         </div>
