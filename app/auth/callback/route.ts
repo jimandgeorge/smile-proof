@@ -57,7 +57,8 @@ export async function GET(request: NextRequest) {
     }
 
     const slug = practice?.slug ?? '';
-    return NextResponse.redirect(`${origin}/practices/${slug}/claim?submitted=1`);
+    const next = encodeURIComponent(`/practices/${slug}/claim?submitted=1`);
+    return NextResponse.redirect(`${origin}/auth/set-password?next=${next}`);
   }
 
   // Redirect to the user's practice dashboard if they have a claimed practice
