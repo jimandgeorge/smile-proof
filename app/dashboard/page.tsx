@@ -8,13 +8,23 @@ export default async function DashboardRedirect() {
   if (!user) redirect('/auth/login');
 
   const admin = createAdminSupabase();
-  const { data: practice } = await admin
+
+  const { data: claimed } = await admin
     .from('practices')
     .select('slug')
     .eq('claimed_by_user_id', user.id)
-    .single();
+    .maybeSingle();
 
-  if (!practice) redirect('/for-dentists');
+  if (claimed?.slug) redirect(`/practices/${claimed.slug}/dashboard`);
 
-  redirect(`/practices/${practice.slug}/dashboard`);
+  const { data: pending } = await admin
+    .from('practices')
+    .select('slug')
+    .eq('claim_pending_user_id', user.id)
+    .is('claimed_by_user_id', null)
+    .maybeSingle();
+
+  if (pending?.slug) redirect(`/practices/${pending.slug}/claim?submitted=1`);
+
+  redirect('/for-dentists');
 }
