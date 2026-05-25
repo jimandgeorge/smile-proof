@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter_Tight, Inter } from "next/font/google";
-import Script from "next/script";
 import NavBar from "./components/NavBar";
 import ConditionalFooter from "./components/ConditionalFooter";
 import "./globals.css";
@@ -30,14 +29,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${interTight.variable} ${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-body" suppressHydrationWarning>
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-YHLN26L0HJ" strategy="afterInteractive" />
-        <Script id="google-analytics" strategy="afterInteractive">{`
+      <head>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-YHLN26L0HJ" />
+        <script dangerouslySetInnerHTML={{ __html: `
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
           gtag('config', 'G-YHLN26L0HJ');
-        `}</Script>
+        `}} />
+      </head>
+      <body className="min-h-full flex flex-col font-body" suppressHydrationWarning>
         <NavBar />
         <div className="flex-1">{children}</div>
         <ConditionalFooter />
