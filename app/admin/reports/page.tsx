@@ -114,7 +114,7 @@ export default async function AdminReportsPage({
           {/* Reason filter */}
           <form method="get" style={{ display: 'flex', gap: 6, padding: '8px 0' }}>
             <input type="hidden" name="status" value={status} />
-            <select name="reason" defaultValue={reason} onChange="this.form.submit()" style={{ padding: '6px 10px', borderRadius: 8, fontSize: 12, border: '1px solid #e5e2db', fontFamily: 'var(--font-body)', color: '#374151', background: 'white' }}>
+            <select name="reason" defaultValue={reason} style={{ padding: '6px 10px', borderRadius: 8, fontSize: 12, border: '1px solid #e5e2db', fontFamily: 'var(--font-body)', color: '#374151', background: 'white' }}>
               <option value="">All reasons</option>
               <option value="fake">Fake</option>
               <option value="defamatory">Defamatory</option>
