@@ -22,20 +22,37 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.smileproof.co.uk'),
   title: "SmileProof — UK Dental Reviews",
   description: "Verified patient reviews and real prices for UK dental practices.",
+  openGraph: {
+    siteName: 'SmileProof',
+    type: 'website',
+    locale: 'en_GB',
+    title: 'SmileProof — UK Dental Reviews',
+    description: 'Verified patient reviews and real prices for UK dental practices.',
+    url: 'https://www.smileproof.co.uk',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'SmileProof — UK Dental Reviews',
+    description: 'Verified patient reviews and real prices for UK dental practices.',
+  },
+  alternates: {
+    canonical: 'https://www.smileproof.co.uk',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${interTight.variable} ${inter.variable} h-full antialiased`}>
       <head>
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-YHLN26L0HJ" />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-2W1RGM0DQ1" />
         <script dangerouslySetInnerHTML={{ __html: `
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', 'G-YHLN26L0HJ');
+          gtag('config', 'G-2W1RGM0DQ1');
         `}} />
       </head>
       <body className="min-h-full flex flex-col font-body" suppressHydrationWarning>

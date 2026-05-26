@@ -401,7 +401,7 @@ export default function DashboardShell({
                 href={`/practices/${practiceSlug}/upgrade`}
                 style={{ display: 'block', width: '100%', padding: '9px 0', borderRadius: 8, background: '#f59e0b', color: '#1c1c0a', fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}
               >
-                Upgrade to Pro
+                Upgrade
               </Link>
             </div>
           )}
@@ -1323,7 +1323,7 @@ function BillingSection({ isPaid, practiceSlug }: { isPaid: boolean; practiceSlu
             href={`/practices/${practiceSlug}/upgrade`}
             style={{ display: 'inline-block', padding: '9px 20px', borderRadius: 8, background: D.accent, color: 'white', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', textDecoration: 'none' }}
           >
-            Upgrade to Pro
+            Upgrade
           </a>
         </div>
       )}

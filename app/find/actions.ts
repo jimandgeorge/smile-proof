@@ -66,6 +66,9 @@ const TREATMENT_SERVICE_SLUGS: Record<string, string[]> = {
   emergency:  ['emergency', 'emergency-care'],
   checkup:    ['general-dentistry', 'hygiene'],
   nhs:        ['nhs'],
+  bonding:    ['composite-bonding', 'cosmetic-dentistry'],
+  gum:        ['gum-disease', 'periodontal', 'gum-treatment'],
+  children:   ['childrens-dentistry', 'paediatric', 'children'],
 };
 
 const TREATMENT_FALLBACK_INSIGHT: Record<string, string> = {
@@ -76,6 +79,9 @@ const TREATMENT_FALLBACK_INSIGHT: Record<string, string> = {
   emergency:  'Same-day emergency appointments available',
   checkup:    'General dentistry & hygiene',
   nhs:        'NHS treatment available',
+  bonding:    'Composite bonding & cosmetic treatments',
+  gum:        'Gum disease treatment & periodontal care',
+  children:   "Children's dental care",
   other:      'Dental practice',
 };
 

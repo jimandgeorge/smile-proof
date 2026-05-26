@@ -62,7 +62,7 @@ export default function MetricsDashboard({ isPaid, practiceSlug, responseRate, c
               fontFamily: 'var(--font-body)', textDecoration: 'none',
             }}
           >
-            Upgrade to Pro
+            Upgrade
           </Link>
         </div>
       </div>

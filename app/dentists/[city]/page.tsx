@@ -17,9 +17,15 @@ function prettify(city: string) {
 export async function generateMetadata({ params }: Props) {
   const { city } = await params;
   const name = prettify(city);
+  const title = `Dentists in ${name} | SmileProof`;
+  const description = `Find verified NHS and private dentists in ${name}. Read patient reviews and compare prices.`;
+  const url = `https://www.smileproof.co.uk/dentists/${city}`;
   return {
-    title: `Dentists in ${name} | SmileProof`,
-    description: `Find verified NHS and private dentists in ${name}. Read patient reviews and compare prices.`,
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, type: 'website' },
+    twitter: { card: 'summary' as const, title, description },
   };
 }
 

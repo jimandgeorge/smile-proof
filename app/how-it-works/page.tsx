@@ -101,13 +101,14 @@ export default function HowItWorksPage() {
       </div>
 
       {/* Two-column audience split */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 56, alignItems: 'stretch' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16, marginBottom: 56, alignItems: 'stretch' }}>
 
         {/* For patients — light */}
         <div style={{
-          borderRadius: 16, padding: '32px 28px',
+          borderRadius: 16, padding: 'clamp(20px, 4vw, 32px) clamp(16px, 3vw, 28px)',
           background: 'white', border: '1.5px solid var(--cream-dark)',
           display: 'flex', flexDirection: 'column',
+          minWidth: 0,
         }}>
           <p style={{
             fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 700,
@@ -156,9 +157,10 @@ export default function HowItWorksPage() {
 
         {/* For practices — dark */}
         <div style={{
-          borderRadius: 16, padding: '32px 28px',
+          borderRadius: 16, padding: 'clamp(20px, 4vw, 32px) clamp(16px, 3vw, 28px)',
           background: 'linear-gradient(150deg, #122d21 0%, #1c4535 100%)',
           display: 'flex', flexDirection: 'column',
+          minWidth: 0,
         }}>
           <p style={{
             fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 700,

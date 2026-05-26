@@ -18,14 +18,31 @@ export async function generateMetadata({ params }: Params) {
   const supabase = await createServerSupabase();
   const { data: practice } = await supabase
     .from('practices')
-    .select('name, city')
+    .select('name, city, address_line1, postcode, practice_type')
     .eq('slug', slug)
     .single();
 
   if (!practice) return { title: 'Practice not found' };
+
+  const title = `${practice.name} reviews — ${practice.city} | SmileProof`;
+  const description = `Verified patient reviews for ${practice.name} in ${practice.city}, ${practice.postcode}. See scores for pain management, anxiety care, communication and more.`;
+  const url = `https://www.smileproof.co.uk/practices/${slug}`;
+
   return {
-    title: `${practice.name} reviews — ${practice.city} | SmileProof`,
-    description: `Verified patient reviews for ${practice.name} in ${practice.city}.`,
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+    },
   };
 }
 
@@ -133,7 +150,39 @@ export default async function PracticePage({ params }: Params) {
 
   const earlyInsights = (summary?.review_count ?? 0) > 0 && (summary?.review_count ?? 0) < SUMMARY_MIN_REVIEWS;
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Dentist',
+    name: practice.name,
+    url: `https://www.smileproof.co.uk/practices/${practice.slug}`,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: practice.address_line1,
+      addressLocality: practice.city,
+      postalCode: practice.postcode,
+      addressCountry: 'GB',
+    },
+    ...(practice.phone ? { telephone: practice.phone } : {}),
+    ...(practice.website ? { sameAs: [practice.website.startsWith('http') ? practice.website : `https://${practice.website}`] } : {}),
+    ...(overallScore && summary?.review_count
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: overallScore.toFixed(1),
+            bestRating: '5',
+            worstRating: '1',
+            reviewCount: summary.review_count,
+          },
+        }
+      : {}),
+  };
+
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
     <main style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 20px 80px' }}>
       {/* Back link */}
       <Link
@@ -333,7 +382,7 @@ export default async function PracticePage({ params }: Params) {
           <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
             {practice.website && (
               <a
-                href={practice.website}
+                href={practice.website.startsWith('http') ? practice.website : `https://${practice.website}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -542,5 +591,6 @@ export default async function PracticePage({ params }: Params) {
         }
       `}</style>
     </main>
+    </>
   );
 }

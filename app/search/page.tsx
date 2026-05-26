@@ -109,7 +109,6 @@ async function searchByText(query: string): Promise<PracticeCardData[]> {
       .from('practices')
       .select('id, slug, name, city, address_line1, practice_type, website, claimed_by_user_id, ai_summary')
       .or(`name.ilike.%${query}%,city.ilike.%${query}%`)
-      .order('name')
       .limit(200),
     supabase
       .from('practice_rating_summary')
@@ -132,7 +131,19 @@ async function searchByText(query: string): Promise<PracticeCardData[]> {
     servicesByPractice.set(ps.practice_id, list);
   }
 
-  return (practicesRes.data ?? []).map((p) => {
+  const q = query.toLowerCase();
+
+  function relevance(p: { name: string; city: string }): number {
+    const name = p.name.toLowerCase();
+    const city = p.city.toLowerCase();
+    if (name === q) return 0;
+    if (name.startsWith(q)) return 1;
+    if (name.includes(q)) return 2;
+    if (city === q || city.startsWith(q)) return 3;
+    return 4;
+  }
+
+  const results = (practicesRes.data ?? []).map((p) => {
     const s = summaryMap[p.id];
     return {
       ...p,
@@ -146,6 +157,15 @@ async function searchByText(query: string): Promise<PracticeCardData[]> {
       ai_summary:        stripHeading(aiSummaryMap[p.id] ?? (p as any).ai_summary) ?? null,
       services:          servicesByPractice.get(p.id) ?? [],
     };
+  });
+
+  return results.sort((a, b) => {
+    const rd = relevance(a) - relevance(b);
+    if (rd !== 0) return rd;
+    // Within same relevance band: more reviews first, then alphabetical
+    const rc = (b.review_count ?? 0) - (a.review_count ?? 0);
+    if (rc !== 0) return rc;
+    return a.name.localeCompare(b.name);
   });
 }
 

@@ -9,9 +9,15 @@ export async function generateMetadata({ params }: Params) {
   const supabase = await createServerSupabase();
   const { data } = await supabase.from('dentists').select('full_name').eq('slug', slug).single();
   if (!data) return { title: 'Dentist not found' };
+  const title = `${data.full_name} — Dentist Reviews | SmileProof`;
+  const description = `Patient reviews and ratings for ${data.full_name}.`;
+  const url = `https://www.smileproof.co.uk/dentist/${slug}`;
   return {
-    title: `${data.full_name} — Dentist Reviews | SmileProof`,
-    description: `Patient reviews and ratings for ${data.full_name}.`,
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, type: 'website' },
+    twitter: { card: 'summary' as const, title, description },
   };
 }
 

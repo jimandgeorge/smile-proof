@@ -85,6 +85,37 @@ const TREATMENTS = [
       </svg>
     ),
   },
+  {
+    q: 'bonding',
+    label: 'Composite bonding',
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M9 4C8 4 7 5 7 7.5c0 3 1.5 5.5 2.5 8h5c1-2.5 2.5-5 2.5-8C17 5 16 4 15 4H9z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M15 3l2 2-4.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M17 5l1-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    q: 'gum',
+    label: 'Gum treatment',
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M9 3C8 3 7 4 7 7c0 3 1.5 5.5 2.5 8h5C15.5 12.5 17 10 17 7c0-3-1-4-2-4H9z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M5 13.5c1.5 0 2 1.5 3.5 1.5s2-1.5 3.5-1.5 2 1.5 3.5 1.5 2-1.5 3.5-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    q: 'children',
+    label: "Children's",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M9 5C8 5 7 6 7 8.5c0 2.5 1 4.5 2 7.5h6c1-3 2-5 2-7.5C17 6 16 5 15 5H9z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M12 1.5l.6 1.7 1.9.6-1.9.6L12 6.3l-.6-1.9L9.5 3.8l1.9-.6z" fill="currentColor" opacity=".65" />
+      </svg>
+    ),
+  },
 ];
 
 const SCROLL_BY = 320;
