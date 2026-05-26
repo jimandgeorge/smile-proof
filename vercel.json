@@ -4,5 +4,19 @@
       "path": "/api/cron/generate-summaries",
       "schedule": "0 2 * * *"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "smileproof.co.uk" }],
+      "destination": "https://beta.smileproof.co.uk/$1",
+      "permanent": false
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.smileproof.co.uk" }],
+      "destination": "https://beta.smileproof.co.uk/$1",
+      "permanent": false
+    }
   ]
 }
