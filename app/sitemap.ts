@@ -1,6 +1,8 @@
 import type { MetadataRoute } from 'next';
 import { createAdminSupabase } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 const BASE = 'https://www.smileproof.co.uk';
 
 const STATIC_PAGES: MetadataRoute.Sitemap = [
