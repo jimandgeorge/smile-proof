@@ -90,12 +90,13 @@ export async function submitReview(_prevState: unknown, formData: FormData) {
   }
 
   // Notify practice owner of new review (non-blocking)
-  admin
-    .from('practices')
-    .select('name, slug, claimed_by_user_id')
-    .eq('id', data.practice_id)
-    .single()
-    .then(async ({ data: practice }) => {
+  void (async () => {
+    try {
+      const { data: practice } = await admin
+        .from('practices')
+        .select('name, slug, claimed_by_user_id')
+        .eq('id', data.practice_id)
+        .single();
       if (!practice?.claimed_by_user_id) return;
       const { data: { user } } = await admin.auth.admin.getUserById(practice.claimed_by_user_id);
       if (!user?.email) return;
@@ -108,8 +109,8 @@ export async function submitReview(_prevState: unknown, formData: FormData) {
         reviewTitle: data.title ?? null,
         reviewBody: data.body,
       });
-    })
-    .catch(() => {});
+    } catch {}
+  })();
 
   // Trigger magic-link email so reviewer can verify ownership
   await supabase.auth.signInWithOtp({

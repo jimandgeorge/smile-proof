@@ -29,12 +29,13 @@ export async function submitEnquiry(formData: FormData): Promise<{ success?: tru
   if (error) return { error: 'Could not send your enquiry. Please try again.' };
 
   // Notify practice owner (non-blocking)
-  admin
-    .from('practices')
-    .select('name, slug, claimed_by_user_id')
-    .eq('id', parsed.data.practice_id)
-    .single()
-    .then(async ({ data: practice }) => {
+  void (async () => {
+    try {
+      const { data: practice } = await admin
+        .from('practices')
+        .select('name, slug, claimed_by_user_id')
+        .eq('id', parsed.data.practice_id)
+        .single();
       if (!practice?.claimed_by_user_id) return;
       const { data: { user } } = await admin.auth.admin.getUserById(practice.claimed_by_user_id);
       if (!user?.email) return;
@@ -47,8 +48,8 @@ export async function submitEnquiry(formData: FormData): Promise<{ success?: tru
         message: parsed.data.message,
         treatmentInterest: parsed.data.treatment_interest,
       });
-    })
-    .catch(() => {});
+    } catch {}
+  })();
 
   return { success: true };
 }
