@@ -1,6 +1,7 @@
 'use server';
 
 import { createAdminSupabase } from '@/lib/supabase';
+import { sendNewEnquiryNotification } from '@/lib/email';
 import { z } from 'zod';
 
 const EnquirySchema = z.object({
@@ -26,6 +27,28 @@ export async function submitEnquiry(formData: FormData): Promise<{ success?: tru
   const admin = createAdminSupabase();
   const { error } = await admin.from('practice_enquiries').insert(parsed.data);
   if (error) return { error: 'Could not send your enquiry. Please try again.' };
+
+  // Notify practice owner (non-blocking)
+  admin
+    .from('practices')
+    .select('name, slug, claimed_by_user_id')
+    .eq('id', parsed.data.practice_id)
+    .single()
+    .then(async ({ data: practice }) => {
+      if (!practice?.claimed_by_user_id) return;
+      const { data: { user } } = await admin.auth.admin.getUserById(practice.claimed_by_user_id);
+      if (!user?.email) return;
+      await sendNewEnquiryNotification({
+        to: user.email,
+        practiceName: practice.name,
+        practiceSlug: practice.slug,
+        patientName: parsed.data.name,
+        patientEmail: parsed.data.email,
+        message: parsed.data.message,
+        treatmentInterest: parsed.data.treatment_interest,
+      });
+    })
+    .catch(() => {});
 
   return { success: true };
 }

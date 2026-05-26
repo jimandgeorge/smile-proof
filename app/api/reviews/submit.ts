@@ -4,6 +4,7 @@
 'use server';
 
 import { createAdminSupabase, createServerSupabase } from '@/lib/supabase';
+import { sendNewReviewNotification } from '@/lib/email';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
@@ -87,6 +88,28 @@ export async function submitReview(_prevState: unknown, formData: FormData) {
       date_of_treatment: data.treatment_date,
     });
   }
+
+  // Notify practice owner of new review (non-blocking)
+  admin
+    .from('practices')
+    .select('name, slug, claimed_by_user_id')
+    .eq('id', data.practice_id)
+    .single()
+    .then(async ({ data: practice }) => {
+      if (!practice?.claimed_by_user_id) return;
+      const { data: { user } } = await admin.auth.admin.getUserById(practice.claimed_by_user_id);
+      if (!user?.email) return;
+      await sendNewReviewNotification({
+        to: user.email,
+        practiceName: practice.name,
+        practiceSlug: practice.slug,
+        reviewerName: data.reviewer_display_name ?? null,
+        ratingOverall: data.rating_overall,
+        reviewTitle: data.title ?? null,
+        reviewBody: data.body,
+      });
+    })
+    .catch(() => {});
 
   // Trigger magic-link email so reviewer can verify ownership
   await supabase.auth.signInWithOtp({
