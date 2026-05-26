@@ -104,12 +104,20 @@ async function searchByPostcodePrefix(outwardCode: string): Promise<PracticeCard
 
 async function searchByText(query: string): Promise<PracticeCardData[]> {
   const supabase = await createServerSupabase();
+  const words = query.trim().split(/\s+/).filter(Boolean);
+  let practicesQuery = supabase
+    .from('practices')
+    .select('id, slug, name, city, address_line1, practice_type, website, claimed_by_user_id, ai_summary')
+    .limit(200);
+  if (words.length > 1) {
+    for (const word of words) {
+      practicesQuery = practicesQuery.ilike('name', `%${word}%`);
+    }
+  } else {
+    practicesQuery = practicesQuery.or(`name.ilike.%${query}%,city.ilike.%${query}%`);
+  }
   const [practicesRes, summariesRes, servicesRes, aiSummaryMap] = await Promise.all([
-    supabase
-      .from('practices')
-      .select('id, slug, name, city, address_line1, practice_type, website, claimed_by_user_id, ai_summary')
-      .or(`name.ilike.%${query}%,city.ilike.%${query}%`)
-      .limit(200),
+    practicesQuery,
     supabase
       .from('practice_rating_summary')
       .select('practice_id, avg_overall, avg_cleanliness, avg_pain, avg_cost, avg_communication, avg_anxiety, review_count'),
