@@ -39,7 +39,10 @@ export async function GET(req: NextRequest) {
     'https://mybusinessaccountmanagement.googleapis.com/v1/accounts',
     { headers: { Authorization: `Bearer ${accessToken}` } }
   );
-  if (!accountsRes.ok) return NextResponse.json({ error: 'Failed to fetch Google accounts' }, { status: 502 });
+  if (!accountsRes.ok) {
+    const body = await accountsRes.json().catch(() => ({}));
+    return NextResponse.json({ error: 'Failed to fetch Google accounts', status: accountsRes.status, detail: body }, { status: 502 });
+  }
   const { accounts = [] } = await accountsRes.json() as { accounts?: { name: string; accountName: string }[] };
 
   // Fetch locations for each account
