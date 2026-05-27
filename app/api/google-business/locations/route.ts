@@ -5,6 +5,15 @@ import { refreshGoogleToken } from '@/lib/google';
 export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
+  try {
+  return await handleGET(req);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: 'Internal error', detail: message }, { status: 500 });
+  }
+}
+
+async function handleGET(req: NextRequest) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
@@ -71,3 +80,4 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ locations });
 }
+
