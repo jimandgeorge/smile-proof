@@ -172,6 +172,33 @@ function NavItem({ icon, label, badge, active, onClick }: {
   );
 }
 
+// ── Management Summary ────────────────────────────────────────────────────────
+function ManagementSummaryCard({ summary, generatedAt }: { summary: string; generatedAt: string }) {
+  const date = new Date(generatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, #f0f7f3 0%, #e8f4ee 100%)',
+      border: '1.5px solid rgba(28,69,53,0.15)',
+      borderRadius: 12,
+      padding: '18px 22px',
+      marginBottom: 4,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--forest)', flexShrink: 0 }} />
+        <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--forest)', fontFamily: 'var(--font-body)' }}>
+          AI Summary for Management
+        </span>
+        <span style={{ fontSize: 11, color: 'var(--ink-faint)', fontFamily: 'var(--font-body)', marginLeft: 'auto' }}>
+          {date}
+        </span>
+      </div>
+      <p style={{ margin: 0, fontSize: 14, color: 'var(--ink)', lineHeight: 1.7, fontFamily: 'var(--font-body)' }}>
+        {summary}
+      </p>
+    </div>
+  );
+}
+
 // ── Insight banner ────────────────────────────────────────────────────────────
 function InsightBanner({ insight, onAction }: { insight: Insight; onAction?: () => void }) {
   const cfg = {
@@ -453,6 +480,8 @@ export default function DashboardShell({
               recentReviews={publishedReviews.slice(0, 5)}
               onGoToReviews={() => setTab('reviews')}
               onGoToInvites={() => setTab('invites')}
+              managementSummary={opportunityInsights?.management_summary ?? null}
+              managementSummaryDate={opportunityInsights?.generated_at ?? null}
             />
           )}
           {tab === 'reviews' && (
@@ -633,6 +662,7 @@ function OverviewTab({
   cityRank, cityTotal, dimensionRanks,
   monthlyData, scoreCards, pendingCount,
   recentReviews, onGoToReviews, onGoToInvites,
+  managementSummary, managementSummaryDate,
 }: {
   isPaid: boolean; practiceSlug: string; practiceCity: string;
   avgOverall: number | null; reviewCount: number;
@@ -646,6 +676,8 @@ function OverviewTab({
   recentReviews: Review[];
   onGoToReviews: () => void;
   onGoToInvites: () => void;
+  managementSummary: string | null;
+  managementSummaryDate: string | null;
 }) {
   const hasActions = unrespondedCount > 0 || pendingCount > 0;
   const responseColor = responseRate >= 80 ? '#4ade80' : responseRate >= 50 ? '#fbbf24' : '#f87171';
@@ -665,6 +697,11 @@ function OverviewTab({
 
       {/* ── Left column ── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+
+        {/* Management summary */}
+        {isPaid && managementSummary && managementSummaryDate && (
+          <ManagementSummaryCard summary={managementSummary} generatedAt={managementSummaryDate} />
+        )}
 
         {/* Hero rating card */}
         <div style={{ background: 'linear-gradient(135deg, #1a3829 0%, #0e1c14 100%)', borderRadius: 14, padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>

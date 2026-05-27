@@ -215,6 +215,7 @@ export type OpportunityInsightData = {
   id: string;
   generated_at: string;
   review_count: number;
+  management_summary: string | null;
   themes: SentimentTheme[];
   strengths: OpportunityStrength[];
   weaknesses: OpportunityWeakness[];
@@ -348,6 +349,7 @@ ${reviewText}`;
       id: upserted.id,
       generated_at: upserted.generated_at,
       review_count: upserted.review_count,
+      management_summary: upserted.management_summary ?? null,
       strengths: upserted.strengths,
       weaknesses: upserted.weaknesses,
       opportunities: upserted.opportunities,
@@ -424,6 +426,7 @@ ${confidenceNote}
 
 Schema:
 {
+  "management_summary": string (2–3 sentences of executive prose: what patients consistently praise, main friction points, and one improvement focus — plain English, no bullet points, no hedging),
   "themes": [4–6 items: {"topic": string (2–4 words, plain English), "sentiment": "positive"|"negative"|"mixed", "count": number, "example": string (real quote under 80 chars)}],
   "strengths": [2–3 items: {"category": string, "text": string (plain English, what the reviews actually show), "mention_count": number, "quote": string (real patient quote under 80 chars)}],
   "weaknesses": [0–2 items, only where genuine negative signal exists: {"category": string, "text": string, "pct_mentions": number, "quote": string (real patient quote under 80 chars)}],
@@ -457,7 +460,7 @@ ${reviewText}`;
     return { error: `AI error: ${e?.message ?? 'unknown'}` };
   }
 
-  let parsed: { themes: any[]; strengths: any[]; weaknesses: any[]; opportunities: any[]; category_scores: Record<string, number> };
+  let parsed: { management_summary?: string; themes: any[]; strengths: any[]; weaknesses: any[]; opportunities: any[]; category_scores: Record<string, number> };
   try {
     // Strip markdown code fences if present, then extract the JSON object
     const stripped = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '');
@@ -472,14 +475,15 @@ ${reviewText}`;
   const { data: upserted, error: dbError } = await admin
     .from('practice_opportunity_insights')
     .upsert({
-      practice_id:    practiceId,
-      generated_at:   now,
-      review_count:   reviews.length,
-      themes:         parsed.themes ?? [],
-      strengths:      parsed.strengths ?? [],
-      weaknesses:     parsed.weaknesses ?? [],
-      opportunities:  parsed.opportunities ?? [],
-      category_scores: parsed.category_scores ?? {},
+      practice_id:        practiceId,
+      generated_at:       now,
+      review_count:       reviews.length,
+      management_summary: parsed.management_summary ?? null,
+      themes:             parsed.themes ?? [],
+      strengths:          parsed.strengths ?? [],
+      weaknesses:         parsed.weaknesses ?? [],
+      opportunities:      parsed.opportunities ?? [],
+      category_scores:    parsed.category_scores ?? {},
     }, { onConflict: 'practice_id' })
     .select()
     .single();
@@ -489,14 +493,15 @@ ${reviewText}`;
   revalidatePath(`/practices/${practiceSlug}/dashboard`);
   return {
     insights: {
-      id:              upserted.id,
-      generated_at:    upserted.generated_at,
-      review_count:    upserted.review_count,
-      themes:          upserted.themes,
-      strengths:       upserted.strengths,
-      weaknesses:      upserted.weaknesses,
-      opportunities:   upserted.opportunities,
-      category_scores: upserted.category_scores,
+      id:                 upserted.id,
+      generated_at:       upserted.generated_at,
+      review_count:       upserted.review_count,
+      management_summary: upserted.management_summary ?? null,
+      themes:             upserted.themes,
+      strengths:          upserted.strengths,
+      weaknesses:         upserted.weaknesses,
+      opportunities:      upserted.opportunities,
+      category_scores:    upserted.category_scores,
     },
   };
 }
