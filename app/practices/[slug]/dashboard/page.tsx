@@ -216,14 +216,15 @@ if (responseRate < 50 && published.length >= 3) {
 
   const rawOpp = opportunityInsightsRes.data;
   const opportunityInsights = rawOpp ? {
-    id:               rawOpp.id as string,
-    generated_at:     rawOpp.generated_at as string,
-    review_count:     rawOpp.review_count as number,
-    strengths:        (rawOpp.strengths ?? []) as any[],
-    weaknesses:       (rawOpp.weaknesses ?? []) as any[],
-    opportunities:    (rawOpp.opportunities ?? []) as any[],
-    category_scores:  (rawOpp.category_scores ?? {}) as Record<string, number>,
-    themes:           (rawOpp.themes ?? []) as any[],
+    id:                 rawOpp.id as string,
+    generated_at:       rawOpp.generated_at as string,
+    review_count:       rawOpp.review_count as number,
+    management_summary: (rawOpp as any).management_summary as string | null ?? null,
+    strengths:          (rawOpp.strengths ?? []) as any[],
+    weaknesses:         (rawOpp.weaknesses ?? []) as any[],
+    opportunities:      (rawOpp.opportunities ?? []) as any[],
+    category_scores:    (rawOpp.category_scores ?? {}) as Record<string, number>,
+    themes:             (rawOpp.themes ?? []) as any[],
   } : null;
 
   return (
