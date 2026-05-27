@@ -1,0 +1,8 @@
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3000
+- PID:          21680
+- Dir:          C:\Users\brend\smile-proof\dental-reviews
+- Log:          .next\dev\logs\next-development.log
+
+Run taskkill /PID 21680 /F to stop it.

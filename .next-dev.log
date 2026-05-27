@@ -1,0 +1,488 @@
+
+> dental-reviews@0.1.0 dev
+> next dev --hostname 127.0.0.1 --port 3000
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+- Environments: .env.local
+✓ Ready in 589ms
+
+ GET /for-dentists 200 in 1909ms (next.js: 249ms, proxy.ts: 603ms, application-code: 1056ms)
+ GET /practices/fairfield-dental-practice-southport 200 in 1514ms (next.js: 673ms, proxy.ts: 6ms, application-code: 834ms)
+ GET /practices/fairfield-dental-practice-southport 200 in 593ms (next.js: 13ms, proxy.ts: 7ms, application-code: 573ms)
+ GET /robots.txt 404 in 150ms (next.js: 59ms, proxy.ts: 17ms, application-code: 74ms)
+ GET /practices/fairfield-dental-practice-southport?gtm_latency=1 200 in 708ms (next.js: 27ms, proxy.ts: 15ms, application-code: 667ms)
+ GET /practices/fairfield-dental-practice-southport 200 in 604ms (next.js: 19ms, proxy.ts: 16ms, application-code: 569ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 824ms (next.js: 67ms, proxy.ts: 11ms, application-code: 745ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 555ms (next.js: 14ms, proxy.ts: 14ms, application-code: 527ms)
+ GET /practices/fairfield-dental-practice-southport 200 in 563ms (next.js: 29ms, proxy.ts: 13ms, application-code: 521ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 479ms (next.js: 4ms, proxy.ts: 8ms, application-code: 467ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 873ms (next.js: 9ms, proxy.ts: 14ms, application-code: 850ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 778ms (next.js: 8ms, proxy.ts: 9ms, application-code: 760ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 461ms (next.js: 6ms, proxy.ts: 11ms, application-code: 443ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 639ms (next.js: 7ms, proxy.ts: 9ms, application-code: 623ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 466ms (next.js: 7ms, proxy.ts: 16ms, application-code: 443ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 483ms (next.js: 6ms, proxy.ts: 11ms, application-code: 466ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 504ms (next.js: 9ms, proxy.ts: 13ms, application-code: 482ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 545ms (next.js: 10ms, proxy.ts: 10ms, application-code: 525ms)
+ GET /find?treatment=implants 200 in 159ms (next.js: 61ms, proxy.ts: 9ms, application-code: 88ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 906ms (next.js: 8ms, proxy.ts: 9ms, application-code: 889ms)
+ GET /practices/blackhills-clinic-auchterarder 200 in 932ms (next.js: 27ms, proxy.ts: 13ms, application-code: 892ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 485ms (next.js: 6ms, proxy.ts: 12ms, application-code: 467ms)
+ GET /how-it-works 200 in 1048ms (next.js: 859ms, proxy.ts: 5ms, application-code: 184ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 607ms (next.js: 7ms, proxy.ts: 16ms, application-code: 584ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 549ms (next.js: 8ms, proxy.ts: 10ms, application-code: 530ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 648ms (next.js: 9ms, proxy.ts: 12ms, application-code: 627ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 470ms (next.js: 5ms, proxy.ts: 9ms, application-code: 456ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 541ms (next.js: 6ms, proxy.ts: 7ms, application-code: 528ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 954ms (next.js: 8ms, proxy.ts: 13ms, application-code: 934ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 644ms (next.js: 4ms, proxy.ts: 12ms, application-code: 628ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 473ms (next.js: 7ms, proxy.ts: 9ms, application-code: 456ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 752ms (next.js: 8ms, proxy.ts: 11ms, application-code: 733ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 722ms (next.js: 16ms, proxy.ts: 14ms, application-code: 692ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 752ms (next.js: 11ms, proxy.ts: 19ms, application-code: 722ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 679ms (next.js: 11ms, proxy.ts: 11ms, application-code: 657ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 665ms (next.js: 9ms, proxy.ts: 10ms, application-code: 645ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 1239ms (next.js: 8ms, proxy.ts: 14ms, application-code: 1217ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 712ms (next.js: 10ms, proxy.ts: 16ms, application-code: 686ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 750ms (next.js: 8ms, proxy.ts: 11ms, application-code: 732ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 664ms (next.js: 8ms, proxy.ts: 14ms, application-code: 642ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 772ms (next.js: 7ms, proxy.ts: 16ms, application-code: 749ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 746ms (next.js: 19ms, proxy.ts: 13ms, application-code: 714ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 731ms (next.js: 8ms, proxy.ts: 12ms, application-code: 711ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 699ms (next.js: 11ms, proxy.ts: 14ms, application-code: 674ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 779ms (next.js: 6ms, proxy.ts: 15ms, application-code: 759ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 689ms (next.js: 11ms, proxy.ts: 14ms, application-code: 664ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 1290ms (next.js: 13ms, proxy.ts: 16ms, application-code: 1260ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 769ms (next.js: 10ms, proxy.ts: 12ms, application-code: 747ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 721ms (next.js: 8ms, proxy.ts: 14ms, application-code: 699ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 707ms (next.js: 9ms, proxy.ts: 14ms, application-code: 684ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 632ms (next.js: 6ms, proxy.ts: 9ms, application-code: 616ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 727ms (next.js: 8ms, proxy.ts: 11ms, application-code: 708ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 669ms (next.js: 8ms, proxy.ts: 19ms, application-code: 641ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 1034ms (next.js: 12ms, proxy.ts: 12ms, application-code: 1011ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 706ms (next.js: 8ms, proxy.ts: 11ms, application-code: 688ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 721ms (next.js: 8ms, proxy.ts: 14ms, application-code: 699ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 642ms (next.js: 8ms, proxy.ts: 11ms, application-code: 623ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 667ms (next.js: 8ms, proxy.ts: 11ms, application-code: 648ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 639ms (next.js: 9ms, proxy.ts: 10ms, application-code: 621ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 1476ms (next.js: 9ms, proxy.ts: 14ms, application-code: 1452ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 694ms (next.js: 10ms, proxy.ts: 15ms, application-code: 669ms)
+[Homepage] {
+  practiceCount: 40,
+  reviewedCount: 2,
+  unreviewedCount: 38,
+  totalReviews: 6,
+  isEarlyStage: true,
+  serviceMapSize: 2
+}
+ GET / 200 in 674ms (next.js: 11ms, proxy.ts: 7ms, application-code: 656ms)
