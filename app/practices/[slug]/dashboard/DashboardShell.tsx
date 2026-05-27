@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useContext, createContext } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ResponseForm } from './ResponseForm';
 import RatingChart from './RatingChart';
@@ -312,9 +313,8 @@ export default function DashboardShell({
   enquiries, teamDentists, opportunityInsights,
   initialAccessToken,
 }: Props) {
-  const googleParam = typeof window !== 'undefined'
-    ? new URLSearchParams(window.location.search).get('google')
-    : null;
+  const searchParams = useSearchParams();
+  const googleParam = searchParams.get('google');
   const [tab, setTab] = useState<Tab>(googleParam === 'pick_location' ? 'settings' : 'overview');
   const [accessToken, setAccessToken] = useState(initialAccessToken);
 
