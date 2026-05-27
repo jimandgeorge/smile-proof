@@ -31,6 +31,16 @@ const CATEGORY_LABELS: Record<string, string> = {
   booking_experience:     'Booking Experience',
 };
 
+const CATEGORY_IMPACT: Record<string, string> = {
+  communication:          'Linked to treatment acceptance confidence',
+  wait_times:             'Affects repeat bookings & review sentiment',
+  nervous_patients:       'Unlocks underserved high-value patient segment',
+  pricing_transparency:   'Affects conversion from enquiry to booking',
+  treatment_satisfaction: 'Primary driver of referrals & 5-star reviews',
+  staff_friendliness:     'Core retention driver across all patient types',
+  booking_experience:     'First impression — shapes willingness to return',
+};
+
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const h = Math.floor(diff / 3600000);
@@ -155,11 +165,18 @@ function OpportunityCard({ item, index }: { item: OpportunityInsightData['opport
           {item.recommendation}
         </p>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, paddingLeft: 30 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: D.accent, background: D.accentPale, borderRadius: 20, padding: '2px 8px', fontFamily: 'var(--font-body)', whiteSpace: 'nowrap' }}>
-          {CATEGORY_LABELS[item.category] ?? item.category}
-        </span>
-        <ImpactBadge impact={impact} />
+      <div style={{ paddingLeft: 30, marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: CATEGORY_IMPACT[item.category] ? 4 : 0 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: D.accent, background: D.accentPale, borderRadius: 20, padding: '2px 8px', fontFamily: 'var(--font-body)', whiteSpace: 'nowrap' }}>
+            {CATEGORY_LABELS[item.category] ?? item.category}
+          </span>
+          <ImpactBadge impact={impact} />
+        </div>
+        {CATEGORY_IMPACT[item.category] && (
+          <div style={{ fontSize: 11, color: D.faint, fontFamily: 'var(--font-body)', lineHeight: 1.4 }}>
+            {CATEGORY_IMPACT[item.category]}
+          </div>
+        )}
       </div>
       <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.6, margin: evidence ? '0 0 10px' : '0', paddingLeft: 30 }}>
         {item.rationale}
@@ -186,14 +203,23 @@ function SignalCard({ type, category, text, stat, statLabel, quote }: {
 
   return (
     <div style={{ background: `${alpha}0.05)`, border: `1px solid ${alpha}0.14)`, borderRadius: 10, padding: '14px 16px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
-        {isS
-          ? <CheckCircle size={12} strokeWidth={1.3} style={{ color: col }} aria-hidden />
-          : <AlertTriangle size={12} strokeWidth={1.2} style={{ color: col }} aria-hidden />
-        }
-        <span style={{ fontSize: 11, fontWeight: 700, color: col, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-body)', flex: 1 }}>
-          {CATEGORY_LABELS[category] ?? category}
-        </span>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7, marginBottom: 7 }}>
+        <div style={{ flexShrink: 0, marginTop: 1 }}>
+          {isS
+            ? <CheckCircle size={12} strokeWidth={1.3} style={{ color: col }} aria-hidden />
+            : <AlertTriangle size={12} strokeWidth={1.2} style={{ color: col }} aria-hidden />
+          }
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: col, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-body)' }}>
+            {CATEGORY_LABELS[category] ?? category}
+          </span>
+          {CATEGORY_IMPACT[category] && (
+            <div style={{ fontSize: 11, color: D.faint, fontFamily: 'var(--font-body)', marginTop: 2, lineHeight: 1.4 }}>
+              {CATEGORY_IMPACT[category]}
+            </div>
+          )}
+        </div>
         {stat != null && (
           <span style={{ fontSize: 11, fontWeight: 600, color: col, fontFamily: 'var(--font-body)', flexShrink: 0, opacity: 0.85 }}>
             {stat} {statLabel}
@@ -254,14 +280,23 @@ function CategoryScores({ scores }: { scores: Record<string, number> }) {
       <SectionLabel text="Category Scores" />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {entries.map(({ key, label, score }) => (
-          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 12, color: D.soft, fontFamily: 'var(--font-body)', width: 148, flexShrink: 0 }}>{label}</span>
-            <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: score != null ? `${(score / 5) * 100}%` : '0%', background: score != null ? scoreColor(score) : D.faint, borderRadius: 2, transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)' }} />
+          <div key={key}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 3 }}>
+              <div style={{ width: 148, flexShrink: 0 }}>
+                <span style={{ fontSize: 12, color: D.soft, fontFamily: 'var(--font-body)' }}>{label}</span>
+                {CATEGORY_IMPACT[key] && (
+                  <div style={{ fontSize: 10, color: D.faint, fontFamily: 'var(--font-body)', lineHeight: 1.3, marginTop: 1 }}>
+                    {CATEGORY_IMPACT[key]}
+                  </div>
+                )}
+              </div>
+              <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: score != null ? `${(score / 5) * 100}%` : '0%', background: score != null ? scoreColor(score) : D.faint, borderRadius: 2, transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)' }} />
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', color: score != null ? scoreColor(score) : D.faint, width: 26, textAlign: 'right', flexShrink: 0 }}>
+                {score != null ? score.toFixed(1) : '—'}
+              </span>
             </div>
-            <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', color: score != null ? scoreColor(score) : D.faint, width: 26, textAlign: 'right', flexShrink: 0 }}>
-              {score != null ? score.toFixed(1) : '—'}
-            </span>
           </div>
         ))}
       </div>
