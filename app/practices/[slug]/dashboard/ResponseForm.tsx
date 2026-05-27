@@ -72,7 +72,7 @@ export function ResponseForm({
           onChange={(e) => setBody(e.target.value)}
           rows={3}
           placeholder="Write a public response to this review…"
-          style={{ width: '100%', border: '1.5px solid var(--cream-dark)', borderRadius: 8, padding: '10px 14px', paddingBottom: 40, fontSize: 13, fontFamily: 'var(--font-body)', color: 'var(--ink)', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+          style={{ width: '100%', border: '1.5px solid var(--cream-dark)', borderRadius: 8, padding: '10px 14px', paddingBottom: 40, fontSize: 13, fontFamily: 'var(--font-body)', color: 'var(--ink)', background: 'white', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
         />
         {isPaid ? (
           <button
