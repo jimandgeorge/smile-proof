@@ -424,8 +424,30 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
         />
       )}
 
-      {/* 2-column main grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: 28, alignItems: 'start' }}>
+      {/* Strengths + Weaknesses — full width 2-col grid */}
+      {(ins.strengths.length > 0 || ins.weaknesses.length > 0) && (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 4 }}>
+            {ins.strengths.length > 0 && <SectionLabel text="What's Working" />}
+            {ins.weaknesses.length > 0 && <SectionLabel text="Areas to Address" />}
+          </div>
+        </>
+      )}
+      {(ins.strengths.length > 0 || ins.weaknesses.length > 0) && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
+          {ins.strengths.map((s, i) => (
+            <SignalCard key={i} type="strength" category={s.category} text={s.text}
+              stat={s.mention_count} statLabel="mentions" quote={(s as any).quote} />
+          ))}
+          {ins.weaknesses.map((w, i) => (
+            <SignalCard key={i} type="weakness" category={w.category} text={w.text}
+              stat={w.pct_mentions} statLabel="% of reviews" quote={(w as any).quote} />
+          ))}
+        </div>
+      )}
+
+      {/* 2-column main grid: opportunities+themes left, scores right */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 280px', gap: 28, alignItems: 'start' }}>
 
         {/* Left: remaining opportunities + themes */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
@@ -452,38 +474,13 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
 
         </div>
 
-        {/* Right: signals + scores */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-
-          {ins.strengths.length > 0 && (
-            <div>
-              <SectionLabel text="What's Working" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-                {ins.strengths.map((s, i) => (
-                  <SignalCard key={i} type="strength" category={s.category} text={s.text}
-                    stat={s.mention_count} statLabel="mentions" quote={(s as any).quote} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {ins.weaknesses.length > 0 && (
-            <div>
-              <SectionLabel text="Areas to Address" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-                {ins.weaknesses.map((w, i) => (
-                  <SignalCard key={i} type="weakness" category={w.category} text={w.text}
-                    stat={w.pct_mentions} statLabel="% of reviews" quote={(w as any).quote} />
-                ))}
-              </div>
-            </div>
-          )}
-
+        {/* Right: scores only */}
+        <div>
           {Object.keys(ins.category_scores).length > 0 && (
             <CategoryScores scores={ins.category_scores} />
           )}
-
         </div>
+
       </div>
     </div>
   );
