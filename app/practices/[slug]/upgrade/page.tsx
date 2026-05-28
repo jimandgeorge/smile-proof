@@ -36,7 +36,7 @@ export default async function UpgradePage({ params }: Params) {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
           </div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: '#edeef5', marginBottom: 12, letterSpacing: '-0.02em' }}>
-            You&apos;re already on Pro
+            You&apos;re already on Practice
           </h1>
           <Link href={`/practices/${slug}/dashboard`} style={{ fontSize: 13, color: '#34d399', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <ChevronLeft size={14} strokeWidth={1.5} />
@@ -61,7 +61,7 @@ export default async function UpgradePage({ params }: Params) {
 
         <div style={{ marginBottom: 36 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#34d399', opacity: 0.8, fontFamily: 'var(--font-body)', marginBottom: 10 }}>
-            Upgrade to Pro
+            Upgrade to Practice
           </div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 38px)', fontWeight: 800, color: '#edeef5', lineHeight: 1.1, letterSpacing: '-0.03em', margin: '0 0 12px' }}>
             Unlock the full intelligence platform.
@@ -86,7 +86,7 @@ export default async function UpgradePage({ params }: Params) {
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#34d399', fontFamily: 'var(--font-body)', marginBottom: 8 }}>
-                  Pro
+                  Practice
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                   <span style={{ fontFamily: 'var(--font-display)', fontSize: 42, fontWeight: 800, color: '#edeef5', letterSpacing: '-0.03em' }}>£99</span>
