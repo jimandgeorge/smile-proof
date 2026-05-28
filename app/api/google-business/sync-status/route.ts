@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
   const readyItems = readyData.tasks?.[0]?.result ?? [];
   const readyItem  = readyItems.find(t => t.id === requestId);
   if (!readyItem) {
-    return NextResponse.json({ status: 'pending' });
+    return NextResponse.json({ status: 'pending', looking_for: requestId, ready_count: readyItems.length, ready_ids: readyItems.map(t => t.id) });
   }
 
   // Task is ready — fetch results using DataForSEO's provided endpoint
