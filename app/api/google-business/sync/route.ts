@@ -34,9 +34,10 @@ export async function POST(req: NextRequest) {
     cutoff:        '0',
   });
 
+  const apiKey = process.env.OUTSCRAPER_API_KEY ?? '';
   const res = await fetch(
     `https://api.app.outscraper.com/maps/reviews-v3?${params}`,
-    { headers: { 'X-API-KEY': process.env.OUTSCRAPER_API_KEY ?? '' } },
+    { headers: { 'X-API-KEY': apiKey, 'Authorization': `Bearer ${apiKey}` } },
   );
 
   if (!res.ok) {
