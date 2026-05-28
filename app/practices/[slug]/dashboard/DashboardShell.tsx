@@ -453,7 +453,6 @@ function OverviewTab({
   const themes = (opportunityInsights?.themes ?? []).slice(0, 6) as SentimentTheme[];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 20, alignItems: 'start' }}>
 
       {/* ── Left column ── */}
@@ -562,6 +561,16 @@ function OverviewTab({
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* Patient themes */}
+        {themes.length > 0 && (
+          <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '18px 20px' }}>
+            <MicroLabel text="Patient themes" color={D.soft} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
+              {themes.map((t, i) => <ThemeCard key={i} theme={t} />)}
             </div>
           </div>
         )}
@@ -714,18 +723,6 @@ function OverviewTab({
           </div>
         )}
       </div>
-    </div>
-
-    {/* Patient themes — full width below the 2-col grid */}
-    {themes.length > 0 && (
-      <div>
-        <div style={{ height: 1, background: D.divider, marginBottom: 20 }} />
-        <MicroLabel text="Patient themes" color={D.soft} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
-          {themes.map((t, i) => <ThemeCard key={i} theme={t} />)}
-        </div>
-      </div>
-    )}
     </div>
   );
 }
