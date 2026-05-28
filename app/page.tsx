@@ -3,7 +3,6 @@ import ProblemSection from './components/ProblemSection';
 import IntelligenceDashboardSection from './components/IntelligenceDashboardSection';
 import GoogleIntelSection from './components/GoogleIntelSection';
 import OutcomesSection from './components/OutcomesSection';
-import ForPatientsSection from './components/ForPatientsSection';
 import HomepageCTA from './components/HomepageCTA';
 
 export default function Home() {
@@ -14,7 +13,6 @@ export default function Home() {
       <IntelligenceDashboardSection />
       <GoogleIntelSection />
       <OutcomesSection />
-      <ForPatientsSection />
       <HomepageCTA />
     </div>
   );

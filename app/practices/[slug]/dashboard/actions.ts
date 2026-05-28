@@ -2,117 +2,9 @@
 
 import { createAdminSupabase, getUserFromToken } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import Anthropic from '@anthropic-ai/sdk';
-import { sendReviewInviteEmail, sendResponseNotificationEmail } from '@/lib/email';
-import { z } from 'zod';
 
-export async function respondToReview(accessToken: string, reviewId: string, practiceId: string, body: string, practiceSlug: string) {
-  if (!body.trim()) return { error: 'Response cannot be empty.' };
-
-  const user = await getUserFromToken(accessToken);
-  if (!user) return { error: 'You must be logged in to respond.' };
-
-  const admin = createAdminSupabase();
-
-  const { data: practice } = await admin
-    .from('practices')
-    .select('claimed_by_user_id')
-    .eq('id', practiceId)
-    .single();
-
-  if (!practice || practice.claimed_by_user_id !== user.id) {
-    return { error: 'You do not own this practice.' };
-  }
-
-  const { error } = await admin.from('practice_responses').upsert(
-    { review_id: reviewId, practice_id: practiceId, body: body.trim(), responder_user_id: user.id },
-    { onConflict: 'review_id' }
-  );
-
-  if (error) return { error: error.message };
-
-  // Notify the reviewer — fire and forget, don't block on failure
-  const { data: review } = await admin
-    .from('reviews')
-    .select('reviewer_email, reviewer_display_name, title, body')
-    .eq('id', reviewId)
-    .single();
-
-  const { data: practiceInfo } = await admin
-    .from('practices')
-    .select('name')
-    .eq('id', practiceId)
-    .single();
-
-  if (review && practiceInfo) {
-    sendResponseNotificationEmail({
-      to: review.reviewer_email,
-      reviewerName: review.reviewer_display_name ?? null,
-      practiceName: practiceInfo.name,
-      practiceSlug,
-      reviewTitle: review.title ?? null,
-      reviewBody: review.body,
-      responseBody: body.trim(),
-    }).catch(() => {});
-  }
-
-  revalidatePath(`/practices/${practiceSlug}/dashboard`);
-  return { success: true };
-}
-
-export async function generateReviewResponse(
-  accessToken: string,
-  reviewBody: string,
-  reviewTitle: string | null,
-  rating: number,
-  practiceName: string,
-  practiceId: string,
-): Promise<{ text?: string; error?: string }> {
-  const user = await getUserFromToken(accessToken);
-  if (!user) return { error: 'You must be logged in.' };
-
-  const admin = createAdminSupabase();
-  const { data: practice } = await admin
-    .from('practices')
-    .select('claimed_by_user_id, subscription_status')
-    .eq('id', practiceId)
-    .single();
-
-  if (!practice || practice.claimed_by_user_id !== user.id) {
-    return { error: 'You do not own this practice.' };
-  }
-  if (practice.subscription_status !== 'active') {
-    return { error: 'AI replies require a Pro subscription.' };
-  }
-
-  const client = new Anthropic();
-
-  const reviewSnippet = [reviewTitle ? `Title: "${reviewTitle}"` : null, `Review: "${reviewBody}"`, `Rating: ${rating}/5`]
-    .filter(Boolean)
-    .join('\n');
-
-  let message;
-  try {
-    message = await client.messages.create({
-      model: 'claude-opus-4-7',
-      max_tokens: 2048,
-      thinking: { type: 'adaptive' },
-      messages: [
-        {
-          role: 'user',
-          content: `You are helping ${practiceName}, a UK dental practice, write a professional public response to a patient review. Write a warm, genuine reply in 2-3 sentences. Address the patient's specific experience, thank them, and end positively. Do not use placeholders. Do not start with "Dear" or "Dear Patient". Return only the response text, nothing else.\n\n${reviewSnippet}`,
-        },
-      ],
-    });
-  } catch (e: any) {
-    return { error: `AI error: ${e?.message ?? 'Unknown error'}` };
-  }
-
-  const text = (message.content.find((b: any) => b.type === 'text') as any)?.text ?? '';
-  if (!text) return { error: 'No response generated.' };
-  return { text };
-}
+// ── AI Opportunities ──────────────────────────────────────────────────────────
 
 export type SentimentTheme = {
   topic: string;
@@ -120,91 +12,6 @@ export type SentimentTheme = {
   count: number;
   example: string;
 };
-
-export async function generateSentimentThemes(
-  accessToken: string,
-  practiceId: string,
-  practiceSlug: string,
-): Promise<{ themes?: SentimentTheme[]; error?: string }> {
-  const user = await getUserFromToken(accessToken);
-  if (!user) return { error: 'You must be logged in.' };
-
-  const admin = createAdminSupabase();
-  const { data: practice } = await admin
-    .from('practices')
-    .select('claimed_by_user_id, subscription_status, ai_insights_updated_at')
-    .eq('id', practiceId)
-    .single();
-
-  if (!practice || practice.claimed_by_user_id !== user.id) return { error: 'You do not own this practice.' };
-  if (practice.subscription_status !== 'active') return { error: 'AI insights require a Pro subscription.' };
-
-  const THEMES_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
-  if (practice.ai_insights_updated_at) {
-    const msSinceLast = Date.now() - new Date(practice.ai_insights_updated_at).getTime();
-    if (msSinceLast < THEMES_COOLDOWN_MS) {
-      const minutesLeft = Math.ceil((THEMES_COOLDOWN_MS - msSinceLast) / 60000);
-      return { error: `Analysis was generated recently. Try again in ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}.` };
-    }
-  }
-
-  const { data: reviews } = await admin
-    .from('reviews')
-    .select('body')
-    .eq('practice_id', practiceId)
-    .eq('moderation_status', 'published')
-    .limit(40);
-
-  if (!reviews || reviews.length < 3) return { error: 'Need at least 3 published reviews to generate themes.' };
-
-  const reviewText = reviews.map((r, i) => `Review ${i + 1}: "${r.body}"`).join('\n\n');
-
-  let raw: string;
-  try {
-    const client = new Anthropic();
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: `Analyse these ${reviews.length} patient reviews for a UK dental practice and identify recurring themes. Return ONLY a JSON array — no markdown, no explanation.
-
-Each item: { "topic": string (2-4 words), "sentiment": "positive"|"negative"|"mixed", "count": number (how many reviews mention it), "example": string (one short quote under 100 chars from an actual review) }
-
-Include 4-8 themes total. Focus on topics patients clearly care about: staff attitude, pain management, wait times, cleanliness, value, communication, anxiety handling, results quality.
-
-Reviews:
-${reviewText}
-
-Return only: [{"topic":"...","sentiment":"...","count":0,"example":"..."},...]`,
-      }],
-    });
-    raw = message.content.find((b) => b.type === 'text')?.text ?? '';
-  } catch (e: any) {
-    return { error: `AI error: ${e?.message ?? 'unknown'}` };
-  }
-
-  let themes: SentimentTheme[];
-  try {
-    themes = JSON.parse(raw.match(/\[[\s\S]*\]/)?.[0] ?? raw);
-    if (!Array.isArray(themes)) throw new Error('Not an array');
-  } catch {
-    return { error: 'Failed to parse AI response.' };
-  }
-
-  await admin
-    .from('practices')
-    .update({
-      ai_insights: { themes, generated_at: new Date().toISOString() },
-      ai_insights_updated_at: new Date().toISOString(),
-    })
-    .eq('id', practiceId);
-
-  revalidatePath(`/practices/${practiceSlug}/dashboard`);
-  return { themes };
-}
-
-// ── AI Opportunities ──────────────────────────────────────────────────────────
 
 export type OpportunityStrength   = { category: string; text: string; mention_count?: number; quote?: string };
 export type OpportunityWeakness   = { category: string; text: string; pct_mentions?: number; quote?: string };
@@ -261,14 +68,6 @@ export async function generateOpportunityInsights(
     }
   }
 
-  const { data: nativeReviews } = await admin
-    .from('reviews')
-    .select('rating_overall, title, body')
-    .eq('practice_id', practiceId)
-    .eq('moderation_status', 'published')
-    .order('created_at', { ascending: false })
-    .limit(50);
-
   const { data: googleReviews } = await admin
     .from('external_reviews')
     .select('rating, body')
@@ -278,29 +77,25 @@ export async function generateOpportunityInsights(
     .order('published_at', { ascending: false })
     .limit(100);
 
-  type NativeReview = { rating_overall: number | null; title: string | null; body: string };
   type GoogleReview = { rating: number | null; body: string | null };
-  type UnifiedReview = { rating: number | null; title: string | null; body: string; source: 'native' | 'google' };
+  type UnifiedReview = { rating: number | null; body: string; source: 'google' };
 
-  const unified: UnifiedReview[] = [
-    ...(nativeReviews ?? []).map((r: NativeReview) => ({ rating: r.rating_overall, title: r.title, body: r.body, source: 'native' as const })),
-    ...(googleReviews ?? []).map((r: GoogleReview) => ({ rating: r.rating, title: null, body: r.body!, source: 'google' as const })),
-  ];
+  const unified: UnifiedReview[] = (googleReviews ?? []).map((r: GoogleReview) => ({
+    rating: r.rating, body: r.body!, source: 'google' as const,
+  }));
 
   if (unified.length < 2) {
-    return { error: 'At least 2 published reviews are needed to generate insights.' };
+    return { error: 'At least 2 Google reviews are needed to generate insights.' };
   }
 
   const reviewText = unified
     .map((r, i) => {
-      const title = r.title ? `Title: "${r.title}" · ` : '';
       const body = r.body.length > 400 ? r.body.slice(0, 400) + '…' : r.body;
-      const src = r.source === 'google' ? ' [Google]' : '';
-      return `[${i + 1}] Rating: ${r.rating ?? '?'}/5${src} · ${title}"${body}"`;
+      return `[${i + 1}] Rating: ${r.rating ?? '?'}/5 · "${body}"`;
     })
     .join('\n\n');
 
-  const prompt = `You are a practice intelligence analyst reviewing ${unified.length} patient reviews for "${practice.name}", a UK dental practice.
+  const prompt = `You are a practice intelligence analyst reviewing ${unified.length} Google reviews for "${practice.name}", a UK dental practice.
 
 Produce a structured JSON analysis. Return ONLY valid JSON — no markdown, no explanation.
 
@@ -412,15 +207,7 @@ export async function generatePracticeIntelligence(
     }
   }
 
-  const { data: nativeReviews2 } = await admin
-    .from('reviews')
-    .select('rating_overall, title, body')
-    .eq('practice_id', practiceId)
-    .eq('moderation_status', 'published')
-    .order('created_at', { ascending: false })
-    .limit(50);
-
-  const { data: googleReviews2 } = await admin
+  const { data: googleReviews } = await admin
     .from('external_reviews')
     .select('rating, body')
     .eq('practice_id', practiceId)
@@ -429,35 +216,31 @@ export async function generatePracticeIntelligence(
     .order('published_at', { ascending: false })
     .limit(100);
 
-  type NR2 = { rating_overall: number | null; title: string | null; body: string };
-  type GR2 = { rating: number | null; body: string | null };
-  type UR2 = { rating: number | null; title: string | null; body: string; source: 'native' | 'google' };
+  type GR = { rating: number | null; body: string | null };
+  type UR = { rating: number | null; body: string; source: 'google' };
 
-  const unified2: UR2[] = [
-    ...(nativeReviews2 ?? []).map((r: NR2) => ({ rating: r.rating_overall, title: r.title, body: r.body, source: 'native' as const })),
-    ...(googleReviews2 ?? []).map((r: GR2) => ({ rating: r.rating, title: null, body: r.body!, source: 'google' as const })),
-  ];
+  const unified: UR[] = (googleReviews ?? []).map((r: GR) => ({
+    rating: r.rating, body: r.body!, source: 'google' as const,
+  }));
 
-  if (unified2.length < 2) {
-    return { error: 'At least 2 published reviews are needed to generate a report.' };
+  if (unified.length < 2) {
+    return { error: 'At least 2 Google reviews are needed to generate a report.' };
   }
 
-  const reviewText = unified2
+  const reviewText = unified
     .map((r, i) => {
-      const title = r.title ? `Title: "${r.title}" · ` : '';
       const body = r.body.length > 400 ? r.body.slice(0, 400) + '…' : r.body;
-      const src = r.source === 'google' ? ' [Google]' : '';
-      return `[${i + 1}] Rating ${r.rating ?? '?'}/5${src} · ${title}"${body}"`;
+      return `[${i + 1}] Rating ${r.rating ?? '?'}/5 · "${body}"`;
     })
     .join('\n\n');
 
-  const confidenceNote = unified2.length < 5
-    ? `IMPORTANT: Only ${unified2.length} reviews — use hedged language ("appears to", "in the available reviews"). Do not state patterns as definitive facts.`
-    : unified2.length < 15
-    ? `Note: ${unified2.length} reviews — patterns are forming but may not be fully representative yet.`
+  const confidenceNote = unified.length < 5
+    ? `IMPORTANT: Only ${unified.length} reviews — use hedged language ("appears to", "in the available reviews"). Do not state patterns as definitive facts.`
+    : unified.length < 15
+    ? `Note: ${unified.length} reviews — patterns are forming but may not be fully representative yet.`
     : '';
 
-  const prompt = `Analyse ${unified2.length} patient reviews for "${practice.name}", a UK dental practice. Return a single JSON object.
+  const prompt = `Analyse ${unified.length} Google reviews for "${practice.name}", a UK dental practice. Return a single JSON object.
 
 Return ONLY valid JSON — no markdown, no preamble.
 ${confidenceNote}
@@ -500,7 +283,6 @@ ${reviewText}`;
 
   let parsed: { management_summary?: string; themes: any[]; strengths: any[]; weaknesses: any[]; opportunities: any[]; category_scores: Record<string, number> };
   try {
-    // Strip markdown code fences if present, then extract the JSON object
     const stripped = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '');
     const jsonStr = stripped.match(/\{[\s\S]*\}/)?.[0] ?? stripped;
     parsed = JSON.parse(jsonStr);
@@ -515,7 +297,7 @@ ${reviewText}`;
     .upsert({
       practice_id:        practiceId,
       generated_at:       now,
-      review_count:       unified2.length,
+      review_count:       unified.length,
       management_summary: parsed.management_summary ?? null,
       themes:             parsed.themes ?? [],
       strengths:          parsed.strengths ?? [],
@@ -574,7 +356,6 @@ export async function updatePracticeServices(
   }
 
   revalidatePath(`/practices/${practiceSlug}/dashboard`);
-  revalidatePath(`/practices/${practiceSlug}`);
   revalidatePath('/');
   return { success: true };
 }
@@ -643,84 +424,8 @@ export async function savePracticeLogoUrl(
     .eq('id', practiceId);
 
   if (error) return { error: error.message };
-  revalidatePath(`/practices/${practiceSlug}`);
   revalidatePath(`/practices/${practiceSlug}/dashboard`);
   return { success: true };
-}
-
-const InviteSchema = z.object({
-  email: z.string().email(),
-  name: z.string().max(80).optional(),
-});
-
-export async function sendReviewInvite(
-  accessToken: string,
-  practiceId: string,
-  practiceSlug: string,
-  practiceName: string,
-  formData: FormData,
-): Promise<{ success?: true; error?: string }> {
-  const user = await getUserFromToken(accessToken);
-  if (!user) return { error: 'You must be logged in.' };
-
-  const admin = createAdminSupabase();
-  const { data: practice } = await admin
-    .from('practices')
-    .select('claimed_by_user_id')
-    .eq('id', practiceId)
-    .single();
-
-  if (!practice || practice.claimed_by_user_id !== user.id) {
-    return { error: 'You do not own this practice.' };
-  }
-
-  const parsed = InviteSchema.safeParse({
-    email: formData.get('email'),
-    name: formData.get('name') || undefined,
-  });
-  if (!parsed.success) return { error: 'Please enter a valid email address.' };
-  const { email, name } = parsed.data;
-
-  const { data: invite, error: insertError } = await admin
-    .from('review_invites')
-    .insert({ practice_id: practiceId, patient_email: email, patient_name: name ?? null })
-    .select('token')
-    .single();
-
-  if (insertError || !invite) return { error: 'Failed to create invite.' };
-
-  try {
-    await sendReviewInviteEmail({
-      to: email,
-      patientName: name ?? null,
-      practiceName,
-      practiceSlug,
-      token: invite.token,
-    });
-  } catch {
-    return { error: 'Invite saved but email failed to send. Check your RESEND_API_KEY.' };
-  }
-
-  revalidatePath(`/practices/${practiceSlug}/dashboard`);
-  return { success: true };
-}
-
-export async function markEnquiriesRead(accessToken: string, practiceId: string): Promise<{ error?: string }> {
-  const user = await getUserFromToken(accessToken);
-  if (!user) return { error: 'Unauthorized' };
-
-  const admin = createAdminSupabase();
-  const { data: practice } = await admin
-    .from('practices').select('claimed_by_user_id').eq('id', practiceId).single();
-  if (!practice || practice.claimed_by_user_id !== user.id) return { error: 'Unauthorized' };
-
-  await admin
-    .from('practice_enquiries')
-    .update({ read_at: new Date().toISOString() })
-    .eq('practice_id', practiceId)
-    .is('read_at', null);
-
-  return {};
 }
 
 // ── Team management ────────────────────────────────────────────────────────────
@@ -752,7 +457,6 @@ export async function addDentistToTeam(
 
   const admin = createAdminSupabase();
 
-  // Check for existing dentist by GDC number
   let dentistId: string;
   let slug: string;
 
@@ -761,7 +465,6 @@ export async function addDentistToTeam(
     if (existing) {
       dentistId = existing.id;
       slug = existing.slug;
-      // Update name/specialisms in case they've changed
       await admin.from('dentists').update({ full_name: fullName, specialisms }).eq('id', dentistId);
     } else {
       slug = toSlug(fullName, gdcNumber);
@@ -772,7 +475,6 @@ export async function addDentistToTeam(
       dentistId = inserted.id;
     }
   } else {
-    // No GDC — create a new record (slug may collide; append practice id suffix if needed)
     const baseSlug = toSlug(fullName, null);
     const { data: collision } = await admin.from('dentists').select('id').eq('slug', baseSlug).maybeSingle();
     slug = collision ? `${baseSlug}-${practiceId.slice(0, 8)}` : baseSlug;
@@ -783,7 +485,6 @@ export async function addDentistToTeam(
     dentistId = inserted.id;
   }
 
-  // Link dentist to practice
   await admin.from('practice_dentists').upsert(
     { practice_id: practiceId, dentist_id: dentistId, active: true },
     { onConflict: 'practice_id,dentist_id' },
@@ -824,7 +525,6 @@ export async function updateDentistRecord(
 
   const admin = createAdminSupabase();
 
-  // Verify caller owns a practice linked to this dentist
   const { data: link } = await admin.from('practice_dentists')
     .select('practices(claimed_by_user_id)')
     .eq('dentist_id', dentistId)

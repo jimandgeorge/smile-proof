@@ -21,7 +21,7 @@ export default function NavBar() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (pathname.startsWith('/widget') || pathname.startsWith('/auth/') || pathname.startsWith('/admin')) return null;
+  if (pathname.startsWith('/auth/') || pathname.startsWith('/admin')) return null;
 
   return (
     <>
@@ -51,22 +51,6 @@ export default function NavBar() {
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
             For dentists
-          </Link>
-
-          <Link
-            href="/search"
-            className="px-4 py-2 rounded-full text-sm font-medium border transition-colors"
-            style={{ fontFamily: 'var(--font-body)', color: 'var(--ink)', borderColor: 'var(--cream-dark)', textDecoration: 'none', background: 'white' }}
-          >
-            Write a review
-          </Link>
-
-          <Link
-            href="/find"
-            className="px-5 py-2 rounded-full text-sm font-semibold transition-opacity hover:opacity-90"
-            style={{ fontFamily: 'var(--font-body)', background: 'var(--forest)', color: 'var(--cream)', textDecoration: 'none' }}
-          >
-            Get matched
           </Link>
 
           {loggedIn ? (
@@ -124,7 +108,6 @@ export default function NavBar() {
         >
           {[
             { href: '/for-dentists', label: 'For dentists' },
-            { href: '/search',       label: 'Write a review' },
             ...(loggedIn ? [
               { href: '/dashboard',    label: 'My dashboard' },
             ] : []),
@@ -155,13 +138,6 @@ export default function NavBar() {
               Sign in
             </Link>
           )}
-          <Link
-            href="/find"
-            style={{ fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 600, color: 'var(--cream)', background: 'var(--forest)', textDecoration: 'none', padding: '12px 16px', borderRadius: 10, textAlign: 'center', marginTop: 4 }}
-            onClick={() => setMenuOpen(false)}
-          >
-            Get matched
-          </Link>
         </div>
       )}
     </>

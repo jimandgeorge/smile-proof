@@ -14,9 +14,6 @@ export default async function DashboardPage({ params }: Params) {
   const supabase = await createServerSupabase();
 
   const { data: { user } } = await supabase.auth.getUser();
-  // getSession() returns null when the access token in cookies is expired,
-  // even though getUser() succeeds (it auto-refreshes internally).
-  // Fall back to refreshSession() which uses the long-lived refresh token.
   let { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) {
     const { data } = await supabase.auth.refreshSession();
@@ -48,11 +45,11 @@ export default async function DashboardPage({ params }: Params) {
           You need to be the verified owner of this practice to access the dashboard.
         </p>
         <Link
-          href={`/practices/${slug}`}
+          href={`/practices/${slug}/claim`}
           style={{ fontSize: 13, color: '#34d399', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, opacity: 0.8 }}
         >
           <ChevronLeft size={14} strokeWidth={1.5} />
-          Back to practice
+          Claim this practice
         </Link>
       </main>
     );
@@ -66,59 +63,33 @@ export default async function DashboardPage({ params }: Params) {
   const userEmail = user.email ?? '';
   const isOAuthUser = (user.app_metadata?.provider ?? '') !== 'email';
 
-  // Date helpers
   const now = new Date();
   const thirtyDaysAgo = new Date(now); thirtyDaysAgo.setDate(now.getDate() - 30);
   const sixtyDaysAgo = new Date(now); sixtyDaysAgo.setDate(now.getDate() - 60);
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-  sixMonthsAgo.setDate(1);
 
   const [
     summaryRes,
-    reviewsRes,
-    responsesRes,
     cityPracticesRes,
-    recentReviewsRes,
     views30dRes,
     viewsPrev30dRes,
-    invitesRes,
     allServicesRes,
     practiceServicesRes,
-    enquiriesRes,
     teamDentistsRes,
     opportunityInsightsRes,
     googleReviewsRes,
   ] = await Promise.all([
     admin.from('practice_rating_summary').select('*').eq('practice_id', practice.id).maybeSingle(),
-    admin.from('reviews').select(`
-      id, title, body, rating_overall, moderation_status, verification_status,
-      reviewer_display_name, created_at,
-      treatments(name),
-      practice_responses(body)
-    `).eq('practice_id', practice.id).order('created_at', { ascending: false }),
-    admin.from('practice_responses').select('id', { count: 'exact', head: true }).eq('practice_id', practice.id),
     admin.from('practices').select('id').eq('city', (practice as any).city),
-    admin.from('reviews').select('created_at, rating_overall').eq('practice_id', practice.id).eq('moderation_status', 'published').gte('created_at', sixMonthsAgo.toISOString()),
     admin.from('practice_page_views').select('id', { count: 'exact', head: true }).eq('practice_id', practice.id).gte('viewed_at', thirtyDaysAgo.toISOString()),
     admin.from('practice_page_views').select('id', { count: 'exact', head: true }).eq('practice_id', practice.id).gte('viewed_at', sixtyDaysAgo.toISOString()).lt('viewed_at', thirtyDaysAgo.toISOString()),
-    admin.from('review_invites').select('id, patient_email, patient_name, sent_at, review_id').eq('practice_id', practice.id).order('sent_at', { ascending: false }).limit(50),
     admin.from('services').select('id, slug, name, category, sort_order').order('sort_order'),
     admin.from('practice_services').select('service_id').eq('practice_id', practice.id),
-    admin.from('practice_enquiries').select('id, name, email, treatment_interest, message, created_at, read_at').eq('practice_id', practice.id).order('created_at', { ascending: false }).limit(100),
     admin.from('practice_dentists').select('dentist_id, dentists(id, full_name, gdc_number, specialisms, slug)').eq('practice_id', practice.id).eq('active', true),
     admin.from('practice_opportunity_insights').select('*').eq('practice_id', practice.id).maybeSingle(),
     admin.from('external_reviews').select('rating').eq('practice_id', practice.id).eq('source', 'google').not('rating', 'is', null),
   ]);
 
   const summary = summaryRes.data;
-  const reviews = reviewsRes.data ?? [];
-  const published = reviews.filter((r: any) => r.moderation_status === 'published');
-  const pending = reviews.filter((r: any) => r.moderation_status === 'pending');
-
-  const responseRate = published.length > 0
-    ? Math.round(((responsesRes.count ?? 0) / published.length) * 100)
-    : 0;
 
   const cityIds = (cityPracticesRes.data ?? []).map((p: any) => p.id);
   let cityRank = 0, cityTotal = 0;
@@ -154,57 +125,8 @@ export default async function DashboardPage({ params }: Params) {
     }
   }
 
-  // Monthly data with avgScore
-  const monthlyMap = new Map<string, { count: number; ratingSum: number; ratingN: number }>();
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date();
-    d.setMonth(d.getMonth() - i);
-    monthlyMap.set(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, { count: 0, ratingSum: 0, ratingN: 0 });
-  }
-  for (const r of recentReviewsRes.data ?? []) {
-    const d = new Date(r.created_at);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    if (monthlyMap.has(key)) {
-      const entry = monthlyMap.get(key)!;
-      entry.count++;
-      if (r.rating_overall != null) { entry.ratingSum += r.rating_overall; entry.ratingN++; }
-    }
-  }
-  const monthlyData = Array.from(monthlyMap.entries()).map(([month, { count, ratingSum, ratingN }]) => ({
-    month, count, avgScore: ratingN > 0 ? ratingSum / ratingN : null,
-  }));
-
-  // Current month reviews
-  const thisMonthKey = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; })();
-  const newReviewsThisMonth = monthlyMap.get(thisMonthKey)?.count ?? 0;
-
-  // Score cards
-  const scoreCards = [
-    { label: 'Overall',            value: summary?.avg_overall ?? null },
-    { label: 'Staff Friendliness', value: summary?.avg_cleanliness ?? null },
-    { label: 'Communication',      value: summary?.avg_communication ?? null },
-    { label: 'Anxiety Handling',   value: summary?.avg_anxiety ?? null },
-    { label: 'Pain Management',    value: summary?.avg_pain ?? null },
-    { label: 'Value for Money',    value: summary?.avg_cost ?? null },
-    { label: 'Treatment Results',  value: (summary as any)?.avg_treatment_results ?? null },
-  ];
-
-  // Computed insights
-  const unresponded = published.filter((r: any) => !r.practice_responses?.body).length;
-  const insights: { type: 'warning' | 'info' | 'action'; text: string; actionLabel: string; actionHref: string }[] = [];
-  if (unresponded > 0) {
-    insights.push({ type: 'action', text: `${unresponded} review${unresponded !== 1 ? 's' : ''} need${unresponded === 1 ? 's' : ''} a response — responding improves trust scores`, actionLabel: 'Respond now', actionHref: '#' });
-  }
-if (responseRate < 50 && published.length >= 3) {
-    insights.push({ type: 'warning', text: `Response rate is ${responseRate}% — patients trust practices that reply`, actionLabel: 'View reviews', actionHref: '#' });
-  }
-
-  const prevMonthReviews = monthlyData[monthlyData.length - 2]?.count ?? 0;
-
-  const invites = (invitesRes.data ?? []) as { id: string; patient_email: string; patient_name: string | null; sent_at: string; review_id: string | null }[];
   const allServices = (allServicesRes.data ?? []) as { id: string; slug: string; name: string; category: string; sort_order: number }[];
   const practiceServiceIds = (practiceServicesRes.data ?? []).map((ps: any) => ps.service_id as string);
-  const enquiries = (enquiriesRes.data ?? []) as { id: string; name: string; email: string; treatment_interest: string | null; message: string | null; created_at: string; read_at: string | null }[];
   const teamDentists = (teamDentistsRes.data ?? [])
     .map((row: any) => row.dentists)
     .filter(Boolean)
@@ -249,27 +171,13 @@ if (responseRate < 50 && published.length >= 3) {
       isOAuthUser={isOAuthUser}
       logoUrl={(practice as any).logo_url ?? null}
       isPaid={isPaid}
-      avgOverall={summary?.avg_overall ?? null}
-      reviewCount={summary?.review_count ?? 0}
-      verifiedCount={summary?.verified_count ?? 0}
       profileViews30d={views30dRes.count ?? 0}
       profileViewsPrev30d={viewsPrev30dRes.count ?? 0}
-      newReviewsThisMonth={newReviewsThisMonth}
-      prevMonthReviews={prevMonthReviews}
-      responseRate={responseRate}
-      unrespondedCount={unresponded}
       cityRank={cityRank}
       cityTotal={cityTotal}
       dimensionRanks={dimensionRanks}
-      monthlyData={monthlyData}
-      scoreCards={scoreCards}
-      publishedReviews={published as any}
-      pendingReviews={pending as any}
-      insights={insights}
-      invites={invites}
       allServices={allServices}
       practiceServiceIds={practiceServiceIds}
-      enquiries={enquiries}
       teamDentists={teamDentists}
       opportunityInsights={opportunityInsights}
       googleReviewCount={googleReviewCount}

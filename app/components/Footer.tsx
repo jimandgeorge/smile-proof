@@ -5,22 +5,14 @@ import { usePathname } from 'next/navigation';
 import BrandLogo from './BrandLogo';
 
 const LINKS = {
-  patients: [
-    { label: 'Find a dentist',      href: '/search' },
-    { label: 'Write a review',      href: '/search' },
-    { label: 'Get matched',         href: '/search' },
-    { label: 'Prices & treatments', href: '/treatments/check-up' },
-  ],
   dentists: [
     { label: 'Why SmileProof',      href: '/for-dentists' },
     { label: 'Claim your practice', href: '/for-dentists#claim' },
-    { label: 'Dentist dashboard',   href: '/for-dentists' },
+    { label: 'Intelligence dashboard', href: '/for-dentists' },
     { label: 'Contact us',          href: '/contact' },
   ],
-  cities: ['London', 'Manchester', 'Birmingham', 'Leeds', 'Bristol', 'Edinburgh'],
   about: [
     { label: 'How it works',         href: '/how-it-works' },
-    { label: 'Trust & verification', href: '/trust' },
     { label: 'Privacy policy',       href: '/privacy' },
     { label: 'Terms of service',     href: '/terms' },
   ],
@@ -60,7 +52,7 @@ function FooterLink({ href, label }: { href: string; label: string }) {
 
 export default function Footer() {
   const pathname = usePathname();
-  if (pathname.startsWith('/widget') || pathname.startsWith('/auth/')) return null;
+  if (pathname.startsWith('/auth/')) return null;
 
   return (
     <footer className="border-t" style={{ background: 'var(--cream)', borderColor: 'var(--cream-dark)' }}>
@@ -79,22 +71,12 @@ export default function Footer() {
             <BrandLogo size="footer" />
           </Link>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.65, maxWidth: 200 }}>
-            Honest dental reviews from real UK patients.
+            AI-powered intelligence for UK dental practices.
           </p>
         </div>
 
-        <FooterCol heading="For patients">
-          {LINKS.patients.map(l => <FooterLink key={l.label} {...l} />)}
-        </FooterCol>
-
         <FooterCol heading="For dentists">
           {LINKS.dentists.map(l => <FooterLink key={l.label} {...l} />)}
-        </FooterCol>
-
-        <FooterCol heading="Cities">
-          {LINKS.cities.map(city => (
-            <FooterLink key={city} label={city} href={`/dentists/${city.toLowerCase()}`} />
-          ))}
         </FooterCol>
 
         <FooterCol heading="About">
@@ -111,7 +93,7 @@ export default function Footer() {
           © {new Date().getFullYear()} SmileProof. All rights reserved.
         </p>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--ink-soft)' }}>
-          Built for UK patients
+          Built for UK dental practices
         </p>
       </div>
 
