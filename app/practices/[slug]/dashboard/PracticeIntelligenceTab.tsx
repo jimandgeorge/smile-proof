@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useContext } from 'react';
 import { generatePracticeIntelligence } from './actions';
-import type { OpportunityInsightData, SentimentTheme } from './actions';
+import type { OpportunityInsightData } from './actions';
 import { AlertTriangle, Info, Star, RefreshCw } from 'lucide-react';
 import { AccessTokenContext } from './token-context';
 
@@ -293,37 +293,6 @@ function OpportunityCard({ item, index }: { item: OpportunityInsightData['opport
   );
 }
 
-// ── Theme card ────────────────────────────────────────────────────────────────
-function ThemeCard({ theme }: { theme: SentimentTheme }) {
-  const cfg = {
-    positive: { badgeText: D.accent,  dot: '#34d399', borderAccent: 'rgba(52,211,153,0.2)' },
-    negative: { badgeText: '#f87171', dot: '#f87171', borderAccent: 'rgba(220,38,38,0.2)'  },
-    mixed:    { badgeText: D.gold,    dot: D.gold,    borderAccent: 'rgba(251,191,36,0.2)' },
-  }[theme.sentiment] ?? { badgeText: D.soft, dot: D.faint, borderAccent: D.border };
-
-  return (
-    <div style={{ background: D.card2, borderRadius: 9, padding: '13px 15px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: theme.example ? 9 : 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)', lineHeight: 1.3 }}>{theme.topic}</span>
-        <span style={{ fontSize: 10, fontWeight: 700, color: cfg.badgeText, fontFamily: 'var(--font-body)', textTransform: 'capitalize', flexShrink: 0, opacity: 0.8 }}>
-          {theme.sentiment}
-        </span>
-      </div>
-      {theme.example && (
-        <p style={{ fontSize: 12, color: D.faint, fontFamily: 'var(--font-body)', lineHeight: 1.55, fontStyle: 'italic', margin: '0 0 8px', borderLeft: `2px solid ${cfg.borderAccent}`, paddingLeft: 9 }}>
-          &ldquo;{theme.example}&rdquo;
-        </p>
-      )}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-        <span style={{ width: 4, height: 4, borderRadius: '50%', background: cfg.dot, display: 'inline-block' }} />
-        <span style={{ fontSize: 11, color: D.xfaint, fontFamily: 'var(--font-body)' }}>
-          {theme.count} {theme.count === 1 ? 'mention' : 'mentions'}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 // ── Category scores ───────────────────────────────────────────────────────────
 function CategoryScores({ scores }: { scores: Record<string, number> }) {
   const entries = Object.entries(CATEGORY_LABELS)
@@ -540,17 +509,6 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
               </div>
             )}
 
-          </div>
-        </>
-      )}
-
-      {/* Patient themes */}
-      {ins.themes.length > 0 && (
-        <>
-          <Divider />
-          <MicroLabel text="Patient themes" />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
-            {ins.themes.map((t, i) => <ThemeCard key={i} theme={t} />)}
           </div>
         </>
       )}

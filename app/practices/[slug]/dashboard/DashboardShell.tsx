@@ -4,7 +4,7 @@ import { useState, useEffect, useContext } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import PracticeIntelligenceTab from './PracticeIntelligenceTab';
-import type { OpportunityInsightData } from './actions';
+import type { OpportunityInsightData, SentimentTheme } from './actions';
 import { AccessTokenContext } from './token-context';
 import { Settings, LogOut, Home, Star, User, Upload, CheckCircle, Lock, RefreshCw, Mail } from 'lucide-react';
 
@@ -322,6 +322,37 @@ export default function DashboardShell({
   );
 }
 
+// ── Theme card ────────────────────────────────────────────────────────────────
+function ThemeCard({ theme }: { theme: SentimentTheme }) {
+  const cfg = {
+    positive: { badgeText: D.accent,  dot: '#34d399', borderAccent: 'rgba(52,211,153,0.2)' },
+    negative: { badgeText: '#f87171', dot: '#f87171', borderAccent: 'rgba(220,38,38,0.2)'  },
+    mixed:    { badgeText: D.gold,    dot: D.gold,    borderAccent: 'rgba(251,191,36,0.2)' },
+  }[theme.sentiment] ?? { badgeText: D.soft, dot: D.faint, borderAccent: D.border };
+
+  return (
+    <div style={{ background: D.card2, borderRadius: 9, padding: '13px 15px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: theme.example ? 9 : 6 }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)', lineHeight: 1.3 }}>{theme.topic}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: cfg.badgeText, fontFamily: 'var(--font-body)', textTransform: 'capitalize', flexShrink: 0, opacity: 0.8 }}>
+          {theme.sentiment}
+        </span>
+      </div>
+      {theme.example && (
+        <p style={{ fontSize: 12, color: D.faint, fontFamily: 'var(--font-body)', lineHeight: 1.55, fontStyle: 'italic', margin: '0 0 8px', borderLeft: `2px solid ${cfg.borderAccent}`, paddingLeft: 9 }}>
+          &ldquo;{theme.example}&rdquo;
+        </p>
+      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+        <span style={{ width: 4, height: 4, borderRadius: '50%', background: cfg.dot, display: 'inline-block' }} />
+        <span style={{ fontSize: 11, color: D.xfaint, fontFamily: 'var(--font-body)' }}>
+          {theme.count} {theme.count === 1 ? 'mention' : 'mentions'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ── Setup checklist ───────────────────────────────────────────────────────────
 function SetupChecklist({ hasGoogleReviews, hasIntelligence, onGoToSettings, onGoToIntelligence }: {
   hasGoogleReviews: boolean; hasIntelligence: boolean;
@@ -419,7 +450,10 @@ function OverviewTab({
         .map(key => ({ key, label: CATEGORY_SCORE_LABELS[key] ?? key, value: opportunityInsights.category_scores[key] }))
     : [];
 
+  const themes = (opportunityInsights?.themes ?? []).slice(0, 6) as SentimentTheme[];
+
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 20, alignItems: 'start' }}>
 
       {/* ── Left column ── */}
@@ -680,6 +714,18 @@ function OverviewTab({
           </div>
         )}
       </div>
+    </div>
+
+    {/* Patient themes — full width below the 2-col grid */}
+    {themes.length > 0 && (
+      <div>
+        <div style={{ height: 1, background: D.divider, marginBottom: 20 }} />
+        <MicroLabel text="Patient themes" color={D.soft} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+          {themes.map((t, i) => <ThemeCard key={i} theme={t} />)}
+        </div>
+      </div>
+    )}
     </div>
   );
 }
