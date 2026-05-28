@@ -44,13 +44,22 @@ export default function NavBar() {
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1">
           <Link
-            href="/for-dentists"
+            href="/pricing"
             className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
             style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-soft)', textDecoration: 'none' }}
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--cream-dark)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
-            For dentists
+            Pricing
+          </Link>
+          <Link
+            href="/contact"
+            className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+            style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-soft)', textDecoration: 'none' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--cream-dark)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >
+            Contact
           </Link>
 
           {loggedIn ? (
@@ -75,13 +84,24 @@ export default function NavBar() {
               </a>
             </>
           ) : (
-            <Link
-              href="/auth/login"
-              className="px-4 py-2 rounded-full text-sm font-semibold border transition-colors"
-              style={{ fontFamily: 'var(--font-body)', color: 'var(--forest)', borderColor: 'rgba(28,69,53,0.3)', textDecoration: 'none', background: 'white' }}
-            >
-              Sign in
-            </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Link
+                href="/auth/login"
+                className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-soft)', textDecoration: 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--cream-dark)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                Log in
+              </Link>
+              <Link
+                href="/auth/signup"
+                className="px-4 py-2 rounded-full text-sm font-semibold border transition-colors"
+                style={{ fontFamily: 'var(--font-body)', color: 'var(--forest)', borderColor: 'rgba(28,69,53,0.3)', textDecoration: 'none', background: 'white' }}
+              >
+                Sign up
+              </Link>
+            </div>
           )}
         </nav>
 
@@ -107,9 +127,10 @@ export default function NavBar() {
           style={{ background: 'var(--cream)', borderTop: '1px solid var(--cream-dark)', borderBottom: '1px solid var(--cream-dark)', position: 'fixed', top: 72, left: 0, right: 0, zIndex: 50, boxShadow: '0 8px 24px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', gap: 4, padding: '16px' }}
         >
           {[
-            { href: '/for-dentists', label: 'For dentists' },
+            { href: '/pricing',   label: 'Pricing' },
+            { href: '/contact',   label: 'Contact' },
             ...(loggedIn ? [
-              { href: '/dashboard',    label: 'My dashboard' },
+              { href: '/dashboard', label: 'My dashboard' },
             ] : []),
           ].map(({ href, label }) => (
             <Link
@@ -130,13 +151,22 @@ export default function NavBar() {
               Log out
             </a>
           ) : (
-            <Link
-              href="/auth/login"
-              style={{ fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 600, color: 'var(--forest)', textDecoration: 'none', padding: '12px 16px', borderRadius: 10, border: '1.5px solid rgba(28,69,53,0.25)', textAlign: 'center' }}
-              onClick={() => setMenuOpen(false)}
-            >
-              Sign in
-            </Link>
+            <>
+              <Link
+                href="/auth/login"
+                style={{ fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 500, color: 'var(--ink-soft)', textDecoration: 'none', padding: '12px 16px', borderRadius: 10 }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Log in
+              </Link>
+              <Link
+                href="/auth/signup"
+                style={{ fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 600, color: 'var(--forest)', textDecoration: 'none', padding: '12px 16px', borderRadius: 10, border: '1.5px solid rgba(28,69,53,0.25)', textAlign: 'center' }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Sign up
+              </Link>
+            </>
           )}
         </div>
       )}

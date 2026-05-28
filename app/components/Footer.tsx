@@ -5,16 +5,15 @@ import { usePathname } from 'next/navigation';
 import BrandLogo from './BrandLogo';
 
 const LINKS = {
-  dentists: [
-    { label: 'Why SmileProof',      href: '/for-dentists' },
-    { label: 'Claim your practice', href: '/for-dentists#claim' },
-    { label: 'Intelligence dashboard', href: '/for-dentists' },
-    { label: 'Contact us',          href: '/contact' },
+  product: [
+    { label: 'Pricing',        href: '/pricing' },
+    { label: 'Contact us',     href: '/contact' },
+    { label: 'Sign up',        href: '/auth/signup' },
+    { label: 'Log in',         href: '/auth/login' },
   ],
-  about: [
-    { label: 'How it works',         href: '/how-it-works' },
-    { label: 'Privacy policy',       href: '/privacy' },
-    { label: 'Terms of service',     href: '/terms' },
+  legal: [
+    { label: 'Privacy policy', href: '/privacy' },
+    { label: 'Terms of service', href: '/terms' },
   ],
 };
 
@@ -75,12 +74,12 @@ export default function Footer() {
           </p>
         </div>
 
-        <FooterCol heading="For dentists">
-          {LINKS.dentists.map(l => <FooterLink key={l.label} {...l} />)}
+        <FooterCol heading="Product">
+          {LINKS.product.map(l => <FooterLink key={l.label} {...l} />)}
         </FooterCol>
 
-        <FooterCol heading="About">
-          {LINKS.about.map(l => <FooterLink key={l.label} {...l} />)}
+        <FooterCol heading="Legal">
+          {LINKS.legal.map(l => <FooterLink key={l.label} {...l} />)}
         </FooterCol>
       </div>
 

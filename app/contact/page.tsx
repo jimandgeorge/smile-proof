@@ -5,26 +5,14 @@ const CATEGORIES = [
   {
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-        <circle cx="12" cy="8" r="4" stroke="var(--forest)" strokeWidth="1.6" strokeLinecap="round" />
-        <path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" stroke="var(--forest)" strokeWidth="1.6" strokeLinecap="round" />
-      </svg>
-    ),
-    title: 'Patient support',
-    description: 'Help finding a dentist, writing or managing a review, or understanding how SmileProof works.',
-    contact: 'support@smileproof.co.uk',
-    href: 'mailto:support@smileproof.co.uk',
-  },
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
         <rect x="3" y="7" width="18" height="14" rx="2" stroke="var(--forest)" strokeWidth="1.6" />
         <path d="M8 7V5a4 4 0 0 1 8 0v2" stroke="var(--forest)" strokeWidth="1.6" strokeLinecap="round" />
         <path d="M12 13v3" stroke="var(--forest)" strokeWidth="1.6" strokeLinecap="round" />
         <circle cx="12" cy="12.5" r="0.8" fill="var(--forest)" />
       </svg>
     ),
-    title: 'Clinic & practice support',
-    description: 'Claiming your profile, responding to reviews, dashboard help, or subscription queries.',
+    title: 'Practice support',
+    description: 'Help claiming your practice, using the intelligence dashboard, or managing your subscription.',
     contact: 'hello@smileproof.co.uk',
     href: 'mailto:hello@smileproof.co.uk',
   },
@@ -38,7 +26,7 @@ const CATEGORIES = [
       </svg>
     ),
     title: 'Partnerships & dental groups',
-    description: 'Multi-location groups, enterprise enquiries, white-label discussions, or press.',
+    description: 'Multi-location groups, enterprise enquiries, or press.',
     contact: 'hello@smileproof.co.uk',
     href: 'mailto:hello@smileproof.co.uk',
   },
@@ -46,24 +34,24 @@ const CATEGORIES = [
 
 const FAQS = [
   {
-    q: 'How do I claim my practice profile?',
+    q: 'How do I claim my practice?',
     a: "Search for your practice on SmileProof, open the profile, and click \"Claim this practice\". We'll verify ownership by email.",
-    href: '/for-dentists',
-  },
-  {
-    q: 'How are reviews verified?',
-    a: 'Reviews are linked to verified patient email addresses. We cross-check against appointment records where possible.',
     href: null,
   },
   {
-    q: 'Can a review be removed?',
-    a: 'We investigate all removal requests. Reviews that violate our guidelines or are demonstrably fraudulent can be removed.',
+    q: 'Where does the review data come from?',
+    a: 'SmileProof imports your Google Reviews. Your data is used only inside your private dashboard — never shown publicly on our site.',
     href: null,
   },
   {
-    q: 'How does SmileProof pricing work?',
-    a: 'Claiming a practice profile is free. Growth and Pro plans unlock review collection tools, analytics, and lead generation features.',
-    href: '/for-dentists#pricing',
+    q: 'How does pricing work?',
+    a: 'Claiming your practice is free. Pro unlocks AI intelligence reports, local benchmarking, and profile analytics.',
+    href: '/pricing',
+  },
+  {
+    q: 'Can I cancel at any time?',
+    a: 'Yes — cancel from the billing section of your dashboard and you\'ll retain access until the end of your billing period.',
+    href: null,
   },
 ];
 
