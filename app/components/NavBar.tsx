@@ -21,7 +21,13 @@ export default function NavBar() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (pathname.startsWith('/auth/') || pathname.startsWith('/admin') || pathname.includes('/dashboard')) return null;
+  if (
+    pathname.startsWith('/auth/') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/onboarding') ||
+    pathname.includes('/dashboard') ||
+    pathname.includes('/upgrade')
+  ) return null;
 
   const linkStyle: React.CSSProperties = {
     fontFamily: 'var(--font-body)',
