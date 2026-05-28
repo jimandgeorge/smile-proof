@@ -46,8 +46,10 @@ export async function GET(req: NextRequest) {
   };
 
   const readyItems = readyData.tasks?.[0]?.result ?? [];
-  // Match by practiceId tag (most recent first) or fall back to exact requestId
-  const readyItem = readyItems.find(t => t.tag === practiceId) ?? readyItems.find(t => t.id === requestId);
+  // Match by practiceId tag, then exact requestId, then any available task
+  const readyItem = readyItems.find(t => t.tag === practiceId)
+    ?? readyItems.find(t => t.id === requestId)
+    ?? readyItems[0];
   if (!readyItem) {
     return NextResponse.json({ status: 'pending' });
   }
