@@ -1057,12 +1057,12 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
         <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: 0 }}>Manage your account and practice settings.</p>
       </div>
 
-      <div style={{ maxWidth: 600 }}>
-      {/* Billing */}
-      <BillingSection isPaid={isPaid} practiceSlug={practiceSlug} />
-      {/* Google Reviews */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: 20, alignItems: 'start' }}>
+      {/* Google Reviews — left (primary) */}
       <GoogleConnectionSection practiceId={practiceId} defaultSearchQuery={`${practiceName} ${practiceCity}`} />
-      {/* Account */}
+      {/* Right column: Billing + Account */}
+      <div>
+      <BillingSection isPaid={isPaid} practiceSlug={practiceSlug} />
       <Section title="Account">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, background: D.card2, marginBottom: 16, border: `1px solid ${D.border}` }}>
           <Mail size={14} strokeWidth={1.5} style={{ flexShrink: 0, color: D.soft }} />
@@ -1127,6 +1127,7 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
           </form>
         )}
       </Section>
+      </div>
       </div>
     </div>
   );

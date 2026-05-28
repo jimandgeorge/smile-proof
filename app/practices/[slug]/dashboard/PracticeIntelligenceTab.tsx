@@ -374,7 +374,7 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
   // ── Empty state ───────────────────────────────────────────────────────────
   if (!insights && !isPending) {
     return (
-      <div style={{ maxWidth: 560 }}>
+      <div>
         <div style={{ marginBottom: 28 }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: D.text, margin: '0 0 4px', letterSpacing: '-0.02em' }}>Practice Intelligence</h2>
           <p style={{ fontSize: 13, color: D.faint, fontFamily: 'var(--font-body)', margin: 0 }}>Patterns from your patient reviews — what&rsquo;s working, what to fix, where to grow.</p>
@@ -406,7 +406,7 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
   // ── Loading state ─────────────────────────────────────────────────────────
   if (isPending) {
     return (
-      <div style={{ maxWidth: 560 }}>
+      <div>
         <div style={{ marginBottom: 28 }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: D.text, margin: '0 0 4px', letterSpacing: '-0.02em' }}>Practice Intelligence</h2>
         </div>
@@ -426,7 +426,7 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
   const remainingOpportunities = ins.opportunities.slice(1);
 
   return (
-    <div style={{ maxWidth: 900 }}>
+    <div>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 32 }}>
