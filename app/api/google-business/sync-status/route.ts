@@ -42,17 +42,18 @@ export async function GET(req: NextRequest) {
   }
 
   const readyData = await readyRes.json() as {
-    tasks?: { result?: { id: string }[] }[];
+    tasks?: { result?: { id: string; endpoint: string }[] }[];
   };
 
-  const readyIds = readyData.tasks?.[0]?.result?.map(t => t.id) ?? [];
-  if (!readyIds.includes(requestId)) {
-    return NextResponse.json({ status: 'pending' });
+  const readyItems = readyData.tasks?.[0]?.result ?? [];
+  const readyItem  = readyItems.find(t => t.id === requestId);
+  if (!readyItem) {
+    return NextResponse.json({ status: 'pending', debug_ready_ids: readyItems.map(t => t.id) });
   }
 
-  // Task is ready — fetch results
+  // Task is ready — fetch results using DataForSEO's provided endpoint
   const statusRes = await fetch(
-    `https://api.dataforseo.com/v3/business_data/google/reviews/task_get/advanced/${requestId}`,
+    `https://api.dataforseo.com${readyItem.endpoint}`,
     { headers: { 'Authorization': authHeader() } },
   );
 
