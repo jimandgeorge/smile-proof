@@ -204,14 +204,14 @@ export default function DashboardShell({
 
   return (
     <AccessTokenContext.Provider value={accessToken}>
-    <div style={{ display: 'flex', minHeight: 'calc(100vh - 72px)', background: D.bg }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: D.bg }}>
 
       {/* ── Sidebar ── */}
       <aside style={{
         width: 216, flexShrink: 0, background: D.sidebar,
         borderRight: `1px solid rgba(255,255,255,0.06)`,
         display: 'flex', flexDirection: 'column',
-        position: 'sticky', top: 72, height: 'calc(100vh - 72px)',
+        position: 'sticky', top: 0, height: '100vh',
         overflowY: 'auto',
       }}>
         {/* Practice selector */}

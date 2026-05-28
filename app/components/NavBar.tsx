@@ -21,7 +21,7 @@ export default function NavBar() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (pathname.startsWith('/auth/') || pathname.startsWith('/admin')) return null;
+  if (pathname.startsWith('/auth/') || pathname.startsWith('/admin') || pathname.includes('/dashboard')) return null;
 
   return (
     <>
