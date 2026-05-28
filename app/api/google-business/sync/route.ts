@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       keyword:       searchQuery.trim(),
       location_name: 'United Kingdom',
       language_name: 'English',
-      depth:         200,
+      depth:         50,
       sort_by:       'newest',
     }]),
   });
