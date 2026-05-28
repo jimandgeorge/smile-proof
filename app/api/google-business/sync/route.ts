@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
       language_name: 'English',
       depth:         100,
       sort_by:       'newest',
+      tag:           practiceId,
     }]),
   });
 

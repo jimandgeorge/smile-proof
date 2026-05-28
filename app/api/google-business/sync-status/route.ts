@@ -42,13 +42,14 @@ export async function GET(req: NextRequest) {
   }
 
   const readyData = await readyRes.json() as {
-    tasks?: { result?: { id: string; endpoint: string }[] }[];
+    tasks?: { result?: { id: string; tag: string; endpoint: string }[] }[];
   };
 
   const readyItems = readyData.tasks?.[0]?.result ?? [];
-  const readyItem  = readyItems.find(t => t.id === requestId);
+  // Match by practiceId tag (most recent first) or fall back to exact requestId
+  const readyItem = readyItems.find(t => t.tag === practiceId) ?? readyItems.find(t => t.id === requestId);
   if (!readyItem) {
-    return NextResponse.json({ status: 'pending', looking_for: requestId, ready_count: readyItems.length, ready_ids: readyItems.map(t => t.id) });
+    return NextResponse.json({ status: 'pending' });
   }
 
   // Task is ready — fetch results using DataForSEO's provided endpoint
