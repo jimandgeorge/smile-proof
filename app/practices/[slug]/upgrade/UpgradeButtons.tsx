@@ -2,62 +2,54 @@
 
 import { useState } from 'react';
 
-type Plan = 'growth' | 'pro';
-
 export default function UpgradeButtons({ slug }: { slug: string }) {
-  const [loading, setLoading] = useState<Plan | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleUpgrade(plan: Plan) {
-    setLoading(plan);
+  async function handleUpgrade() {
+    setLoading(true);
     setError(null);
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, plan }),
+        body: JSON.stringify({ slug, plan: 'pro' }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Something went wrong');
       window.location.href = data.url;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong');
-      setLoading(null);
+      setLoading(false);
     }
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {error && (
-        <p style={{ fontSize: 13, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', margin: 0, fontFamily: 'var(--font-body)' }}>
+        <p style={{ fontSize: 13, color: '#f87171', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '10px 14px', margin: 0, fontFamily: 'var(--font-body)' }}>
           {error}
         </p>
       )}
       <button
-        onClick={() => handleUpgrade('growth')}
-        disabled={!!loading}
+        onClick={handleUpgrade}
+        disabled={loading}
         style={{
-          width: '100%', padding: '13px', borderRadius: 50,
-          background: loading === 'growth' ? 'var(--ink-faint)' : 'var(--forest)',
-          color: 'white', border: 'none', fontSize: 15, fontWeight: 700,
-          fontFamily: 'var(--font-body)', cursor: loading ? 'not-allowed' : 'pointer',
+          width: '100%', padding: '14px',
+          borderRadius: 10,
+          background: loading ? 'rgba(52,211,153,0.4)' : '#34d399',
+          color: '#07070e', border: 'none',
+          fontSize: 15, fontWeight: 700,
+          fontFamily: 'var(--font-body)',
+          cursor: loading ? 'not-allowed' : 'pointer',
           letterSpacing: '-0.01em',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}
       >
-        {loading === 'growth' ? 'Redirecting…' : 'Start Growth — £49/month'}
-      </button>
-      <button
-        onClick={() => handleUpgrade('pro')}
-        disabled={!!loading}
-        style={{
-          width: '100%', padding: '13px', borderRadius: 50,
-          background: loading === 'pro' ? 'var(--ink-faint)' : 'var(--ink)',
-          color: 'white', border: 'none', fontSize: 15, fontWeight: 700,
-          fontFamily: 'var(--font-body)', cursor: loading ? 'not-allowed' : 'pointer',
-          letterSpacing: '-0.01em',
-        }}
-      >
-        {loading === 'pro' ? 'Redirecting…' : 'Start Pro — £99/month'}
+        {loading ? 'Redirecting to checkout…' : 'Start Pro — £99/month'}
+        {!loading && (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+        )}
       </button>
     </div>
   );
