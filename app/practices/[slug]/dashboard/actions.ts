@@ -4,6 +4,43 @@ import { createAdminSupabase, getUserFromToken } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 import Anthropic from '@anthropic-ai/sdk';
 
+export type ReviewItem = { id: string; rating: number | null; body: string; published_at: string | null };
+
+export async function getPracticeReviews(
+  accessToken: string,
+  practiceId: string,
+): Promise<{ reviews?: ReviewItem[]; error?: string }> {
+  const user = await getUserFromToken(accessToken);
+  if (!user) return { error: 'Unauthorized' };
+
+  const admin = createAdminSupabase();
+  const { data: practice } = await admin
+    .from('practices')
+    .select('claimed_by_user_id')
+    .eq('id', practiceId)
+    .single();
+
+  if (!practice || practice.claimed_by_user_id !== user.id) return { error: 'Unauthorized' };
+
+  const { data } = await admin
+    .from('external_reviews')
+    .select('id, rating, body, published_at')
+    .eq('practice_id', practiceId)
+    .eq('source', 'google')
+    .not('body', 'is', null)
+    .order('published_at', { ascending: false })
+    .limit(200);
+
+  return {
+    reviews: (data ?? []).map(r => ({
+      id: r.id,
+      rating: r.rating,
+      body: r.body!,
+      published_at: r.published_at,
+    })),
+  };
+}
+
 // ── AI Opportunities ──────────────────────────────────────────────────────────
 
 export type SentimentTheme = {

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useTransition, useContext } from 'react';
-import { generatePracticeIntelligence } from './actions';
-import type { OpportunityInsightData } from './actions';
-import { AlertTriangle, Info, Star, RefreshCw } from 'lucide-react';
+import { useState, useTransition, useContext, useRef } from 'react';
+import { generatePracticeIntelligence, getPracticeReviews } from './actions';
+import type { OpportunityInsightData, ReviewItem } from './actions';
+import { AlertTriangle, Info, Star, RefreshCw, ChevronRight } from 'lucide-react';
 import { AccessTokenContext } from './token-context';
 import { createClient } from '@/lib/supabase';
+import ReviewDrawer, { DrawerTopic, CATEGORY_KEYWORDS } from './ReviewDrawer';
 
 const D = {
   bg: '#0d0d12', card: '#13131a', card2: '#17171f',
@@ -43,6 +44,21 @@ const CATEGORY_IMPACT: Record<string, string> = {
   staff_friendliness:     'Core retention driver across all patient types',
   booking_experience:     'First impression — shapes willingness to return',
 };
+
+function makeDrillTopic(
+  category: string,
+  insightText: string,
+  score?: number | null,
+  accentColor?: string,
+): DrawerTopic {
+  return {
+    label: CATEGORY_LABELS[category] ?? category,
+    insightText,
+    keywords: CATEGORY_KEYWORDS[category] ?? [],
+    score: score ?? undefined,
+    accentColor,
+  };
+}
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -169,9 +185,9 @@ function TrustScoreHero({ scores, reviewCount }: { scores: Record<string, number
   );
 }
 
-// ── Priority focus (AI recommendation) ───────────────────────────────────────
-function PriorityFocus({ recommendation, rationale, evidence }: {
-  recommendation: string; rationale: string; evidence?: string;
+// ── Priority focus ────────────────────────────────────────────────────────────
+function PriorityFocus({ recommendation, rationale, evidence, onClick }: {
+  recommendation: string; rationale: string; evidence?: string; onClick?: () => void;
 }) {
   return (
     <div style={{ marginBottom: 36 }}>
@@ -180,10 +196,16 @@ function PriorityFocus({ recommendation, rationale, evidence }: {
           AI · Priority focus
         </div>
       </div>
-      <div style={{ borderLeft: '2px solid rgba(52,211,153,0.25)', paddingLeft: 18 }}>
-        <p style={{ fontSize: 17, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)', margin: '0 0 8px', lineHeight: 1.35, letterSpacing: '-0.02em' }}>
-          {recommendation}
-        </p>
+      <div
+        onClick={onClick}
+        style={{ borderLeft: '2px solid rgba(52,211,153,0.25)', paddingLeft: 18, cursor: onClick ? 'pointer' : 'default' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+          <p style={{ fontSize: 17, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)', margin: '0 0 8px', lineHeight: 1.35, letterSpacing: '-0.02em', flex: 1 }}>
+            {recommendation}
+          </p>
+          {onClick && <ChevronRight size={14} strokeWidth={1.5} style={{ color: D.xfaint, flexShrink: 0, marginTop: 3 }} />}
+        </div>
         <p style={{ fontSize: 13.5, color: D.soft, fontFamily: 'var(--font-body)', margin: evidence ? '0 0 12px' : '0', lineHeight: 1.65 }}>
           {rationale}
         </p>
@@ -197,28 +219,35 @@ function PriorityFocus({ recommendation, rationale, evidence }: {
   );
 }
 
-// ── Signal item (strength / area) ─────────────────────────────────────────────
-function SignalItem({ type, category, text, stat, statLabel, quote }: {
+// ── Signal item (strength / weakness) ────────────────────────────────────────
+function SignalItem({ type, category, text, stat, statLabel, quote, onClick }: {
   type: 'strength' | 'weakness';
   category: string; text: string;
   stat?: number; statLabel?: string;
   quote?: string;
+  onClick?: () => void;
 }) {
   const isS = type === 'strength';
   const accentCol = isS ? 'rgba(52,211,153,0.3)' : 'rgba(251,191,36,0.3)';
   const labelCol  = isS ? D.accent : D.gold;
 
   return (
-    <div style={{ paddingLeft: 14, borderLeft: `2px solid ${accentCol}`, paddingTop: 2, paddingBottom: 2 }}>
+    <div
+      onClick={onClick}
+      style={{ paddingLeft: 14, borderLeft: `2px solid ${accentCol}`, paddingTop: 2, paddingBottom: 2, cursor: onClick ? 'pointer' : 'default' }}
+    >
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
         <span style={{ fontSize: 13, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)', letterSpacing: '-0.01em' }}>
           {CATEGORY_LABELS[category] ?? category}
         </span>
-        {stat != null && (
-          <span style={{ fontSize: 11.5, fontWeight: 600, color: labelCol, fontFamily: 'var(--font-body)', flexShrink: 0, opacity: 0.8 }}>
-            {stat} {statLabel}
-          </span>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          {stat != null && (
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: labelCol, fontFamily: 'var(--font-body)', opacity: 0.8 }}>
+              {stat} {statLabel}
+            </span>
+          )}
+          {onClick && <ChevronRight size={11} strokeWidth={1.5} style={{ color: D.xfaint }} />}
+        </div>
       </div>
       {CATEGORY_IMPACT[category] && (
         <div style={{ fontSize: 11, color: D.xfaint, fontFamily: 'var(--font-body)', lineHeight: 1.4, marginBottom: 5 }}>
@@ -260,12 +289,17 @@ function ImpactBadge({ impact }: { impact?: string }) {
 }
 
 // ── Opportunity card ──────────────────────────────────────────────────────────
-function OpportunityCard({ item, index }: { item: OpportunityInsightData['opportunities'][0]; index: number }) {
+function OpportunityCard({ item, index, onClick }: {
+  item: OpportunityInsightData['opportunities'][0]; index: number; onClick?: () => void;
+}) {
   const impact = (item as any).impact as string | undefined;
   const evidence = (item as any).evidence as string | undefined;
 
   return (
-    <div style={{ background: D.card2, borderRadius: 10, padding: '16px 18px' }}>
+    <div
+      onClick={onClick}
+      style={{ background: D.card2, borderRadius: 10, padding: '16px 18px', cursor: onClick ? 'pointer' : 'default' }}
+    >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
         <div style={{ width: 22, height: 22, borderRadius: 6, flexShrink: 0, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.15)', color: D.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 800, marginTop: 1 }}>
           {index + 1}
@@ -281,6 +315,7 @@ function OpportunityCard({ item, index }: { item: OpportunityInsightData['opport
             <ImpactBadge impact={impact} />
           </div>
         </div>
+        {onClick && <ChevronRight size={14} strokeWidth={1.5} style={{ color: D.xfaint, flexShrink: 0, marginTop: 3 }} />}
       </div>
       <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.65, margin: evidence ? '0 0 10px' : '0', paddingLeft: 34 }}>
         {item.rationale}
@@ -295,7 +330,10 @@ function OpportunityCard({ item, index }: { item: OpportunityInsightData['opport
 }
 
 // ── Category scores ───────────────────────────────────────────────────────────
-function CategoryScores({ scores }: { scores: Record<string, number> }) {
+function CategoryScores({ scores, onDrill }: {
+  scores: Record<string, number>;
+  onDrill?: (key: string, score: number) => void;
+}) {
   const entries = Object.entries(CATEGORY_LABELS)
     .map(([key, label]) => ({ key, label, score: scores[key] ?? null }))
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
@@ -305,15 +343,23 @@ function CategoryScores({ scores }: { scores: Record<string, number> }) {
       <MicroLabel text="Category Breakdown" />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
         {entries.map(({ key, label, score }) => (
-          <div key={key}>
+          <div
+            key={key}
+            onClick={() => score != null && onDrill?.(key, score)}
+            style={{ cursor: score != null && onDrill ? 'pointer' : 'default' }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <span style={{ fontSize: 12, color: score != null ? D.soft : D.xfaint, fontFamily: 'var(--font-body)', width: 140, flexShrink: 0 }}>{label}</span>
+              <span style={{ fontSize: 12, color: score != null ? D.soft : D.xfaint, fontFamily: 'var(--font-body)', width: 128, flexShrink: 0 }}>{label}</span>
               <div style={{ flex: 1, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: score != null ? `${(score / 5) * 100}%` : '0%', background: score != null ? scoreColor(score) : D.xfaint, borderRadius: 2, transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)', opacity: score != null ? 1 : 0.4 }} />
               </div>
               <span style={{ fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-body)', color: score != null ? scoreColor(score) : D.xfaint, width: 26, textAlign: 'right', flexShrink: 0 }}>
                 {score != null ? score.toFixed(1) : '—'}
               </span>
+              {score != null && onDrill
+                ? <ChevronRight size={11} strokeWidth={1.5} style={{ color: D.xfaint, flexShrink: 0 }} />
+                : <div style={{ width: 11 }} />
+              }
             </div>
           </div>
         ))}
@@ -329,13 +375,18 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
   const [isPending, startTransition] = useTransition();
   const accessToken = useContext(AccessTokenContext);
 
+  // Drill-down state
+  const [drawerTopic, setDrawerTopic] = useState<DrawerTopic | null>(null);
+  const [allReviews, setAllReviews] = useState<ReviewItem[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const fetchingRef = useRef(false);
+
   const isStale = insights != null && reviewCount > insights.review_count;
   const newSince = insights ? reviewCount - insights.review_count : 0;
 
   const handleGenerate = () => {
     setError('');
     startTransition(async () => {
-      // Always get a fresh token — the initial token from page load expires after ~1 hour
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token ?? accessToken;
@@ -344,6 +395,20 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
       if (result.error) { setError(result.error); return; }
       if (result.insights) setInsights(result.insights);
     });
+  };
+
+  const openDrawer = async (topic: DrawerTopic) => {
+    setDrawerTopic(topic);
+    if (allReviews.length === 0 && !fetchingRef.current) {
+      fetchingRef.current = true;
+      setReviewsLoading(true);
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token ?? accessToken;
+      const result = await getPracticeReviews(token, practiceId);
+      if (result.reviews) setAllReviews(result.reviews);
+      setReviewsLoading(false);
+    }
   };
 
   // ── Empty state ───────────────────────────────────────────────────────────
@@ -378,7 +443,7 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
     );
   }
 
-  // ── Loading state — only for initial generation (no existing report yet) ──
+  // ── Loading state ─────────────────────────────────────────────────────────
   if (isPending && !insights) {
     return (
       <div>
@@ -455,11 +520,12 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
             recommendation={topOpportunity.recommendation}
             rationale={topOpportunity.rationale}
             evidence={(topOpportunity as any).evidence}
+            onClick={() => openDrawer(makeDrillTopic(topOpportunity.category, topOpportunity.rationale))}
           />
         </>
       )}
 
-      {/* Strengths + Areas — explicit 2 columns */}
+      {/* Strengths + Areas */}
       {(ins.strengths.length > 0 || ins.weaknesses.length > 0) && (
         <>
           <Divider />
@@ -471,7 +537,9 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {ins.strengths.map((s, i) => (
                     <SignalItem key={i} type="strength" category={s.category} text={s.text}
-                      stat={s.mention_count} statLabel="mentions" quote={(s as any).quote} />
+                      stat={s.mention_count} statLabel="mentions" quote={(s as any).quote}
+                      onClick={() => openDrawer(makeDrillTopic(s.category, s.text, ins.category_scores[s.category], D.accent))}
+                    />
                   ))}
                 </div>
               </div>
@@ -483,7 +551,9 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {ins.weaknesses.map((w, i) => (
                     <SignalItem key={i} type="weakness" category={w.category} text={w.text}
-                      stat={w.pct_mentions} statLabel="% of reviews" quote={(w as any).quote} />
+                      stat={w.pct_mentions} statLabel="% of reviews" quote={(w as any).quote}
+                      onClick={() => openDrawer(makeDrillTopic(w.category, w.text, ins.category_scores[w.category], D.gold))}
+                    />
                   ))}
                 </div>
               </div>
@@ -504,7 +574,9 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
                 <MicroLabel text="Growth opportunities" />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {remainingOpportunities.map((o, i) => (
-                    <OpportunityCard key={i} item={o} index={i + 1} />
+                    <OpportunityCard key={i} item={o} index={i + 1}
+                      onClick={() => openDrawer(makeDrillTopic(o.category, o.rationale))}
+                    />
                   ))}
                 </div>
               </div>
@@ -512,13 +584,24 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
 
             {Object.keys(ins.category_scores).length > 0 && (
               <div>
-                <CategoryScores scores={ins.category_scores} />
+                <CategoryScores
+                  scores={ins.category_scores}
+                  onDrill={(key, score) => openDrawer(makeDrillTopic(key, CATEGORY_IMPACT[key] ?? key, score, scoreColor(score)))}
+                />
               </div>
             )}
 
           </div>
         </>
       )}
+
+      {/* Drill-down drawer */}
+      <ReviewDrawer
+        topic={drawerTopic}
+        reviews={allReviews}
+        loading={reviewsLoading}
+        onClose={() => setDrawerTopic(null)}
+      />
 
     </div>
   );
