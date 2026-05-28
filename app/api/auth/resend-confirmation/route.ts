@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   const admin = createAdminSupabase();
 
   const { data, error } = await admin.auth.admin.generateLink({
-    type: 'signup',
+    type: 'magiclink',
     email: email.trim().toLowerCase(),
     options: { redirectTo: `${SITE}/auth/callback` },
   });
