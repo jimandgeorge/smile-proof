@@ -26,10 +26,10 @@ export default function GoogleIntelSection() {
             </div>
 
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(26px, 3vw, 40px)', fontWeight: 800, color: '#edeef5', lineHeight: 1.1, letterSpacing: '-0.03em', margin: '0 0 16px' }}>
-              Connect your Google reviews. Unlock AI-powered patient insight.
+              Google review intelligence built in.
             </h2>
             <p style={{ fontSize: 15, color: 'rgba(237,238,245,0.5)', lineHeight: 1.65, fontFamily: 'var(--font-body)', margin: '0 0 22px' }}>
-              Import your existing Google reviews into SmileProof&rsquo;s intelligence engine. Our AI analyses them alongside verified patient feedback to surface patterns you&rsquo;d never find manually.
+              Practices can securely connect Google reviews to unlock instant AI-powered reputation insight and operational analysis. Imported reviews are used exclusively for intelligence and reporting — not public duplication.
             </p>
 
             {/* Privacy note */}
@@ -44,9 +44,10 @@ export default function GoogleIntelSection() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                'Blend Google + SmileProof data for richer AI analysis',
+                'Instantly populate your intelligence dashboard from existing reviews',
                 'Surface sentiment patterns across a larger review corpus',
                 'Understand your full reputation picture in one place',
+                'Reviews stay private — never shown publicly on SmileProof',
               ].map(item => (
                 <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <div style={{

@@ -26,15 +26,20 @@ export default function IntelligenceDashboardSection() {
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 3.2vw, 42px)', fontWeight: 800, color: '#edeef5', lineHeight: 1.1, letterSpacing: '-0.03em', margin: '0 0 18px' }}>
               Turn patient feedback into operational insight.
             </h2>
-            <p style={{ fontSize: 15, color: 'rgba(237,238,245,0.5)', lineHeight: 1.65, fontFamily: 'var(--font-body)', margin: '0 0 28px' }}>
+            <p style={{ fontSize: 15, color: 'rgba(237,238,245,0.5)', lineHeight: 1.65, fontFamily: 'var(--font-body)', margin: '0 0 16px' }}>
               SmileProof analyses every patient review across 7 clinical and operational dimensions — surfacing patterns that would take weeks to identify manually.
+            </p>
+            <p style={{ fontSize: 13.5, color: 'rgba(237,238,245,0.38)', lineHeight: 1.6, fontFamily: 'var(--font-body)', margin: '0 0 20px', fontStyle: 'italic' }}>
+              The platform surfaces:
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
               {[
-                'Understand exactly what patients experience at your practice',
-                'Identify recurring issues before they affect your reputation',
-                'Benchmark across every clinical and operational dimension',
-                'Generate AI management summaries your team can act on',
+                'Recurring themes impacting patient satisfaction and trust',
+                'Operational friction points your team may not be aware of',
+                'Sentiment trends across clinical categories over time',
+                'Competitive positioning within your local patient market',
+                'AI-generated management summaries your team can act on',
+                'Actionable recommendations for improving patient experience',
               ].map(item => (
                 <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <div style={{
@@ -93,6 +98,9 @@ export default function IntelligenceDashboardSection() {
               </p>
               <div style={{ fontSize: 11, color: 'rgba(237,238,245,0.22)', fontFamily: 'var(--font-body)', marginTop: 10 }}>
                 Generated from 118 reviews · Updated today
+              </div>
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: 12.5, color: 'rgba(52,211,153,0.55)', fontFamily: 'var(--font-body)' }}>
+                Connect Google reviews to instantly populate your intelligence dashboard.
               </div>
             </div>
           </div>

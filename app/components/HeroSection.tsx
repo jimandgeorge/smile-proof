@@ -56,21 +56,21 @@ export default function HeroSection() {
             <p style={{
               fontSize: 'clamp(15px, 1.5vw, 17px)',
               color: 'rgba(237,238,245,0.5)', lineHeight: 1.7,
-              margin: 0, fontFamily: 'var(--font-body)', maxWidth: 480,
+              margin: 0, fontFamily: 'var(--font-body)', maxWidth: 540,
             }}>
-              Connect your Google Reviews, run AI analysis, and surface the operational insight your practice needs — in minutes.
+              SmileProof transforms patient feedback into operational insight through AI-powered sentiment analysis, reputation intelligence, and practice performance monitoring.
             </p>
           </div>
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-            <Link href="/auth/signup" style={{
+            <Link href="/contact" style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '12px 22px', borderRadius: 9,
               background: '#34d399', color: '#07070e',
               fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-body)',
               textDecoration: 'none', letterSpacing: '-0.01em',
             }}>
-              Start free trial
+              Book a Demo
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </Link>
             <Link href="/pricing" style={{
@@ -80,9 +80,13 @@ export default function HeroSection() {
               color: 'rgba(237,238,245,0.65)', fontSize: 14, fontWeight: 600,
               fontFamily: 'var(--font-body)', textDecoration: 'none',
             }}>
-              View pricing
+              View Platform
             </Link>
           </div>
+
+          <p style={{ fontSize: 12.5, color: 'rgba(237,238,245,0.25)', fontFamily: 'var(--font-body)', margin: '14px 0 0', letterSpacing: '-0.005em' }}>
+            Connect Google reviews to instantly unlock patient sentiment and operational insight.
+          </p>
         </div>
 
         {/* ── Dashboard screenshot ── */}

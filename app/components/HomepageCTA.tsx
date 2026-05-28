@@ -17,21 +17,21 @@ export default function HomepageCTA() {
         </div>
 
         <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 800, color: '#edeef5', lineHeight: 1.08, letterSpacing: '-0.03em', margin: '0 0 18px' }}>
-          Ready to understand your patients better?
+          Understand what patients actually experience inside your practice.
         </h2>
         <p style={{ fontSize: 16, color: 'rgba(237,238,245,0.48)', lineHeight: 1.7, fontFamily: 'var(--font-body)', margin: '0 auto 36px', maxWidth: 460 }}>
-          Connect your Google Reviews and start surfacing the intelligence your team needs — free for 14 days, no credit card required.
+          Turn patient feedback into operational intelligence with SmileProof.
         </p>
 
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link href="/auth/signup" style={{
+          <Link href="/contact" style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '14px 28px', borderRadius: 10,
             background: '#34d399', color: '#07070e',
             fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-body)',
             textDecoration: 'none', letterSpacing: '-0.01em',
           }}>
-            Start free trial
+            Book a Demo
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
           </Link>
           <Link href="/pricing" style={{

@@ -34,7 +34,7 @@ export default function ProblemSection() {
             Most review platforms stop at star ratings.
           </h2>
           <p style={{ fontSize: 15, color: 'rgba(237,238,245,0.48)', lineHeight: 1.68, fontFamily: 'var(--font-body)', margin: 0 }}>
-            Collecting stars is easy. Understanding what they mean — and what to do about them — is where every other platform falls short.
+            Practices already collect patient reviews — but most struggle to identify recurring themes, operational weaknesses, and the factors influencing patient trust and treatment acceptance. SmileProof helps practices move beyond ratings by turning patient feedback into actionable intelligence.
           </p>
         </div>
 
