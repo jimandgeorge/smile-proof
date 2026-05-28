@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { createAdminSupabase } from '@/lib/supabase';
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 const FROM = 'SmileProof <hello@smileproof.co.uk>';
 
 export async function POST(request: NextRequest) {
@@ -12,12 +11,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 });
   }
 
+  const origin = new URL(request.url).origin;
   const admin = createAdminSupabase();
 
   const { data, error } = await admin.auth.admin.generateLink({
     type: 'magiclink',
     email: email.trim().toLowerCase(),
-    options: { redirectTo: `${SITE}/auth/callback` },
+    options: { redirectTo: `${origin}/auth/callback` },
   });
 
   if (error || !data?.properties?.action_link) {
@@ -32,8 +32,7 @@ export async function POST(request: NextRequest) {
     from: FROM,
     to: email.trim(),
     subject: 'Confirm your SmileProof account',
-    html: `
-<!DOCTYPE html>
+    html: `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#07070e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
@@ -74,7 +73,7 @@ export async function POST(request: NextRequest) {
         <tr>
           <td style="background:#0a0a14;padding:16px 36px;border-top:1px solid rgba(255,255,255,0.05);">
             <p style="margin:0;font-size:11px;color:rgba(237,238,245,0.22);">
-              SmileProof · <a href="${SITE}" style="color:#34d399;text-decoration:none;">smileproof.co.uk</a>
+              SmileProof · <a href="${origin}" style="color:#34d399;text-decoration:none;">smileproof.co.uk</a>
             </p>
           </td>
         </tr>

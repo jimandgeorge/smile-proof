@@ -26,5 +26,5 @@ export default async function DashboardRedirect() {
 
   if (pending?.slug) redirect(`/practices/${pending.slug}/claim?submitted=1`);
 
-  redirect('/for-dentists');
+  redirect('/onboarding');
 }
