@@ -32,7 +32,7 @@ export default function LoginPage() {
         .eq('claimed_by_user_id', authData.user.id)
         .limit(1)
         .maybeSingle();
-      router.push(practice?.slug ? `/practices/${practice.slug}/dashboard` : '/');
+      router.push(practice?.slug ? `/practices/${practice.slug}/dashboard` : '/onboarding');
       router.refresh();
     }
   }
