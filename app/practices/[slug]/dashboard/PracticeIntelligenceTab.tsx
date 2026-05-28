@@ -5,6 +5,7 @@ import { generatePracticeIntelligence } from './actions';
 import type { OpportunityInsightData } from './actions';
 import { AlertTriangle, Info, Star, RefreshCw } from 'lucide-react';
 import { AccessTokenContext } from './token-context';
+import { createClient } from '@/lib/supabase';
 
 const D = {
   bg: '#0d0d12', card: '#13131a', card2: '#17171f',
@@ -334,7 +335,12 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
   const handleGenerate = () => {
     setError('');
     startTransition(async () => {
-      const result = await generatePracticeIntelligence(accessToken, practiceId, practiceSlug);
+      // Always get a fresh token — the initial token from page load expires after ~1 hour
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token ?? accessToken;
+
+      const result = await generatePracticeIntelligence(token, practiceId, practiceSlug);
       if (result.error) { setError(result.error); return; }
       if (result.insights) setInsights(result.insights);
     });
@@ -372,8 +378,8 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
     );
   }
 
-  // ── Loading state ─────────────────────────────────────────────────────────
-  if (isPending) {
+  // ── Loading state — only for initial generation (no existing report yet) ──
+  if (isPending && !insights) {
     return (
       <div>
         <div style={{ marginBottom: 28 }}>
@@ -407,10 +413,11 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
         </div>
         <button
           onClick={handleGenerate}
-          style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, background: 'transparent', color: D.faint, border: `1px solid ${D.border}`, cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-body)' }}
+          disabled={isPending}
+          style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, background: 'transparent', color: isPending ? D.xfaint : D.faint, border: `1px solid ${D.border}`, cursor: isPending ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-body)' }}
         >
-          <RefreshCw size={11} strokeWidth={2} aria-hidden />
-          Refresh
+          <RefreshCw size={11} strokeWidth={2} style={{ animation: isPending ? 'spin 0.8s linear infinite' : 'none' }} aria-hidden />
+          {isPending ? 'Refreshing…' : 'Refresh'}
         </button>
       </div>
 
