@@ -309,8 +309,10 @@ export default function DashboardShell({
               googleReviewCount={googleReviewCount}
               googleAvgRating={googleAvgRating}
               opportunityInsights={opportunityInsights}
+              teamCount={teamDentists.length}
               onGoToIntelligence={() => setTab('intelligence')}
               onGoToSettings={() => setTab('settings')}
+              onGoToTeam={() => setTab('team')}
             />
           )}
           {tab === 'intelligence' && (
@@ -328,6 +330,57 @@ export default function DashboardShell({
       </div>
     </div>
     </AccessTokenContext.Provider>
+  );
+}
+
+// ── Setup checklist ───────────────────────────────────────────────────────────
+function SetupChecklist({ hasGoogleReviews, hasIntelligence, teamCount, onGoToSettings, onGoToIntelligence, onGoToTeam }: {
+  hasGoogleReviews: boolean; hasIntelligence: boolean; teamCount: number;
+  onGoToSettings: () => void; onGoToIntelligence: () => void; onGoToTeam: () => void;
+}) {
+  const steps = [
+    { done: true,             label: 'Claim your practice',     sub: 'Verified dashboard access',                         action: null as (() => void) | null, actionLabel: '' },
+    { done: hasGoogleReviews, label: 'Connect Google Reviews',  sub: 'Import your reviews for AI analysis',               action: onGoToSettings,     actionLabel: 'Go to Settings' },
+    { done: hasIntelligence,  label: 'Run intelligence report', sub: 'Analyse reviews to surface insights and actions',   action: hasGoogleReviews ? onGoToIntelligence : null, actionLabel: 'Go to Intelligence' },
+    { done: teamCount > 0,    label: 'Add your team',           sub: 'Add dentists to your practice profile',             action: onGoToTeam,         actionLabel: 'Go to Team' },
+  ];
+  if (steps.every(s => s.done)) return null;
+  const completedCount = steps.filter(s => s.done).length;
+
+  return (
+    <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '18px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <MicroLabel text="Getting started" color={D.soft} />
+        <span style={{ fontSize: 11, color: D.xfaint, fontFamily: 'var(--font-body)' }}>{completedCount} / {steps.length}</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {steps.map((step, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, marginTop: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: step.done ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.04)', border: `1.5px solid ${step.done ? 'rgba(52,211,153,0.35)' : 'rgba(255,255,255,0.1)'}` }}>
+              {step.done
+                ? <CheckCircle size={10} strokeWidth={2.5} style={{ color: D.accent }} />
+                : <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'block' }} />
+              }
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: step.done ? 400 : 600, color: step.done ? D.xfaint : D.text, fontFamily: 'var(--font-body)', textDecoration: step.done ? 'line-through' : 'none', marginBottom: step.done ? 0 : 2 }}>
+                {step.label}
+              </div>
+              {!step.done && (
+                <div style={{ fontSize: 12, color: D.faint, fontFamily: 'var(--font-body)', lineHeight: 1.45 }}>
+                  {step.sub}
+                  {step.action && (
+                    <button onClick={step.action} style={{ display: 'block', marginTop: 5, fontSize: 11, fontWeight: 600, color: D.accent, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)' }}>
+                      {step.actionLabel} →
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -354,8 +407,8 @@ function OverviewTab({
   cityRank, cityTotal, dimensionRanks,
   managementSummary, managementSummaryDate,
   googleReviewCount, googleAvgRating,
-  opportunityInsights,
-  onGoToIntelligence, onGoToSettings,
+  opportunityInsights, teamCount,
+  onGoToIntelligence, onGoToSettings, onGoToTeam,
 }: {
   isPaid: boolean; practiceSlug: string; practiceCity: string;
   profileViews30d: number; viewsDelta: number | null;
@@ -366,8 +419,10 @@ function OverviewTab({
   googleReviewCount: number;
   googleAvgRating: number | null;
   opportunityInsights: OpportunityInsightData | null;
+  teamCount: number;
   onGoToIntelligence: () => void;
   onGoToSettings: () => void;
+  onGoToTeam: () => void;
 }) {
   const rankingMeaningful = cityTotal >= 3 && cityRank > 0;
   const rankingEarly = cityTotal > 0 && cityTotal < 3 && cityRank > 0;
@@ -491,6 +546,16 @@ function OverviewTab({
           </div>
         )}
 
+        {/* Getting started checklist */}
+        <SetupChecklist
+          hasGoogleReviews={googleReviewCount > 0}
+          hasIntelligence={opportunityInsights != null}
+          teamCount={teamCount}
+          onGoToSettings={onGoToSettings}
+          onGoToIntelligence={onGoToIntelligence}
+          onGoToTeam={onGoToTeam}
+        />
+
         {/* No intelligence yet — CTA */}
         {!opportunityInsights && googleReviewCount >= 2 && (
           <div style={{ background: D.accentPale, border: `1px solid rgba(52,211,153,0.2)`, borderRadius: 12, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -515,6 +580,26 @@ function OverviewTab({
 
       {/* ── Right column ── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+        {/* Practice snapshot */}
+        <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '18px 20px' }}>
+          <MicroLabel text="Practice snapshot" color={D.soft} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {([
+              { label: 'Google reviews', value: googleReviewCount > 0 ? String(googleReviewCount) : null },
+              { label: 'Average rating',  value: googleAvgRating != null ? `★ ${googleAvgRating.toFixed(1)}` : null },
+              { label: 'Team members',    value: teamCount > 0 ? String(teamCount) : null },
+              { label: 'AI report',       value: opportunityInsights ? 'Generated' : null },
+            ] as { label: string; value: string | null }[]).map(({ label, value }) => (
+              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 12, color: D.faint, fontFamily: 'var(--font-body)' }}>{label}</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: value ? D.mid : D.xfaint, fontFamily: 'var(--font-body)' }}>
+                  {value ?? '—'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Profile views (free plan upsell) */}
         {!isPaid && (
