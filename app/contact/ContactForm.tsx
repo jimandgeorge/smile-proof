@@ -5,8 +5,7 @@ import { Check } from 'lucide-react';
 
 const ENQUIRY_TYPES = [
   { value: '', label: 'Select an enquiry type…' },
-  { value: 'patient',     label: 'Patient — finding a dentist or review help' },
-  { value: 'clinic',      label: 'Clinic — profile, claiming, or reviews' },
+  { value: 'clinic',      label: 'Clinic — profile, claiming, or dashboard' },
   { value: 'partnership', label: 'Partnerships & dental groups' },
   { value: 'press',       label: 'Press & media' },
   { value: 'other',       label: 'Something else' },
@@ -14,13 +13,13 @@ const ENQUIRY_TYPES = [
 
 const INPUT_STYLE: React.CSSProperties = {
   width: '100%',
-  border: '1.5px solid var(--cream-dark)',
-  borderRadius: 10,
-  padding: '12px 16px',
-  fontSize: 15,
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderRadius: 8,
+  padding: '11px 14px',
+  fontSize: 14,
   fontFamily: 'var(--font-body)',
-  color: 'var(--ink)',
-  background: 'white',
+  color: '#edeef5',
+  background: 'rgba(255,255,255,0.04)',
   outline: 'none',
   boxSizing: 'border-box',
   transition: 'border-color 0.15s',
@@ -28,11 +27,11 @@ const INPUT_STYLE: React.CSSProperties = {
 
 const LABEL_STYLE: React.CSSProperties = {
   display: 'block',
-  fontSize: 12,
+  fontSize: 11,
   fontWeight: 700,
-  letterSpacing: '0.07em',
+  letterSpacing: '0.08em',
   textTransform: 'uppercase',
-  color: 'var(--ink-soft)',
+  color: 'rgba(237,238,245,0.4)',
   fontFamily: 'var(--font-body)',
   marginBottom: 8,
 };
@@ -49,7 +48,7 @@ export default function ContactForm() {
   }
 
   function focusStyle(name: string): React.CSSProperties {
-    return { ...INPUT_STYLE, borderColor: focused === name ? 'rgba(28,69,53,0.5)' : 'var(--cream-dark)' };
+    return { ...INPUT_STYLE, borderColor: focused === name ? 'rgba(52,211,153,0.4)' : 'rgba(255,255,255,0.1)' };
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -60,7 +59,6 @@ export default function ContactForm() {
     }
     setError(null);
     setLoading(true);
-    // Simulate sending — wire up to an API route or email service when ready
     await new Promise(r => setTimeout(r, 900));
     setLoading(false);
     setSubmitted(true);
@@ -69,22 +67,22 @@ export default function ContactForm() {
   if (submitted) {
     return (
       <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-        <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--forest-pale)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-          <Check size={22} strokeWidth={2} style={{ color: 'var(--forest)' }} aria-hidden />
+        <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+          <Check size={22} strokeWidth={2} style={{ color: '#34d399' }} aria-hidden />
         </div>
-        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ink)', marginBottom: 10, letterSpacing: '-0.02em' }}>
+        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: '#edeef5', marginBottom: 10, letterSpacing: '-0.02em' }}>
           Message received
         </h3>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--ink-soft)', lineHeight: 1.65, maxWidth: 380, margin: '0 auto' }}>
-          Thanks for reaching out. We'll get back to you within 1 business day.
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'rgba(237,238,245,0.5)', lineHeight: 1.65, maxWidth: 380, margin: '0 auto' }}>
+          Thanks for reaching out. We&apos;ll get back to you within 1 business day.
         </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="sm:grid block">
+    <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }} className="sm:grid block">
         <div>
           <label htmlFor="contact-name" style={LABEL_STYLE}>Your name</label>
           <input
@@ -105,7 +103,7 @@ export default function ContactForm() {
             id="contact-email"
             type="email"
             autoComplete="email"
-            placeholder="jane@example.com"
+            placeholder="jane@practice.co.uk"
             value={fields.email}
             onChange={e => set('email', e.target.value)}
             onFocus={() => setFocused('email')}
@@ -123,10 +121,17 @@ export default function ContactForm() {
           onChange={e => set('type', e.target.value)}
           onFocus={() => setFocused('type')}
           onBlur={() => setFocused(null)}
-          style={{ ...focusStyle('type'), color: fields.type ? 'var(--ink)' : 'var(--ink-faint)', appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239ca3af' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center' }}
+          style={{
+            ...focusStyle('type'),
+            color: fields.type ? '#edeef5' : 'rgba(237,238,245,0.35)',
+            appearance: 'none',
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'right 14px center',
+          }}
         >
           {ENQUIRY_TYPES.map(({ value, label }) => (
-            <option key={value} value={value} disabled={value === ''}>{label}</option>
+            <option key={value} value={value} disabled={value === ''} style={{ background: '#111119', color: '#edeef5' }}>{label}</option>
           ))}
         </select>
       </div>
@@ -146,7 +151,7 @@ export default function ContactForm() {
       </div>
 
       {error && (
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', margin: 0 }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: '#f87171', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '10px 14px', margin: 0 }}>
           {error}
         </p>
       )}
@@ -155,17 +160,16 @@ export default function ContactForm() {
         type="submit"
         disabled={loading}
         style={{
-          padding: '14px',
-          borderRadius: 10,
-          background: loading ? 'var(--ink-faint)' : 'var(--forest)',
-          color: 'white',
+          padding: '13px',
+          borderRadius: 8,
+          background: loading ? 'rgba(52,211,153,0.4)' : '#34d399',
+          color: '#07070e',
           border: 'none',
-          fontSize: 15,
+          fontSize: 14,
           fontWeight: 700,
           fontFamily: 'var(--font-body)',
           cursor: loading ? 'not-allowed' : 'pointer',
           letterSpacing: '-0.01em',
-          transition: 'opacity 0.15s',
         }}
       >
         {loading ? 'Sending…' : 'Send message'}
