@@ -14,12 +14,33 @@ import { AccessTokenContext } from './token-context';
 import { Bell, Settings, LogOut, Home, MessageSquare, Star, Send, Mail, Users, User, ArrowRight, ChevronRight, Upload, CheckCircle, AlertTriangle, TrendingUp, Info, Lock, RefreshCw, ExternalLink } from 'lucide-react';
 
 const D = {
-  bg: '#0d0d12', sidebar: '#09090d', card: '#13131a', card2: '#1a1a24',
+  bg: '#0d0d12', sidebar: '#09090d', card: '#13131a', card2: '#17171f',
   border: 'rgba(255,255,255,0.07)', border2: 'rgba(255,255,255,0.12)',
+  divider: 'rgba(255,255,255,0.05)',
   text: '#edeef5', mid: 'rgba(237,238,245,0.72)', soft: 'rgba(237,238,245,0.5)',
-  faint: 'rgba(237,238,245,0.28)', accent: '#34d399', accentPale: 'rgba(52,211,153,0.1)',
+  faint: 'rgba(237,238,245,0.28)', xfaint: 'rgba(237,238,245,0.13)',
+  accent: '#34d399', accentPale: 'rgba(52,211,153,0.08)',
   gold: '#fbbf24',
 } as const;
+
+function MicroLabel({ text, color = D.faint }: { text: string; color?: string }) {
+  return (
+    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color, fontFamily: 'var(--font-body)', marginBottom: 10 }}>
+      {text}
+    </div>
+  );
+}
+
+function SectionDivider({ label }: { label?: string }) {
+  if (!label) return <div style={{ height: 1, background: D.divider, margin: '28px 0' }} />;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '28px 0 20px' }}>
+      <div style={{ flex: 1, height: 1, background: D.divider }} />
+      <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: D.xfaint, fontFamily: 'var(--font-body)', whiteSpace: 'nowrap' }}>{label}</span>
+      <div style={{ flex: 1, height: 1, background: D.divider }} />
+    </div>
+  );
+}
 
 type ServiceDef = { id: string; slug: string; name: string; category: string; sort_order: number };
 type Enquiry = { id: string; name: string; email: string; treatment_interest: string | null; message: string | null; created_at: string; read_at: string | null };
@@ -179,23 +200,16 @@ function NavItem({ icon, label, badge, active, onClick }: {
 function ManagementSummaryCard({ summary, generatedAt }: { summary: string; generatedAt: string }) {
   const date = new Date(generatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   return (
-    <div style={{
-      background: 'linear-gradient(135deg, #f0f7f3 0%, #e8f4ee 100%)',
-      border: '1.5px solid rgba(28,69,53,0.15)',
-      borderRadius: 12,
-      padding: '18px 22px',
-      marginBottom: 4,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--forest)', flexShrink: 0 }} />
-        <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--forest)', fontFamily: 'var(--font-body)' }}>
-          AI Summary for Management
+    <div style={{ borderLeft: '2px solid rgba(52,211,153,0.25)', paddingLeft: 18, marginBottom: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(52,211,153,0.6)', fontFamily: 'var(--font-body)' }}>
+          AI · Management summary
         </span>
-        <span style={{ fontSize: 11, color: 'var(--ink-faint)', fontFamily: 'var(--font-body)', marginLeft: 'auto' }}>
+        <span style={{ fontSize: 10, color: D.xfaint, fontFamily: 'var(--font-body)', marginLeft: 'auto' }}>
           {date}
         </span>
       </div>
-      <p style={{ margin: 0, fontSize: 14, color: 'var(--ink)', lineHeight: 1.7, fontFamily: 'var(--font-body)' }}>
+      <p style={{ margin: 0, fontSize: 13.5, color: D.soft, lineHeight: 1.7, fontFamily: 'var(--font-body)' }}>
         {summary}
       </p>
     </div>
@@ -205,35 +219,35 @@ function ManagementSummaryCard({ summary, generatedAt }: { summary: string; gene
 // ── Insight banner ────────────────────────────────────────────────────────────
 function InsightBanner({ insight, onAction }: { insight: Insight; onAction?: () => void }) {
   const cfg = {
-    warning: { bg: '#1c1400', border: '#fde68a', iconColor: '#d97706', textColor: '#fde68a', btnBg: '#271c00', btnColor: '#fbbf24' },
-    info:    { bg: '#110b1f', border: '#7c3aed', iconColor: '#a78bfa', textColor: '#c4b5fd', btnBg: '#1a1030', btnColor: '#a78bfa' },
-    action:  { bg: '#071a0f', border: '#16a34a', iconColor: '#34d399', textColor: '#6ee7b7', btnBg: '#0d2318', btnColor: '#34d399' },
+    warning: { accent: D.gold,   bg: 'rgba(251,191,36,0.05)',    border: 'rgba(251,191,36,0.15)' },
+    info:    { accent: '#a78bfa', bg: 'rgba(139,92,246,0.05)',   border: 'rgba(139,92,246,0.15)' },
+    action:  { accent: D.accent,  bg: D.accentPale,               border: 'rgba(52,211,153,0.15)' },
   }[insight.type];
 
   const icons = {
-    warning: <AlertTriangle size={14} strokeWidth={1.5} style={{ color: cfg.iconColor }} />,
-    info:    <TrendingUp size={14} strokeWidth={1.5} style={{ color: cfg.iconColor }} />,
-    action:  <MessageSquare size={14} strokeWidth={1.5} style={{ color: cfg.iconColor }} />,
+    warning: <AlertTriangle size={13} strokeWidth={1.5} style={{ color: cfg.accent }} />,
+    info:    <TrendingUp size={13} strokeWidth={1.5} style={{ color: cfg.accent }} />,
+    action:  <MessageSquare size={13} strokeWidth={1.5} style={{ color: cfg.accent }} />,
   };
 
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 12,
-      padding: '12px 16px',
-      background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 10,
+      padding: '11px 14px',
+      background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 9,
     }}>
       <span style={{ flexShrink: 0 }}>{icons[insight.type]}</span>
-      <span style={{ flex: 1, fontSize: 13, color: cfg.textColor, fontFamily: 'var(--font-body)' }}>{insight.text}</span>
+      <span style={{ flex: 1, fontSize: 12.5, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.5 }}>{insight.text}</span>
       <button
         onClick={onAction}
         style={{
-          flexShrink: 0, fontSize: 12, fontWeight: 600, color: cfg.btnColor,
-          background: cfg.btnBg, borderRadius: 20, padding: '4px 12px',
+          flexShrink: 0, fontSize: 11.5, fontWeight: 600, color: cfg.accent,
+          background: 'transparent', borderRadius: 20, padding: '3px 10px',
           whiteSpace: 'nowrap', fontFamily: 'var(--font-body)',
-          border: 'none', cursor: onAction ? 'pointer' : 'default',
+          border: `1px solid ${cfg.border}`, cursor: onAction ? 'pointer' : 'default',
         }}
       >
-        {insight.actionLabel} →
+        {insight.actionLabel}
       </button>
     </div>
   );
@@ -245,7 +259,7 @@ function MetricCard({ label, value, sub1, sub2, sub2Red }: {
 }) {
   return (
     <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '20px 22px' }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: D.soft, letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 10, fontFamily: 'var(--font-body)' }}>{label}</div>
+      <MicroLabel text={label} color={D.faint} />
       <div style={{ fontFamily: 'var(--font-display)', fontSize: 34, fontWeight: 800, color: D.text, letterSpacing: '-0.03em', lineHeight: 1 }}>{value}</div>
       {sub1 && <div style={{ fontSize: 12, color: D.soft, marginTop: 6, fontFamily: 'var(--font-body)' }}>{sub1}</div>}
       {sub2 && <div style={{ fontSize: 12, marginTop: 2, fontFamily: 'var(--font-body)', color: sub2Red ? '#dc2626' : D.soft, fontWeight: sub2Red ? 600 : 400 }}>{sub2}</div>}
@@ -814,8 +828,8 @@ function OverviewTab({
         {isLowData ? (
           <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '20px 24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)' }}>Recent reviews</div>
-              <span style={{ fontSize: 11, color: D.faint, fontFamily: 'var(--font-body)' }}>Trend chart unlocks at 10 reviews</span>
+              <MicroLabel text="Recent reviews" color={D.soft} />
+              <span style={{ fontSize: 11, color: D.xfaint, fontFamily: 'var(--font-body)' }}>Trend chart unlocks at 10 reviews</span>
             </div>
             {recentReviews.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px 0' }}>
@@ -855,7 +869,7 @@ function OverviewTab({
         ) : (
           <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '20px 24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)' }}>Rating trend</div>
+              <MicroLabel text="Rating trend" color={D.soft} />
               <div style={{ display: 'flex', gap: 14 }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: D.soft, fontFamily: 'var(--font-body)' }}>
                   <span style={{ width: 14, height: 2, background: D.accent, borderRadius: 1, display: 'inline-block' }} /> Score
@@ -873,9 +887,7 @@ function OverviewTab({
         {perceptionTags.length > 0 && (
           <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '16px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: D.soft, fontFamily: 'var(--font-body)' }}>
-                Patient perception
-              </div>
+              <MicroLabel text="Patient perception" color={D.soft} />
               <span style={{ fontSize: 11, color: D.faint, fontFamily: 'var(--font-body)' }}>From {reviewCount} review{reviewCount !== 1 ? 's' : ''}</span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
@@ -902,9 +914,7 @@ function OverviewTab({
         {/* Actions */}
         {hasActions ? (
           <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '18px 20px' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: D.soft, marginBottom: 12, fontFamily: 'var(--font-body)' }}>
-              Action needed
-            </div>
+            <MicroLabel text="Action needed" color={D.soft} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {unrespondedCount > 0 && (
                 <button
@@ -945,9 +955,7 @@ function OverviewTab({
 
         {/* Patient scores — priority order */}
         <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '18px 20px' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: D.soft, marginBottom: 14, fontFamily: 'var(--font-body)' }}>
-            Patient scores
-          </div>
+          <MicroLabel text="Patient scores" color={D.soft} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
             {sortedScores.map(({ label, value }) => {
               const v = value != null ? Number(value) : null;
@@ -972,9 +980,7 @@ function OverviewTab({
         {/* Local standing — sparse-data safe */}
         {isPaid && (rankingMeaningful || rankingEarly) && (
           <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '18px 20px' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: D.soft, marginBottom: 14, fontFamily: 'var(--font-body)' }}>
-              {practiceCity} standing
-            </div>
+            <MicroLabel text={`${practiceCity} standing`} color={D.soft} />
             {rankingMeaningful ? (
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: dimensionRanks.length > 0 ? 16 : 0, paddingBottom: dimensionRanks.length > 0 ? 14 : 0, borderBottom: dimensionRanks.length > 0 ? `1px solid ${D.border}` : 'none' }}>
                 <span style={{ fontFamily: 'var(--font-display)', fontSize: 44, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1, color: cityRank <= 3 ? D.accent : D.text }}>#{cityRank}</span>
@@ -1017,7 +1023,7 @@ function OverviewTab({
         {!isPaid && (
           <>
             <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: D.soft, marginBottom: 8, fontFamily: 'var(--font-body)' }}>Profile views</div>
+              <MicroLabel text="Profile views" color={D.soft} />
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 800, color: D.text, letterSpacing: '-0.03em', lineHeight: 1, filter: 'blur(7px)', userSelect: 'none', marginBottom: 4 }}>1,240</div>
               <div style={{ fontSize: 11, color: D.faint, fontFamily: 'var(--font-body)', filter: 'blur(4px)', userSelect: 'none' }}>↑ 24% vs last month</div>
               <Link href={`/practices/${practiceSlug}/upgrade`} style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(13,13,18,0.82)', textDecoration: 'none', gap: 5 }}>
@@ -1027,7 +1033,7 @@ function OverviewTab({
             </div>
 
             <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: D.soft, marginBottom: 10, fontFamily: 'var(--font-body)' }}>Local comparison</div>
+              <MicroLabel text="Local comparison" color={D.soft} />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, opacity: 0.18, userSelect: 'none' }}>
                 {(['Your practice', 'Top local avg.', 'Area average'] as const).map((l, i) => (
                   <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1061,14 +1067,15 @@ function ReviewsTab({ publishedReviews, pendingReviews, practiceId, practiceSlug
   return (
     <div>
       {pendingReviews.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: D.text, marginBottom: 12 }}>Awaiting moderation ({pendingReviews.length})</h2>
+        <div style={{ marginBottom: 28 }}>
+          <MicroLabel text={`Awaiting moderation · ${pendingReviews.length}`} color={D.gold} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {pendingReviews.map(r => <ReviewCard key={r.id} r={r} practiceId={practiceId} practiceSlug={practiceSlug} practiceName={practiceName} isPaid={isPaid} dimmed />)}
           </div>
+          <SectionDivider />
         </div>
       )}
-      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: D.text, marginBottom: 12 }}>Published reviews ({publishedReviews.length})</h2>
+      <MicroLabel text={`Published reviews · ${publishedReviews.length}`} color={D.faint} />
       {publishedReviews.length === 0 ? (
         <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '40px 24px', textAlign: 'center' }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: D.accentPale, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
@@ -1247,9 +1254,7 @@ function ProfileTab({ practiceName, practiceCity, practiceSlug, practiceId, allS
 
       {/* Preview */}
       <div style={{ background: D.card, border: `1.5px solid ${D.border}`, borderRadius: 12, padding: '20px 22px', marginBottom: 16 }}>
-        <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: D.soft, marginBottom: 12, fontFamily: 'var(--font-body)' }}>
-          Preview
-        </p>
+        <MicroLabel text="Preview" color={D.soft} />
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, border: `1.5px solid ${D.border}`, background: D.card2 }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: D.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'white', fontFamily: 'var(--font-display)' }}>S</span>
@@ -1293,7 +1298,7 @@ function ProfileTab({ practiceName, practiceCity, practiceSlug, practiceId, allS
       <div>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 16 }}>
           <div>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, color: D.text, margin: '0 0 4px', letterSpacing: '-0.01em' }}>Services offered</h3>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 700, color: D.text, margin: '0 0 4px', letterSpacing: '-0.02em' }}>Services offered</h3>
             <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: 0, lineHeight: 1.5 }}>
               Tell patients what you offer — shown on your profile and used to surface your practice in relevant searches.
             </p>
@@ -1321,9 +1326,7 @@ function ProfileTab({ practiceName, practiceCity, practiceSlug, practiceId, allS
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {Object.entries(grouped).map(([category, services]) => (
             <div key={category}>
-              <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: D.soft, marginBottom: 8, fontFamily: 'var(--font-body)' }}>
-                {CATEGORY_LABELS[category] ?? category}
-              </p>
+              <MicroLabel text={CATEGORY_LABELS[category] ?? category} color={D.soft} />
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {services.map(s => {
                   const checked = selectedServices.has(s.id);

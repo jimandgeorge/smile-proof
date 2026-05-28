@@ -3,14 +3,16 @@
 import { useState, useTransition, useContext } from 'react';
 import { generatePracticeIntelligence } from './actions';
 import type { OpportunityInsightData, SentimentTheme } from './actions';
-import { AlertTriangle, Info, ArrowRight, CheckCircle, Star } from 'lucide-react';
+import { AlertTriangle, Info, Star, RefreshCw } from 'lucide-react';
 import { AccessTokenContext } from './token-context';
 
 const D = {
-  bg: '#0d0d12', sidebar: '#09090d', card: '#13131a', card2: '#1a1a24',
+  bg: '#0d0d12', card: '#13131a', card2: '#17171f',
   border: 'rgba(255,255,255,0.07)', border2: 'rgba(255,255,255,0.12)',
+  divider: 'rgba(255,255,255,0.05)',
   text: '#edeef5', mid: 'rgba(237,238,245,0.72)', soft: 'rgba(237,238,245,0.5)',
-  faint: 'rgba(237,238,245,0.28)', accent: '#34d399', accentPale: 'rgba(52,211,153,0.1)',
+  faint: 'rgba(237,238,245,0.28)', xfaint: 'rgba(237,238,245,0.13)',
+  accent: '#34d399', accentPale: 'rgba(52,211,153,0.08)',
   gold: '#fbbf24',
 } as const;
 
@@ -51,77 +53,183 @@ function timeAgo(iso: string): string {
 }
 
 function scoreColor(s: number) {
-  if (s >= 4.3) return '#16a34a';
-  if (s >= 3.5) return '#ca8a04';
-  if (s >= 2.5) return '#ea580c';
-  return '#dc2626';
+  if (s >= 4.3) return '#34d399';
+  if (s >= 3.5) return '#a3e635';
+  if (s >= 2.5) return '#fbbf24';
+  return '#f87171';
 }
 
-function SectionLabel({ text }: { text: string }) {
+function trustLabel(s: number): string {
+  if (s >= 4.5) return 'Excellent';
+  if (s >= 4.0) return 'Strong';
+  if (s >= 3.5) return 'Good';
+  if (s >= 2.5) return 'Fair';
+  return 'Needs attention';
+}
+
+// ── Micro label ───────────────────────────────────────────────────────────────
+function MicroLabel({ text, color = D.faint }: { text: string; color?: string }) {
   return (
-    <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: D.soft, fontFamily: 'var(--font-body)', margin: '0 0 14px' }}>
+    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color, fontFamily: 'var(--font-body)', marginBottom: 10 }}>
       {text}
-    </p>
+    </div>
   );
 }
 
-// ── Confidence banner ─────────────────────────────────────────────────────────
+// ── Section divider ───────────────────────────────────────────────────────────
+function Divider({ label }: { label?: string }) {
+  if (!label) return <div style={{ height: 1, background: D.divider, margin: '36px 0' }} />;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '36px 0 24px' }}>
+      <div style={{ flex: 1, height: 1, background: D.divider }} />
+      <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: D.xfaint, fontFamily: 'var(--font-body)', whiteSpace: 'nowrap' }}>{label}</span>
+      <div style={{ flex: 1, height: 1, background: D.divider }} />
+    </div>
+  );
+}
+
+// ── Confidence notice ─────────────────────────────────────────────────────────
 function ConfidenceBanner({ count }: { count: number }) {
   if (count >= 15) return null;
   const isLow = count < 5;
   return (
     <div style={{
-      display: 'flex', alignItems: 'flex-start', gap: 10,
-      background: isLow ? 'rgba(251,191,36,0.06)' : 'rgba(255,255,255,0.03)',
-      border: `1px solid ${isLow ? 'rgba(251,191,36,0.18)' : D.border}`,
-      borderRadius: 10, padding: '11px 14px', marginBottom: 20,
+      display: 'flex', alignItems: 'flex-start', gap: 9,
+      background: isLow ? 'rgba(251,191,36,0.05)' : 'transparent',
+      border: `1px solid ${isLow ? 'rgba(251,191,36,0.15)' : D.border}`,
+      borderRadius: 9, padding: '10px 13px', marginBottom: 28,
     }}>
       {isLow
-        ? <AlertTriangle size={14} strokeWidth={1.2} style={{ flexShrink: 0, marginTop: 1, color: D.gold }} aria-hidden />
-        : <Info size={14} strokeWidth={1.3} style={{ flexShrink: 0, marginTop: 1, color: D.faint }} aria-hidden />
+        ? <AlertTriangle size={13} strokeWidth={1.2} style={{ flexShrink: 0, marginTop: 1, color: D.gold }} aria-hidden />
+        : <Info size={13} strokeWidth={1.3} style={{ flexShrink: 0, marginTop: 1, color: D.faint }} aria-hidden />
       }
+      <span style={{ fontSize: 12, color: isLow ? 'rgba(251,191,36,0.7)' : D.faint, fontFamily: 'var(--font-body)', lineHeight: 1.6 }}>
+        <strong style={{ color: isLow ? D.gold : D.soft, fontWeight: 600 }}>
+          {isLow ? 'Low confidence' : 'Early signal'}
+        </strong>
+        {' '}— {isLow
+          ? `based on ${count} review${count !== 1 ? 's' : ''} only. Patterns will sharpen with more data.`
+          : `based on ${count} reviews. Useful signal, but trends may shift as more come in.`
+        }
+      </span>
+    </div>
+  );
+}
+
+// ── Hero trust score ──────────────────────────────────────────────────────────
+function TrustScoreHero({ scores, reviewCount }: { scores: Record<string, number>; reviewCount: number }) {
+  const vals = Object.values(scores).filter(s => s != null && s > 0);
+  if (vals.length === 0) return null;
+  const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const color = scoreColor(avg);
+  const topEntry = Object.entries(scores)
+    .filter(([, v]) => v > 0)
+    .sort(([, a], [, b]) => b - a)[0];
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 40, marginBottom: 8, paddingBottom: 32, borderBottom: `1px solid ${D.divider}` }}>
       <div>
-        <span style={{ fontSize: 12, fontWeight: 700, color: isLow ? D.gold : D.soft, fontFamily: 'var(--font-body)' }}>
-          {isLow ? 'Low confidence' : 'Early-stage insight'}
-        </span>
-        <span style={{ fontSize: 12, color: isLow ? 'rgba(251,191,36,0.65)' : D.faint, fontFamily: 'var(--font-body)', marginLeft: 6 }}>
-          {isLow
-            ? `— based on ${count} review${count !== 1 ? 's' : ''} only. Patterns will sharpen with more data.`
-            : `— based on ${count} reviews. Useful signal, but trends may shift as more reviews come in.`
-          }
-        </span>
+        <MicroLabel text="Patient Trust Score" color={D.faint} />
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 56, fontWeight: 800, color, lineHeight: 1, letterSpacing: '-0.04em' }}>
+            {avg.toFixed(1)}
+          </span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 600, color: D.soft, letterSpacing: '-0.01em' }}>/ 5</span>
+        </div>
+        <div style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', marginTop: 5, fontWeight: 500 }}>
+          {trustLabel(avg)}
+          <span style={{ color: D.xfaint, marginLeft: 8 }}>·</span>
+          <span style={{ color: D.faint, marginLeft: 8 }}>{vals.length} categories rated</span>
+        </div>
+      </div>
+
+      {topEntry && (
+        <div style={{ paddingLeft: 32, borderLeft: `1px solid ${D.divider}` }}>
+          <MicroLabel text="Strongest signal" color={D.faint} />
+          <div style={{ fontSize: 16, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)', letterSpacing: '-0.01em' }}>
+            {CATEGORY_LABELS[topEntry[0]] ?? topEntry[0]}
+          </div>
+          <div style={{ fontSize: 12, color: D.soft, fontFamily: 'var(--font-body)', marginTop: 3 }}>
+            {topEntry[1].toFixed(1)} score · {CATEGORY_IMPACT[topEntry[0]] ?? ''}
+          </div>
+        </div>
+      )}
+
+      <div style={{ paddingLeft: 32, borderLeft: `1px solid ${D.divider}` }}>
+        <MicroLabel text="Data sources" color={D.faint} />
+        <div style={{ fontSize: 16, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)', letterSpacing: '-0.01em' }}>
+          {reviewCount} reviews
+        </div>
+        <div style={{ fontSize: 12, color: D.soft, fontFamily: 'var(--font-body)', marginTop: 3 }}>
+          SmileProof + Google
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Recommended next step ─────────────────────────────────────────────────────
-function NextStepCard({ recommendation, rationale, evidence }: {
+// ── Priority focus (AI recommendation) ───────────────────────────────────────
+function PriorityFocus({ recommendation, rationale, evidence }: {
   recommendation: string; rationale: string; evidence?: string;
 }) {
   return (
-    <div style={{
-      background: 'linear-gradient(135deg, rgba(52,211,153,0.07) 0%, rgba(52,211,153,0.02) 100%)',
-      border: '1.5px solid rgba(52,211,153,0.18)',
-      borderRadius: 12, padding: '18px 22px', marginBottom: 28,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <div style={{ width: 18, height: 18, borderRadius: 5, background: D.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <ArrowRight size={9} strokeWidth={1.3} style={{ color: '#0d0d12' }} aria-hidden />
+    <div style={{ marginBottom: 36 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(52,211,153,0.6)', fontFamily: 'var(--font-body)' }}>
+          AI · Priority focus
         </div>
-        <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: D.accent, fontFamily: 'var(--font-body)' }}>
-          Recommended next step
-        </span>
       </div>
-      <p style={{ fontSize: 15, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)', margin: '0 0 5px', lineHeight: 1.4 }}>
-        {recommendation}
+      <div style={{ borderLeft: '2px solid rgba(52,211,153,0.25)', paddingLeft: 18 }}>
+        <p style={{ fontSize: 17, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)', margin: '0 0 8px', lineHeight: 1.35, letterSpacing: '-0.02em' }}>
+          {recommendation}
+        </p>
+        <p style={{ fontSize: 13.5, color: D.soft, fontFamily: 'var(--font-body)', margin: evidence ? '0 0 12px' : '0', lineHeight: 1.65 }}>
+          {rationale}
+        </p>
+        {evidence && (
+          <p style={{ fontSize: 12.5, color: D.faint, fontFamily: 'var(--font-body)', margin: 0, fontStyle: 'italic', lineHeight: 1.55 }}>
+            &ldquo;{evidence}&rdquo;
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Signal item (strength / area) ─────────────────────────────────────────────
+function SignalItem({ type, category, text, stat, statLabel, quote }: {
+  type: 'strength' | 'weakness';
+  category: string; text: string;
+  stat?: number; statLabel?: string;
+  quote?: string;
+}) {
+  const isS = type === 'strength';
+  const accentCol = isS ? 'rgba(52,211,153,0.3)' : 'rgba(251,191,36,0.3)';
+  const labelCol  = isS ? D.accent : D.gold;
+
+  return (
+    <div style={{ paddingLeft: 14, borderLeft: `2px solid ${accentCol}`, paddingTop: 2, paddingBottom: 2 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)', letterSpacing: '-0.01em' }}>
+          {CATEGORY_LABELS[category] ?? category}
+        </span>
+        {stat != null && (
+          <span style={{ fontSize: 11.5, fontWeight: 600, color: labelCol, fontFamily: 'var(--font-body)', flexShrink: 0, opacity: 0.8 }}>
+            {stat} {statLabel}
+          </span>
+        )}
+      </div>
+      {CATEGORY_IMPACT[category] && (
+        <div style={{ fontSize: 11, color: D.xfaint, fontFamily: 'var(--font-body)', lineHeight: 1.4, marginBottom: 5 }}>
+          {CATEGORY_IMPACT[category]}
+        </div>
+      )}
+      <p style={{ fontSize: 12.5, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.6, margin: quote ? '0 0 8px' : '0' }}>
+        {text}
       </p>
-      <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: evidence ? '0 0 10px' : '0', lineHeight: 1.6 }}>
-        {rationale}
-      </p>
-      {evidence && (
-        <p style={{ fontSize: 12, color: D.faint, fontFamily: 'var(--font-body)', margin: '0', fontStyle: 'italic', borderLeft: '2px solid rgba(52,211,153,0.25)', paddingLeft: 10 }}>
-          {evidence}
+      {quote && (
+        <p style={{ fontSize: 12, color: D.faint, fontFamily: 'var(--font-body)', margin: 0, fontStyle: 'italic', lineHeight: 1.5 }}>
+          &ldquo;{quote}&rdquo;
         </p>
       )}
     </div>
@@ -130,9 +238,9 @@ function NextStepCard({ recommendation, rationale, evidence }: {
 
 // ── Impact badge ──────────────────────────────────────────────────────────────
 const IMPACT_CFG = {
-  high_impact: { label: 'High impact', bg: 'rgba(234,88,12,0.1)',  text: '#fb923c', border: 'rgba(234,88,12,0.22)' },
-  quick_win:   { label: 'Quick win',   bg: 'rgba(52,211,153,0.08)', text: D.accent, border: 'rgba(52,211,153,0.2)' },
-  monitor:     { label: 'Monitor',     bg: 'rgba(255,255,255,0.04)', text: D.faint,  border: D.border },
+  high_impact: { label: 'High impact', bg: 'rgba(234,88,12,0.08)',  text: '#fb923c', border: 'rgba(234,88,12,0.2)' },
+  quick_win:   { label: 'Quick win',   bg: D.accentPale,            text: D.accent,  border: 'rgba(52,211,153,0.18)' },
+  monitor:     { label: 'Monitor',     bg: 'rgba(255,255,255,0.03)', text: D.faint,   border: D.border },
 } as const;
 
 function ImpactBadge({ impact }: { impact?: string }) {
@@ -156,82 +264,29 @@ function OpportunityCard({ item, index }: { item: OpportunityInsightData['opport
   const evidence = (item as any).evidence as string | undefined;
 
   return (
-    <div style={{ background: D.card, border: `1.5px solid ${D.border}`, borderLeft: '3px solid rgba(52,211,153,0.5)', borderRadius: 10, padding: '16px 18px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
-        <div style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, background: 'rgba(52,211,153,0.1)', color: D.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, marginTop: 2 }}>
+    <div style={{ background: D.card2, borderRadius: 10, padding: '16px 18px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
+        <div style={{ width: 22, height: 22, borderRadius: 6, flexShrink: 0, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.15)', color: D.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 800, marginTop: 1 }}>
           {index + 1}
         </div>
-        <p style={{ fontSize: 14, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)', margin: 0, flex: 1, lineHeight: 1.4 }}>
-          {item.recommendation}
-        </p>
-      </div>
-      <div style={{ paddingLeft: 30, marginBottom: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: CATEGORY_IMPACT[item.category] ? 4 : 0 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: D.accent, background: D.accentPale, borderRadius: 20, padding: '2px 8px', fontFamily: 'var(--font-body)', whiteSpace: 'nowrap' }}>
-            {CATEGORY_LABELS[item.category] ?? item.category}
-          </span>
-          <ImpactBadge impact={impact} />
-        </div>
-        {CATEGORY_IMPACT[item.category] && (
-          <div style={{ fontSize: 11, color: D.faint, fontFamily: 'var(--font-body)', lineHeight: 1.4 }}>
-            {CATEGORY_IMPACT[item.category]}
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)', margin: '0 0 5px', lineHeight: 1.35, letterSpacing: '-0.01em' }}>
+            {item.recommendation}
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(52,211,153,0.7)', background: D.accentPale, borderRadius: 20, padding: '1px 8px', fontFamily: 'var(--font-body)' }}>
+              {CATEGORY_LABELS[item.category] ?? item.category}
+            </span>
+            <ImpactBadge impact={impact} />
           </div>
-        )}
+        </div>
       </div>
-      <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.6, margin: evidence ? '0 0 10px' : '0', paddingLeft: 30 }}>
+      <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.65, margin: evidence ? '0 0 10px' : '0', paddingLeft: 34 }}>
         {item.rationale}
       </p>
       {evidence && (
-        <p style={{ fontSize: 12, color: D.faint, fontFamily: 'var(--font-body)', margin: '0', fontStyle: 'italic', borderLeft: `2px solid ${D.border2}`, paddingLeft: 10, marginLeft: 30, lineHeight: 1.5 }}>
-          {evidence}
-        </p>
-      )}
-    </div>
-  );
-}
-
-// ── Signal card (strength / weakness) ────────────────────────────────────────
-function SignalCard({ type, category, text, stat, statLabel, quote }: {
-  type: 'strength' | 'weakness';
-  category: string; text: string;
-  stat?: number; statLabel?: string;
-  quote?: string;
-}) {
-  const isS = type === 'strength';
-  const col = isS ? '#34d399' : '#fbbf24';
-  const alpha = isS ? 'rgba(52,211,153,' : 'rgba(251,191,36,';
-
-  return (
-    <div style={{ background: `${alpha}0.05)`, border: `1px solid ${alpha}0.14)`, borderRadius: 10, padding: '14px 16px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7, marginBottom: 7 }}>
-        <div style={{ flexShrink: 0, marginTop: 1 }}>
-          {isS
-            ? <CheckCircle size={12} strokeWidth={1.3} style={{ color: col }} aria-hidden />
-            : <AlertTriangle size={12} strokeWidth={1.2} style={{ color: col }} aria-hidden />
-          }
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: col, textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-body)' }}>
-            {CATEGORY_LABELS[category] ?? category}
-          </span>
-          {CATEGORY_IMPACT[category] && (
-            <div style={{ fontSize: 11, color: D.faint, fontFamily: 'var(--font-body)', marginTop: 2, lineHeight: 1.4 }}>
-              {CATEGORY_IMPACT[category]}
-            </div>
-          )}
-        </div>
-        {stat != null && (
-          <span style={{ fontSize: 11, fontWeight: 600, color: col, fontFamily: 'var(--font-body)', flexShrink: 0, opacity: 0.85 }}>
-            {stat} {statLabel}
-          </span>
-        )}
-      </div>
-      <p style={{ fontSize: 13, color: D.mid, fontFamily: 'var(--font-body)', lineHeight: 1.6, margin: quote ? '0 0 9px' : '0' }}>
-        {text}
-      </p>
-      {quote && (
-        <p style={{ fontSize: 12, color: D.faint, fontFamily: 'var(--font-body)', margin: '0', fontStyle: 'italic', borderLeft: `2px solid ${alpha}0.28)`, paddingLeft: 9, lineHeight: 1.5 }}>
-          &ldquo;{quote}&rdquo;
+        <p style={{ fontSize: 12, color: D.faint, fontFamily: 'var(--font-body)', margin: '0', fontStyle: 'italic', paddingLeft: 34, lineHeight: 1.5 }}>
+          &ldquo;{evidence}&rdquo;
         </p>
       )}
     </div>
@@ -241,27 +296,27 @@ function SignalCard({ type, category, text, stat, statLabel, quote }: {
 // ── Theme card ────────────────────────────────────────────────────────────────
 function ThemeCard({ theme }: { theme: SentimentTheme }) {
   const cfg = {
-    positive: { badge: D.accentPale,              badgeText: D.accent,  border: 'rgba(52,211,153,0.18)',  dot: '#34d399' },
-    negative: { badge: 'rgba(220,38,38,0.08)',    badgeText: '#f87171', border: 'rgba(220,38,38,0.18)',   dot: '#f87171' },
-    mixed:    { badge: 'rgba(251,191,36,0.08)',   badgeText: D.gold,    border: 'rgba(251,191,36,0.18)',  dot: D.gold },
-  }[theme.sentiment] ?? { badge: D.card2, badgeText: D.soft, border: D.border, dot: D.faint };
+    positive: { badgeText: D.accent,  dot: '#34d399', borderAccent: 'rgba(52,211,153,0.2)' },
+    negative: { badgeText: '#f87171', dot: '#f87171', borderAccent: 'rgba(220,38,38,0.2)'  },
+    mixed:    { badgeText: D.gold,    dot: D.gold,    borderAccent: 'rgba(251,191,36,0.2)' },
+  }[theme.sentiment] ?? { badgeText: D.soft, dot: D.faint, borderAccent: D.border };
 
   return (
-    <div style={{ background: D.card, border: `1.5px solid ${D.border}`, borderRadius: 10, padding: '14px 15px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+    <div style={{ background: D.card2, borderRadius: 9, padding: '13px 15px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: theme.example ? 9 : 6 }}>
         <span style={{ fontSize: 13, fontWeight: 700, color: D.text, fontFamily: 'var(--font-body)', lineHeight: 1.3 }}>{theme.topic}</span>
-        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: cfg.badge, color: cfg.badgeText, border: `1px solid ${cfg.border}`, fontFamily: 'var(--font-body)', textTransform: 'capitalize', flexShrink: 0 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: cfg.badgeText, fontFamily: 'var(--font-body)', textTransform: 'capitalize', flexShrink: 0, opacity: 0.8 }}>
           {theme.sentiment}
         </span>
       </div>
       {theme.example && (
-        <p style={{ fontSize: 12, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.55, fontStyle: 'italic', margin: '0 0 9px', borderLeft: `2px solid ${cfg.border}`, paddingLeft: 9 }}>
+        <p style={{ fontSize: 12, color: D.faint, fontFamily: 'var(--font-body)', lineHeight: 1.55, fontStyle: 'italic', margin: '0 0 8px', borderLeft: `2px solid ${cfg.borderAccent}`, paddingLeft: 9 }}>
           &ldquo;{theme.example}&rdquo;
         </p>
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-        <span style={{ width: 5, height: 5, borderRadius: '50%', background: cfg.dot, display: 'inline-block', flexShrink: 0 }} />
-        <span style={{ fontSize: 11, color: D.faint, fontFamily: 'var(--font-body)' }}>
+        <span style={{ width: 4, height: 4, borderRadius: '50%', background: cfg.dot, display: 'inline-block' }} />
+        <span style={{ fontSize: 11, color: D.xfaint, fontFamily: 'var(--font-body)' }}>
           {theme.count} {theme.count === 1 ? 'mention' : 'mentions'}
         </span>
       </div>
@@ -276,24 +331,17 @@ function CategoryScores({ scores }: { scores: Record<string, number> }) {
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
 
   return (
-    <div style={{ background: D.card, border: `1.5px solid ${D.border}`, borderRadius: 12, padding: '18px 20px' }}>
-      <SectionLabel text="Category Scores" />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '18px 20px' }}>
+      <MicroLabel text="Category Breakdown" />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
         {entries.map(({ key, label, score }) => (
           <div key={key}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 3 }}>
-              <div style={{ width: 148, flexShrink: 0 }}>
-                <span style={{ fontSize: 12, color: D.soft, fontFamily: 'var(--font-body)' }}>{label}</span>
-                {CATEGORY_IMPACT[key] && (
-                  <div style={{ fontSize: 10, color: D.faint, fontFamily: 'var(--font-body)', lineHeight: 1.3, marginTop: 1 }}>
-                    {CATEGORY_IMPACT[key]}
-                  </div>
-                )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <span style={{ fontSize: 12, color: score != null ? D.soft : D.xfaint, fontFamily: 'var(--font-body)', width: 140, flexShrink: 0 }}>{label}</span>
+              <div style={{ flex: 1, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: score != null ? `${(score / 5) * 100}%` : '0%', background: score != null ? scoreColor(score) : D.xfaint, borderRadius: 2, transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)', opacity: score != null ? 1 : 0.4 }} />
               </div>
-              <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: score != null ? `${(score / 5) * 100}%` : '0%', background: score != null ? scoreColor(score) : D.faint, borderRadius: 2, transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)' }} />
-              </div>
-              <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-body)', color: score != null ? scoreColor(score) : D.faint, width: 26, textAlign: 'right', flexShrink: 0 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-body)', color: score != null ? scoreColor(score) : D.xfaint, width: 26, textAlign: 'right', flexShrink: 0 }}>
                 {score != null ? score.toFixed(1) : '—'}
               </span>
             </div>
@@ -326,30 +374,30 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
   // ── Empty state ───────────────────────────────────────────────────────────
   if (!insights && !isPending) {
     return (
-      <div style={{ maxWidth: 600 }}>
-        <div style={{ marginBottom: 24 }}>
+      <div style={{ maxWidth: 560 }}>
+        <div style={{ marginBottom: 28 }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: D.text, margin: '0 0 4px', letterSpacing: '-0.02em' }}>Practice Intelligence</h2>
-          <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: 0 }}>Patterns from your patient reviews — what's working, what to fix, where to grow.</p>
+          <p style={{ fontSize: 13, color: D.faint, fontFamily: 'var(--font-body)', margin: 0 }}>Patterns from your patient reviews — what&rsquo;s working, what to fix, where to grow.</p>
         </div>
-        <div style={{ background: D.card, border: `1.5px solid ${D.border}`, borderRadius: 14, padding: '48px 40px', textAlign: 'center' }}>
-          <div style={{ width: 52, height: 52, borderRadius: 13, background: D.accentPale, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
-            <Star size={22} strokeWidth={1.5} style={{ color: D.accent }} aria-hidden />
+        <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 14, padding: '52px 44px', textAlign: 'center' }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: D.accentPale, border: '1px solid rgba(52,211,153,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <Star size={20} strokeWidth={1.5} style={{ color: D.accent }} aria-hidden />
           </div>
-          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 700, color: D.text, marginBottom: 8 }}>Generate your practice report</h3>
-          <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.65, maxWidth: 380, margin: '0 auto 24px' }}>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 700, color: D.text, margin: '0 0 8px', letterSpacing: '-0.01em' }}>Generate your practice report</h3>
+          <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.7, maxWidth: 360, margin: '0 auto 28px' }}>
             Reads your {reviewCount} patient review{reviewCount !== 1 ? 's' : ''} and surfaces patterns — what patients value, what frustrates them, and what to act on.
           </p>
           {reviewCount < 2 ? (
             <p style={{ fontSize: 13, color: D.faint, fontFamily: 'var(--font-body)' }}>You need at least 2 published reviews to generate a report.</p>
           ) : (
             <>
-              <button onClick={handleGenerate} style={{ padding: '11px 26px', borderRadius: 9, background: D.accent, color: '#0d0d12', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-body)', marginBottom: 10 }}>
+              <button onClick={handleGenerate} style={{ padding: '11px 28px', borderRadius: 9, background: D.accent, color: '#0d0d12', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-body)', marginBottom: 12, letterSpacing: '-0.01em' }}>
                 Generate report
               </button>
-              <p style={{ fontSize: 12, color: D.faint, fontFamily: 'var(--font-body)', margin: 0 }}>Takes ~15 seconds · Cached until you refresh</p>
+              <p style={{ fontSize: 12, color: D.xfaint, fontFamily: 'var(--font-body)', margin: 0 }}>Takes ~15 seconds · Cached until you refresh</p>
             </>
           )}
-          {error && <p style={{ fontSize: 13, color: '#f87171', fontFamily: 'var(--font-body)', marginTop: 12 }}>{error}</p>}
+          {error && <p style={{ fontSize: 13, color: '#f87171', fontFamily: 'var(--font-body)', marginTop: 14 }}>{error}</p>}
         </div>
       </div>
     );
@@ -358,15 +406,15 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
   // ── Loading state ─────────────────────────────────────────────────────────
   if (isPending) {
     return (
-      <div style={{ maxWidth: 600 }}>
-        <div style={{ marginBottom: 24 }}>
+      <div style={{ maxWidth: 560 }}>
+        <div style={{ marginBottom: 28 }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: D.text, margin: '0 0 4px', letterSpacing: '-0.02em' }}>Practice Intelligence</h2>
         </div>
-        <div style={{ background: D.card, border: `1.5px solid ${D.border}`, borderRadius: 14, padding: '56px 40px', textAlign: 'center' }}>
-          <div style={{ width: 38, height: 38, borderRadius: '50%', border: `3px solid ${D.accentPale}`, borderTop: `3px solid ${D.accent}`, animation: 'spin 0.8s linear infinite', margin: '0 auto 18px' }} />
+        <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 14, padding: '60px 44px', textAlign: 'center' }}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', border: `3px solid ${D.accentPale}`, borderTop: `3px solid ${D.accent}`, animation: 'spin 0.8s linear infinite', margin: '0 auto 20px' }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          <p style={{ fontSize: 14, fontWeight: 600, color: D.text, fontFamily: 'var(--font-body)', marginBottom: 4 }}>Reading {reviewCount} reviews…</p>
-          <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: 0 }}>About 15 seconds.</p>
+          <p style={{ fontSize: 14, fontWeight: 600, color: D.text, fontFamily: 'var(--font-body)', margin: '0 0 4px' }}>Reading {reviewCount} reviews…</p>
+          <p style={{ fontSize: 13, color: D.faint, fontFamily: 'var(--font-body)', margin: 0 }}>About 15 seconds.</p>
         </div>
       </div>
     );
@@ -378,110 +426,135 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
   const remainingOpportunities = ins.opportunities.slice(1);
 
   return (
-    <div>
+    <div style={{ maxWidth: 900 }}>
+
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 32 }}>
         <div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: D.text, margin: '0 0 3px', letterSpacing: '-0.02em' }}>Practice Intelligence</h2>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: D.text, margin: '0 0 4px', letterSpacing: '-0.02em' }}>Practice Intelligence</h2>
           <p style={{ fontSize: 12, color: D.faint, fontFamily: 'var(--font-body)', margin: 0 }}>
             Based on {ins.review_count} review{ins.review_count !== 1 ? 's' : ''} · updated {timeAgo(ins.generated_at)}
           </p>
         </div>
         <button
           onClick={handleGenerate}
-          style={{ flexShrink: 0, padding: '7px 13px', borderRadius: 8, background: D.card, color: D.soft, border: `1.5px solid ${D.border}`, cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-body)' }}
+          style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, background: 'transparent', color: D.faint, border: `1px solid ${D.border}`, cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-body)' }}
         >
+          <RefreshCw size={11} strokeWidth={2} aria-hidden />
           Refresh
         </button>
       </div>
 
       <ConfidenceBanner count={ins.review_count} />
 
+      {/* Stale notice */}
       {isStale && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)', borderRadius: 10, padding: '10px 14px', marginBottom: 20 }}>
-          <AlertTriangle size={13} strokeWidth={1.2} style={{ color: D.gold }} aria-hidden />
-          <p style={{ fontSize: 13, color: D.gold, fontFamily: 'var(--font-body)', margin: 0, flex: 1 }}>
-            {newSince} new review{newSince !== 1 ? 's' : ''} since this report — refresh to include them.
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.14)', borderRadius: 9, padding: '9px 13px', marginBottom: 24 }}>
+          <AlertTriangle size={12} strokeWidth={1.2} style={{ color: D.gold, flexShrink: 0 }} aria-hidden />
+          <p style={{ fontSize: 12.5, color: 'rgba(251,191,36,0.7)', fontFamily: 'var(--font-body)', margin: 0, flex: 1 }}>
+            {newSince} new review{newSince !== 1 ? 's' : ''} since this report
           </p>
-          <button onClick={handleGenerate} style={{ flexShrink: 0, fontSize: 12, fontWeight: 600, color: D.gold, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>
-            Refresh now
+          <button onClick={handleGenerate} style={{ flexShrink: 0, fontSize: 11.5, fontWeight: 600, color: D.gold, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 6, padding: '3px 9px', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>
+            Refresh
           </button>
         </div>
       )}
 
       {error && (
-        <div style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 10, padding: '10px 14px', marginBottom: 20 }}>
+        <div style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: 9, padding: '10px 13px', marginBottom: 20 }}>
           <p style={{ fontSize: 13, color: '#f87171', fontFamily: 'var(--font-body)', margin: 0 }}>{error}</p>
         </div>
       )}
 
-      {/* Recommended next step */}
-      {topOpportunity && (
-        <NextStepCard
-          recommendation={topOpportunity.recommendation}
-          rationale={topOpportunity.rationale}
-          evidence={(topOpportunity as any).evidence}
-        />
+      {/* Hero trust score */}
+      {Object.keys(ins.category_scores).length > 0 && (
+        <TrustScoreHero scores={ins.category_scores} reviewCount={ins.review_count} />
       )}
 
-      {/* Strengths + Weaknesses — full width 2-col grid */}
+      {/* AI Priority focus */}
+      {topOpportunity && (
+        <>
+          <div style={{ height: 32 }} />
+          <PriorityFocus
+            recommendation={topOpportunity.recommendation}
+            rationale={topOpportunity.rationale}
+            evidence={(topOpportunity as any).evidence}
+          />
+        </>
+      )}
+
+      {/* Strengths + Areas — explicit 2 columns */}
       {(ins.strengths.length > 0 || ins.weaknesses.length > 0) && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 4 }}>
-            {ins.strengths.length > 0 && <SectionLabel text="What's Working" />}
-            {ins.weaknesses.length > 0 && <SectionLabel text="Areas to Address" />}
+          <Divider />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
+
+            {ins.strengths.length > 0 && (
+              <div>
+                <MicroLabel text="What's working" />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  {ins.strengths.map((s, i) => (
+                    <SignalItem key={i} type="strength" category={s.category} text={s.text}
+                      stat={s.mention_count} statLabel="mentions" quote={(s as any).quote} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {ins.weaknesses.length > 0 && (
+              <div>
+                <MicroLabel text="Areas to address" />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  {ins.weaknesses.map((w, i) => (
+                    <SignalItem key={i} type="weakness" category={w.category} text={w.text}
+                      stat={w.pct_mentions} statLabel="% of reviews" quote={(w as any).quote} />
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
         </>
       )}
-      {(ins.strengths.length > 0 || ins.weaknesses.length > 0) && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
-          {ins.strengths.map((s, i) => (
-            <SignalCard key={i} type="strength" category={s.category} text={s.text}
-              stat={s.mention_count} statLabel="mentions" quote={(s as any).quote} />
-          ))}
-          {ins.weaknesses.map((w, i) => (
-            <SignalCard key={i} type="weakness" category={w.category} text={w.text}
-              stat={w.pct_mentions} statLabel="% of reviews" quote={(w as any).quote} />
-          ))}
-        </div>
+
+      {/* Growth opportunities + scores */}
+      {(remainingOpportunities.length > 0 || Object.keys(ins.category_scores).length > 0) && (
+        <>
+          <Divider />
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 280px', gap: 32, alignItems: 'start' }}>
+
+            {remainingOpportunities.length > 0 && (
+              <div>
+                <MicroLabel text="Growth opportunities" />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {remainingOpportunities.map((o, i) => (
+                    <OpportunityCard key={i} item={o} index={i + 1} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {Object.keys(ins.category_scores).length > 0 && (
+              <div>
+                <CategoryScores scores={ins.category_scores} />
+              </div>
+            )}
+
+          </div>
+        </>
       )}
 
-      {/* 2-column main grid: opportunities+themes left, scores right */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 280px', gap: 28, alignItems: 'start' }}>
+      {/* Patient themes */}
+      {ins.themes.length > 0 && (
+        <>
+          <Divider />
+          <MicroLabel text="Patient themes" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+            {ins.themes.map((t, i) => <ThemeCard key={i} theme={t} />)}
+          </div>
+        </>
+      )}
 
-        {/* Left: remaining opportunities + themes */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-
-          {remainingOpportunities.length > 0 && (
-            <div>
-              <SectionLabel text="Growth Opportunities" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {remainingOpportunities.map((o, i) => (
-                  <OpportunityCard key={i} item={o} index={i + 1} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {ins.themes.length > 0 && (
-            <div>
-              <SectionLabel text="Patient Themes" />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                {ins.themes.map((t, i) => <ThemeCard key={i} theme={t} />)}
-              </div>
-            </div>
-          )}
-
-        </div>
-
-        {/* Right: scores only */}
-        <div>
-          {Object.keys(ins.category_scores).length > 0 && (
-            <CategoryScores scores={ins.category_scores} />
-          )}
-        </div>
-
-      </div>
     </div>
   );
 }

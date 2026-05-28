@@ -6,10 +6,11 @@ import { sendReviewInvite } from './actions';
 import { AccessTokenContext } from './token-context';
 
 const D = {
-  bg: '#0d0d12', sidebar: '#09090d', card: '#13131a', card2: '#1a1a24',
+  bg: '#0d0d12', card: '#13131a', card2: '#17171f',
   border: 'rgba(255,255,255,0.07)', border2: 'rgba(255,255,255,0.12)',
   text: '#edeef5', mid: 'rgba(237,238,245,0.72)', soft: 'rgba(237,238,245,0.5)',
-  faint: 'rgba(237,238,245,0.28)', accent: '#34d399', accentPale: 'rgba(52,211,153,0.1)',
+  faint: 'rgba(237,238,245,0.28)', xfaint: 'rgba(237,238,245,0.13)',
+  accent: '#34d399', accentPale: 'rgba(52,211,153,0.08)',
   gold: '#fbbf24',
 } as const;
 
@@ -132,11 +133,11 @@ export default function InviteTab({ practiceId, practiceSlug, practiceName, invi
       {/* Right: history */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <h3 style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 700, color: D.soft, textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: D.faint, fontFamily: 'var(--font-body)' }}>
             Sent invites
-          </h3>
+          </div>
           {invites.length > 0 && (
-            <span style={{ fontSize: 12, color: D.faint, fontFamily: 'var(--font-body)' }}>
+            <span style={{ fontSize: 11, color: D.xfaint, fontFamily: 'var(--font-body)' }}>
               {reviewed}/{invites.length} reviewed
             </span>
           )}

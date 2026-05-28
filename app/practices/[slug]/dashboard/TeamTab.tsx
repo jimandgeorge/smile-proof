@@ -7,10 +7,11 @@ import { addDentistToTeam, removeDentistFromPractice, updateDentistRecord } from
 import { AccessTokenContext } from './token-context';
 
 const D = {
-  bg: '#0d0d12', sidebar: '#09090d', card: '#13131a', card2: '#1a1a24',
+  bg: '#0d0d12', card: '#13131a', card2: '#17171f',
   border: 'rgba(255,255,255,0.07)', border2: 'rgba(255,255,255,0.12)',
   text: '#edeef5', mid: 'rgba(237,238,245,0.72)', soft: 'rgba(237,238,245,0.5)',
-  faint: 'rgba(237,238,245,0.28)', accent: '#34d399', accentPale: 'rgba(52,211,153,0.1)',
+  faint: 'rgba(237,238,245,0.28)', xfaint: 'rgba(237,238,245,0.13)',
+  accent: '#34d399', accentPale: 'rgba(52,211,153,0.08)',
   gold: '#fbbf24',
 } as const;
 
