@@ -3,12 +3,11 @@
 import { useState, useEffect, useContext } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import TeamTab, { type TeamDentist } from './TeamTab';
 import PracticeIntelligenceTab from './PracticeIntelligenceTab';
 import type { OpportunityInsightData } from './actions';
 import { updatePracticeServices } from './actions';
 import { AccessTokenContext } from './token-context';
-import { Settings, LogOut, Home, Star, Users, User, ArrowRight, Upload, CheckCircle, Lock, RefreshCw, Mail } from 'lucide-react';
+import { Settings, LogOut, Home, Star, User, ArrowRight, Upload, CheckCircle, Lock, RefreshCw, Mail } from 'lucide-react';
 
 const D = {
   bg: '#0d0d12', sidebar: '#09090d', card: '#13131a', card2: '#17171f',
@@ -53,14 +52,13 @@ type Props = {
   dimensionRanks: DimensionRank[];
   allServices: ServiceDef[];
   practiceServiceIds: string[];
-  teamDentists: TeamDentist[];
   opportunityInsights: OpportunityInsightData | null;
   googleReviewCount: number;
   googleAvgRating: number | null;
   initialAccessToken: string;
 };
 
-type Tab = 'overview' | 'intelligence' | 'profile' | 'team' | 'settings';
+type Tab = 'overview' | 'intelligence' | 'profile' | 'settings';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -176,7 +174,7 @@ export default function DashboardShell({
   profileViews30d, profileViewsPrev30d,
   cityRank, cityTotal, dimensionRanks,
   allServices, practiceServiceIds,
-  teamDentists, opportunityInsights,
+  opportunityInsights,
   googleReviewCount, googleAvgRating,
   initialAccessToken,
 }: Props) {
@@ -205,7 +203,6 @@ export default function DashboardShell({
   const navItems: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'overview',      label: 'Practice Health', icon: <Home size={15} strokeWidth={1.5} /> },
     { id: 'intelligence',  label: 'Intelligence',    icon: <Star size={15} strokeWidth={1.4} /> },
-    { id: 'team',          label: 'Team',            icon: <Users size={15} strokeWidth={1.5} /> },
     { id: 'profile',       label: 'Profile',         icon: <User size={15} strokeWidth={1.5} /> },
     { id: 'settings',      label: 'Settings',        icon: <Settings size={15} strokeWidth={1.5} /> },
   ];
@@ -309,10 +306,8 @@ export default function DashboardShell({
               googleReviewCount={googleReviewCount}
               googleAvgRating={googleAvgRating}
               opportunityInsights={opportunityInsights}
-              teamCount={teamDentists.length}
               onGoToIntelligence={() => setTab('intelligence')}
               onGoToSettings={() => setTab('settings')}
-              onGoToTeam={() => setTab('team')}
             />
           )}
           {tab === 'intelligence' && (
@@ -323,7 +318,6 @@ export default function DashboardShell({
               initialInsights={opportunityInsights}
             />
           )}
-          {tab === 'team' && <TeamTab practiceId={practiceId} practiceSlug={practiceSlug} initialDentists={teamDentists} />}
           {tab === 'profile' && <ProfileTab practiceName={practiceName} practiceCity={practiceCity} practiceSlug={practiceSlug} practiceId={practiceId} allServices={allServices} practiceServiceIds={practiceServiceIds} initialLogoUrl={logoUrl} />}
           {tab === 'settings' && <SettingsTab userEmail={userEmail} isOAuthUser={isOAuthUser} practiceId={practiceId} practiceSlug={practiceSlug} practiceName={practiceName} practiceCity={practiceCity} isPaid={isPaid} />}
         </div>
@@ -334,15 +328,14 @@ export default function DashboardShell({
 }
 
 // ── Setup checklist ───────────────────────────────────────────────────────────
-function SetupChecklist({ hasGoogleReviews, hasIntelligence, teamCount, onGoToSettings, onGoToIntelligence, onGoToTeam }: {
-  hasGoogleReviews: boolean; hasIntelligence: boolean; teamCount: number;
-  onGoToSettings: () => void; onGoToIntelligence: () => void; onGoToTeam: () => void;
+function SetupChecklist({ hasGoogleReviews, hasIntelligence, onGoToSettings, onGoToIntelligence }: {
+  hasGoogleReviews: boolean; hasIntelligence: boolean;
+  onGoToSettings: () => void; onGoToIntelligence: () => void;
 }) {
   const steps = [
     { done: true,             label: 'Claim your practice',     sub: 'Verified dashboard access',                         action: null as (() => void) | null, actionLabel: '' },
     { done: hasGoogleReviews, label: 'Connect Google Reviews',  sub: 'Import your reviews for AI analysis',               action: onGoToSettings,     actionLabel: 'Go to Settings' },
     { done: hasIntelligence,  label: 'Run intelligence report', sub: 'Analyse reviews to surface insights and actions',   action: hasGoogleReviews ? onGoToIntelligence : null, actionLabel: 'Go to Intelligence' },
-    { done: teamCount > 0,    label: 'Add your team',           sub: 'Add dentists to your practice profile',             action: onGoToTeam,         actionLabel: 'Go to Team' },
   ];
   if (steps.every(s => s.done)) return null;
   const completedCount = steps.filter(s => s.done).length;
@@ -407,8 +400,8 @@ function OverviewTab({
   cityRank, cityTotal, dimensionRanks,
   managementSummary, managementSummaryDate,
   googleReviewCount, googleAvgRating,
-  opportunityInsights, teamCount,
-  onGoToIntelligence, onGoToSettings, onGoToTeam,
+  opportunityInsights,
+  onGoToIntelligence, onGoToSettings,
 }: {
   isPaid: boolean; practiceSlug: string; practiceCity: string;
   profileViews30d: number; viewsDelta: number | null;
@@ -419,10 +412,8 @@ function OverviewTab({
   googleReviewCount: number;
   googleAvgRating: number | null;
   opportunityInsights: OpportunityInsightData | null;
-  teamCount: number;
   onGoToIntelligence: () => void;
   onGoToSettings: () => void;
-  onGoToTeam: () => void;
 }) {
   const rankingMeaningful = cityTotal >= 3 && cityRank > 0;
   const rankingEarly = cityTotal > 0 && cityTotal < 3 && cityRank > 0;
@@ -550,10 +541,8 @@ function OverviewTab({
         <SetupChecklist
           hasGoogleReviews={googleReviewCount > 0}
           hasIntelligence={opportunityInsights != null}
-          teamCount={teamCount}
           onGoToSettings={onGoToSettings}
           onGoToIntelligence={onGoToIntelligence}
-          onGoToTeam={onGoToTeam}
         />
 
         {/* No intelligence yet — CTA */}
@@ -588,7 +577,6 @@ function OverviewTab({
             {([
               { label: 'Google reviews', value: googleReviewCount > 0 ? String(googleReviewCount) : null },
               { label: 'Average rating',  value: googleAvgRating != null ? `★ ${googleAvgRating.toFixed(1)}` : null },
-              { label: 'Team members',    value: teamCount > 0 ? String(teamCount) : null },
               { label: 'AI report',       value: opportunityInsights ? 'Generated' : null },
             ] as { label: string; value: string | null }[]).map(({ label, value }) => (
               <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

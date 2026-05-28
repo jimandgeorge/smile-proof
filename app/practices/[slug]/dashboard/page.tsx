@@ -74,7 +74,6 @@ export default async function DashboardPage({ params }: Params) {
     viewsPrev30dRes,
     allServicesRes,
     practiceServicesRes,
-    teamDentistsRes,
     opportunityInsightsRes,
     googleReviewsRes,
   ] = await Promise.all([
@@ -84,7 +83,6 @@ export default async function DashboardPage({ params }: Params) {
     admin.from('practice_page_views').select('id', { count: 'exact', head: true }).eq('practice_id', practice.id).gte('viewed_at', sixtyDaysAgo.toISOString()).lt('viewed_at', thirtyDaysAgo.toISOString()),
     admin.from('services').select('id, slug, name, category, sort_order').order('sort_order'),
     admin.from('practice_services').select('service_id').eq('practice_id', practice.id),
-    admin.from('practice_dentists').select('dentist_id, dentists(id, full_name, gdc_number, specialisms, slug)').eq('practice_id', practice.id).eq('active', true),
     admin.from('practice_opportunity_insights').select('*').eq('practice_id', practice.id).maybeSingle(),
     admin.from('external_reviews').select('rating').eq('practice_id', practice.id).eq('source', 'google').not('rating', 'is', null),
   ]);
@@ -127,16 +125,6 @@ export default async function DashboardPage({ params }: Params) {
 
   const allServices = (allServicesRes.data ?? []) as { id: string; slug: string; name: string; category: string; sort_order: number }[];
   const practiceServiceIds = (practiceServicesRes.data ?? []).map((ps: any) => ps.service_id as string);
-  const teamDentists = (teamDentistsRes.data ?? [])
-    .map((row: any) => row.dentists)
-    .filter(Boolean)
-    .map((d: any) => ({
-      dentistId: d.id as string,
-      fullName: d.full_name as string,
-      gdcNumber: (d.gdc_number as string | null) ?? null,
-      specialisms: (d.specialisms as string[]) ?? [],
-      slug: d.slug as string,
-    }));
 
   const googleRatings = (googleReviewsRes.data ?? []).map((r: any) => r.rating as number);
   const googleReviewCount = googleRatings.length;
@@ -178,7 +166,6 @@ export default async function DashboardPage({ params }: Params) {
       dimensionRanks={dimensionRanks}
       allServices={allServices}
       practiceServiceIds={practiceServiceIds}
-      teamDentists={teamDentists}
       opportunityInsights={opportunityInsights}
       googleReviewCount={googleReviewCount}
       googleAvgRating={googleAvgRating}
