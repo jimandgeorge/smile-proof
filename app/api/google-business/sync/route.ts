@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   const listingTask = listingsData.tasks?.[0];
   if (!listingTask || listingTask.status_code !== 20000) {
     return NextResponse.json(
-      { error: 'Failed to find business listing', detail: listingTask?.status_message },
+      { error: 'Failed to find business listing', code: listingTask?.status_code, detail: listingTask?.status_message, raw: listingsData },
       { status: 502 },
     );
   }
