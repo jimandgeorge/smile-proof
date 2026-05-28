@@ -30,6 +30,27 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 403 });
   }
 
+  // Check if task is ready
+  const readyRes = await fetch(
+    'https://api.dataforseo.com/v3/business_data/google/reviews/tasks_ready',
+    { headers: { 'Authorization': authHeader() } },
+  );
+
+  if (!readyRes.ok) {
+    const body = await readyRes.text();
+    return NextResponse.json({ error: 'Failed to check tasks_ready', detail: body }, { status: 502 });
+  }
+
+  const readyData = await readyRes.json() as {
+    tasks?: { result?: { id: string }[] }[];
+  };
+
+  const readyIds = readyData.tasks?.[0]?.result?.map(t => t.id) ?? [];
+  if (!readyIds.includes(requestId)) {
+    return NextResponse.json({ status: 'pending' });
+  }
+
+  // Task is ready — fetch results
   const statusRes = await fetch(
     `https://api.dataforseo.com/v3/business_data/google/reviews/task_get/advanced/${requestId}`,
     { headers: { 'Authorization': authHeader() } },
@@ -37,7 +58,7 @@ export async function GET(req: NextRequest) {
 
   if (!statusRes.ok) {
     const body = await statusRes.text();
-    return NextResponse.json({ error: 'Failed to check status', httpStatus: statusRes.status, detail: body }, { status: 502 });
+    return NextResponse.json({ error: 'Failed to fetch results', detail: body }, { status: 502 });
   }
 
   const statusData = await statusRes.json() as {
