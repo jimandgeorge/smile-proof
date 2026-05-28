@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
       practice_type: practice_type || 'mixed',
       claimed_by_user_id: user.id,
       subscription_status: 'free',
+      trial_started_at: new Date().toISOString(),
     })
     .select('slug')
     .single();

@@ -23,6 +23,8 @@ type Props = {
   practiceSlug: string;
   reviewCount: number;
   initialInsights: OpportunityInsightData | null;
+  isPaid: boolean;
+  isTrialExpired: boolean;
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -369,7 +371,7 @@ function CategoryScores({ scores, onDrill }: {
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
-export default function PracticeIntelligenceTab({ practiceId, practiceSlug, reviewCount, initialInsights }: Props) {
+export default function PracticeIntelligenceTab({ practiceId, practiceSlug, reviewCount, initialInsights, isPaid, isTrialExpired }: Props) {
   const [insights, setInsights] = useState<OpportunityInsightData | null>(initialInsights);
   const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
@@ -427,7 +429,14 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
           <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.7, maxWidth: 360, margin: '0 auto 28px' }}>
             Reads your {reviewCount} patient review{reviewCount !== 1 ? 's' : ''} and surfaces patterns — what patients value, what frustrates them, and what to act on.
           </p>
-          {reviewCount < 2 ? (
+          {isTrialExpired ? (
+            <>
+              <a href={`/practices/${practiceSlug}/upgrade`} style={{ display: 'inline-block', padding: '11px 28px', borderRadius: 9, background: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-body)', marginBottom: 12, letterSpacing: '-0.01em', textDecoration: 'none' }}>
+                Upgrade to generate reports
+              </a>
+              <p style={{ fontSize: 12, color: D.xfaint, fontFamily: 'var(--font-body)', margin: 0 }}>Your 14-day trial has ended · £99/mo</p>
+            </>
+          ) : reviewCount < 2 ? (
             <p style={{ fontSize: 13, color: D.faint, fontFamily: 'var(--font-body)' }}>You need at least 2 published reviews to generate a report.</p>
           ) : (
             <>
@@ -476,14 +485,23 @@ export default function PracticeIntelligenceTab({ practiceId, practiceSlug, revi
             Based on {ins.review_count} review{ins.review_count !== 1 ? 's' : ''} · updated {timeAgo(ins.generated_at)}
           </p>
         </div>
-        <button
-          onClick={handleGenerate}
-          disabled={isPending}
-          style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, background: 'transparent', color: isPending ? D.xfaint : D.faint, border: `1px solid ${D.border}`, cursor: isPending ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-body)' }}
-        >
-          <RefreshCw size={11} strokeWidth={2} style={{ animation: isPending ? 'spin 0.8s linear infinite' : 'none' }} aria-hidden />
-          {isPending ? 'Refreshing…' : 'Refresh'}
-        </button>
+        {isTrialExpired ? (
+          <a
+            href={`/practices/${practiceSlug}/upgrade`}
+            style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-body)', textDecoration: 'none' }}
+          >
+            Upgrade to refresh
+          </a>
+        ) : (
+          <button
+            onClick={handleGenerate}
+            disabled={isPending}
+            style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, background: 'transparent', color: isPending ? D.xfaint : D.faint, border: `1px solid ${D.border}`, cursor: isPending ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-body)' }}
+          >
+            <RefreshCw size={11} strokeWidth={2} style={{ animation: isPending ? 'spin 0.8s linear infinite' : 'none' }} aria-hidden />
+            {isPending ? 'Refreshing…' : 'Refresh'}
+          </button>
+        )}
       </div>
 
       <ConfidenceBanner count={ins.review_count} />

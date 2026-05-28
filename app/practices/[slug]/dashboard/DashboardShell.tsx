@@ -39,12 +39,22 @@ function SectionDivider({ label }: { label?: string }) {
 
 type DimensionRank = { label: string; rank: number; total: number; score: number | null };
 
+const TRIAL_DAYS = 14;
+
+function trialDaysRemaining(trialStartedAt: string | null): number | null {
+  if (!trialStartedAt) return null;
+  const elapsed = Date.now() - new Date(trialStartedAt).getTime();
+  const daysLeft = TRIAL_DAYS - elapsed / (1000 * 60 * 60 * 24);
+  return Math.max(0, Math.ceil(daysLeft));
+}
+
 type Props = {
   practiceId: string; practiceSlug: string; practiceName: string;
   practiceCity: string; practicePostcode: string; practiceType: string | null;
   userName: string; userInitial: string; userEmail: string; isOAuthUser: boolean;
   logoUrl: string | null;
   isPaid: boolean;
+  trialStartedAt: string | null;
   profileViews30d: number; profileViewsPrev30d: number;
   cityRank: number; cityTotal: number;
   dimensionRanks: DimensionRank[];
@@ -166,13 +176,15 @@ function ManagementSummaryCard({ summary, generatedAt }: { summary: string; gene
 export default function DashboardShell({
   practiceId, practiceSlug, practiceName, practiceCity, practiceType,
   userName, userInitial, userEmail, isOAuthUser, logoUrl,
-  isPaid,
+  isPaid, trialStartedAt,
   profileViews30d, profileViewsPrev30d,
   cityRank, cityTotal, dimensionRanks,
   opportunityInsights,
   googleReviewCount, googleAvgRating,
   initialAccessToken,
 }: Props) {
+  const trialDaysLeft = trialDaysRemaining(trialStartedAt);
+  const isTrialExpired = !isPaid && trialDaysLeft !== null && trialDaysLeft <= 0;
   const searchParams = useSearchParams();
   const googleParam = searchParams.get('google');
   const [tab, setTab] = useState<Tab>(googleParam === 'pick_location' ? 'settings' : 'overview');
@@ -244,9 +256,17 @@ export default function DashboardShell({
 
         {/* Bottom */}
         <div style={{ padding: '12px 16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          {!isPaid && (
+          {isPaid && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80' }} />
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)' }}>Pro plan active</span>
+            </div>
+          )}
+          {!isPaid && trialDaysLeft !== null && trialDaysLeft > 0 && (
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#f59e0b', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, fontFamily: 'var(--font-body)' }}>Free plan</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: D.gold, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, fontFamily: 'var(--font-body)' }}>
+                Trial · {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} left
+              </div>
               <Link
                 href={`/practices/${practiceSlug}/upgrade`}
                 style={{ display: 'block', width: '100%', padding: '9px 0', borderRadius: 8, background: '#f59e0b', color: '#1c1c0a', fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}
@@ -255,10 +275,17 @@ export default function DashboardShell({
               </Link>
             </div>
           )}
-          {isPaid && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80' }} />
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)' }}>Pro plan active</span>
+          {!isPaid && (trialDaysLeft === 0 || trialDaysLeft === null) && (
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: trialDaysLeft === 0 ? '#f87171' : D.gold, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, fontFamily: 'var(--font-body)' }}>
+                {trialDaysLeft === 0 ? 'Trial expired' : 'Free plan'}
+              </div>
+              <Link
+                href={`/practices/${practiceSlug}/upgrade`}
+                style={{ display: 'block', width: '100%', padding: '9px 0', borderRadius: 8, background: trialDaysLeft === 0 ? '#ef4444' : '#f59e0b', color: 'white', fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-body)', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}
+              >
+                Upgrade to Pro
+              </Link>
             </div>
           )}
         </div>
@@ -311,10 +338,12 @@ export default function DashboardShell({
               practiceSlug={practiceSlug}
               reviewCount={googleReviewCount}
               initialInsights={opportunityInsights}
+              isPaid={isPaid}
+              isTrialExpired={isTrialExpired}
             />
           )}
           {tab === 'profile' && <ProfileTab practiceName={practiceName} practiceSlug={practiceSlug} practiceId={practiceId} initialLogoUrl={logoUrl} />}
-          {tab === 'settings' && <SettingsTab userEmail={userEmail} isOAuthUser={isOAuthUser} practiceId={practiceId} practiceSlug={practiceSlug} practiceName={practiceName} practiceCity={practiceCity} isPaid={isPaid} />}
+          {tab === 'settings' && <SettingsTab userEmail={userEmail} isOAuthUser={isOAuthUser} practiceId={practiceId} practiceSlug={practiceSlug} practiceName={practiceName} practiceCity={practiceCity} isPaid={isPaid} trialDaysLeft={trialDaysLeft} />}
         </div>
       </div>
     </div>
@@ -956,7 +985,9 @@ function GoogleConnectionSection({ practiceId, defaultSearchQuery }: { practiceI
 }
 
 // ── Billing section ───────────────────────────────────────────────────────────
-function BillingSection({ isPaid, practiceSlug }: { isPaid: boolean; practiceSlug: string }) {
+function BillingSection({ isPaid, practiceSlug, trialDaysLeft }: {
+  isPaid: boolean; practiceSlug: string; trialDaysLeft: number | null;
+}) {
   const [loading, setLoading] = useState(false);
 
   async function openPortal() {
@@ -990,16 +1021,50 @@ function BillingSection({ isPaid, practiceSlug }: { isPaid: boolean; practiceSlu
             {loading ? 'Opening…' : 'Manage billing'}
           </button>
         </div>
-      ) : (
+      ) : trialDaysLeft !== null && trialDaysLeft > 0 ? (
         <div>
-          <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: '0 0 14px' }}>
-            You&apos;re on the free plan.
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: D.gold, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--font-body)' }}>
+              Free trial — {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} remaining
+            </span>
+          </div>
+          <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: '0 0 14px', lineHeight: 1.6 }}>
+            Full access to all features. £99/mo after your trial ends.
           </p>
           <a
             href={`/practices/${practiceSlug}/upgrade`}
-            style={{ display: 'inline-block', padding: '9px 20px', borderRadius: 8, background: D.accent, color: 'white', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', textDecoration: 'none' }}
+            style={{ display: 'inline-block', padding: '9px 20px', borderRadius: 8, background: D.accent, color: '#0d0d12', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', textDecoration: 'none' }}
           >
-            Upgrade
+            Upgrade now
+          </a>
+        </div>
+      ) : trialDaysLeft === 0 ? (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#f87171', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--font-body)' }}>
+              Trial expired
+            </span>
+          </div>
+          <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: '0 0 14px', lineHeight: 1.6 }}>
+            Your 14-day trial has ended. Upgrade to keep full access for £99/mo.
+          </p>
+          <a
+            href={`/practices/${practiceSlug}/upgrade`}
+            style={{ display: 'inline-block', padding: '9px 20px', borderRadius: 8, background: '#ef4444', color: 'white', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', textDecoration: 'none' }}
+          >
+            Upgrade to continue
+          </a>
+        </div>
+      ) : (
+        <div>
+          <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: '0 0 14px' }}>
+            Start a 14-day free trial — full access, no credit card required.
+          </p>
+          <a
+            href={`/practices/${practiceSlug}/upgrade`}
+            style={{ display: 'inline-block', padding: '9px 20px', borderRadius: 8, background: D.accent, color: '#0d0d12', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', textDecoration: 'none' }}
+          >
+            Start free trial
           </a>
         </div>
       )}
@@ -1008,9 +1073,10 @@ function BillingSection({ isPaid, practiceSlug }: { isPaid: boolean; practiceSlu
 }
 
 // ── Settings tab ──────────────────────────────────────────────────────────────
-function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practiceCity, isPaid, practiceName }: {
+function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practiceCity, isPaid, practiceName, trialDaysLeft }: {
   userEmail: string; isOAuthUser: boolean;
-  practiceId: string; practiceSlug: string; practiceName: string; practiceCity: string; isPaid: boolean;
+  practiceId: string; practiceSlug: string; practiceName: string; practiceCity: string;
+  isPaid: boolean; trialDaysLeft: number | null;
 }) {
   const [pwNew, setPwNew] = useState('');
   const [pwConfirm, setPwConfirm] = useState('');
@@ -1068,7 +1134,7 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
       <GoogleConnectionSection practiceId={practiceId} defaultSearchQuery={`${practiceName} ${practiceCity}`} />
       {/* Right column: Billing + Account */}
       <div>
-      <BillingSection isPaid={isPaid} practiceSlug={practiceSlug} />
+      <BillingSection isPaid={isPaid} practiceSlug={practiceSlug} trialDaysLeft={trialDaysLeft} />
       <Section title="Account">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, background: D.card2, marginBottom: 16, border: `1px solid ${D.border}` }}>
           <Mail size={14} strokeWidth={1.5} style={{ flexShrink: 0, color: D.soft }} />

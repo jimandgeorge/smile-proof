@@ -56,6 +56,7 @@ export default async function DashboardPage({ params }: Params) {
   }
 
   const isPaid = (practice as any).subscription_status === 'active';
+  const trialStartedAt: string | null = (practice as any).trial_started_at ?? null;
 
   const rawName: string = user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'there';
   const userName = rawName.split(' ')[0];
@@ -152,6 +153,7 @@ export default async function DashboardPage({ params }: Params) {
       isOAuthUser={isOAuthUser}
       logoUrl={(practice as any).logo_url ?? null}
       isPaid={isPaid}
+      trialStartedAt={trialStartedAt}
       profileViews30d={views30dRes.count ?? 0}
       profileViewsPrev30d={viewsPrev30dRes.count ?? 0}
       cityRank={cityRank}
