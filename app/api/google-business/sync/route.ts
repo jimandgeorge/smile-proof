@@ -31,9 +31,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 403 });
   }
 
-  // Step 1: find the Google place_id via business listings
-  const listingsRes = await fetch(
-    'https://api.dataforseo.com/v3/business_data/google/business_listings/live/advanced',
+  // Step 1: find the Google place_id via Maps SERP
+  const mapsRes = await fetch(
+    'https://api.dataforseo.com/v3/serp/google/maps/live/advanced',
     {
       method: 'POST',
       headers: { Authorization: dfsAuth(), 'Content-Type': 'application/json' },
@@ -41,28 +41,28 @@ export async function POST(req: NextRequest) {
         keyword:       searchQuery.trim(),
         location_code: 2826,
         language_code: 'en',
-        limit:         1,
+        depth:         1,
       }]),
     },
   );
 
-  const listingsData = await listingsRes.json() as {
+  const mapsData = await mapsRes.json() as {
     tasks?: {
       status_code: number;
       status_message: string;
-      result?: { items?: { place_id?: string; title?: string }[] }[];
+      result?: { items?: { place_id?: string; title?: string; type?: string }[] }[];
     }[];
   };
 
-  const listingTask = listingsData.tasks?.[0];
-  if (!listingTask || listingTask.status_code !== 20000) {
+  const mapsTask = mapsData.tasks?.[0];
+  if (!mapsTask || mapsTask.status_code !== 20000) {
     return NextResponse.json(
-      { error: 'Failed to find business listing', code: listingTask?.status_code, detail: listingTask?.status_message, raw: listingsData },
+      { error: 'Failed to search Google Maps', code: mapsTask?.status_code, detail: mapsTask?.status_message, raw: mapsData },
       { status: 502 },
     );
   }
 
-  const placeId = listingTask.result?.[0]?.items?.[0]?.place_id;
+  const placeId = mapsTask.result?.[0]?.items?.find(i => i.place_id)?.place_id;
   if (!placeId) {
     return NextResponse.json(
       { error: `No Google listing found for "${searchQuery}" — try a more specific search query` },
