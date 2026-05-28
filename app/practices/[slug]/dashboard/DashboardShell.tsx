@@ -6,7 +6,7 @@ import Link from 'next/link';
 import TeamTab, { type TeamDentist } from './TeamTab';
 import PracticeIntelligenceTab from './PracticeIntelligenceTab';
 import type { OpportunityInsightData } from './actions';
-import { updatePracticeServices, unclaimPractice } from './actions';
+import { updatePracticeServices } from './actions';
 import { AccessTokenContext } from './token-context';
 import { Settings, LogOut, Home, Star, Users, User, ArrowRight, Upload, CheckCircle, Lock, RefreshCw, Mail } from 'lucide-react';
 
@@ -1002,7 +1002,7 @@ function BillingSection({ isPaid, practiceSlug }: { isPaid: boolean; practiceSlu
 }
 
 // ── Settings tab ──────────────────────────────────────────────────────────────
-function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practiceName, practiceCity, isPaid }: {
+function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practiceCity, isPaid, practiceName }: {
   userEmail: string; isOAuthUser: boolean;
   practiceId: string; practiceSlug: string; practiceName: string; practiceCity: string; isPaid: boolean;
 }) {
@@ -1011,9 +1011,6 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  const [unclaimConfirm, setUnclaimConfirm] = useState(false);
-  const [unclaiming, setUnclaiming] = useState(false);
-  const [unclaimMsg, setUnclaimMsg] = useState<string | null>(null);
   const accessToken = useContext(AccessTokenContext);
 
   async function handleChangePassword(e: React.FormEvent) {
@@ -1046,20 +1043,6 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
     setPwSaving(false);
   }
 
-  async function handleUnclaim() {
-    setUnclaiming(true);
-    setUnclaimMsg(null);
-    const result = await unclaimPractice(accessToken, practiceId, practiceSlug);
-    if (result.error) {
-      setUnclaimMsg(result.error);
-      setUnclaiming(false);
-    } else {
-      const { createClient } = await import('@/lib/supabase');
-      await createClient().auth.signOut();
-      window.location.href = '/';
-    }
-  }
-
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '24px 28px', marginBottom: 16 }}>
       <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: D.text, margin: '0 0 16px', letterSpacing: '-0.01em' }}>{title}</h3>
@@ -1074,8 +1057,7 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
         <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: 0 }}>Manage your account and practice settings.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }}>
-      <div>
+      <div style={{ maxWidth: 600 }}>
       {/* Billing */}
       <BillingSection isPaid={isPaid} practiceSlug={practiceSlug} />
       {/* Google Reviews */}
@@ -1145,56 +1127,6 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
           </form>
         )}
       </Section>
-
-      {/* Sign out */}
-      <Section title="Sign out">
-        <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.6, margin: '0 0 14px' }}>
-          Sign out of your account on this device.
-        </p>
-        <a
-          href="/auth/logout"
-          style={{ display: 'inline-block', padding: '9px 20px', borderRadius: 8, border: `1.5px solid ${D.border}`, background: D.card2, color: D.mid, fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-body)', textDecoration: 'none' }}
-        >
-          Sign out
-        </a>
-      </Section>
-
-      </div>
-      <div>
-      {/* Danger zone */}
-      <div style={{ background: 'rgba(220,38,38,0.07)', border: '1.5px solid rgba(220,38,38,0.25)', borderRadius: 12, padding: '24px 28px' }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: '#f87171', margin: '0 0 8px', letterSpacing: '-0.01em' }}>Danger zone</h3>
-        <p style={{ fontSize: 13, color: 'rgba(248,113,113,0.7)', fontFamily: 'var(--font-body)', lineHeight: 1.6, margin: '0 0 14px' }}>
-          This will unclaim <strong>{practiceName}</strong>, delete your account, and sign you out. The listing will revert to unverified. This cannot be undone.
-        </p>
-        {!unclaimConfirm ? (
-          <button
-            onClick={() => setUnclaimConfirm(true)}
-            style={{ padding: '9px 20px', borderRadius: 8, border: '1.5px solid rgba(220,38,38,0.4)', background: 'rgba(220,38,38,0.08)', color: '#f87171', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', cursor: 'pointer' }}
-          >
-            Unclaim practice
-          </button>
-        ) : (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 13, color: 'rgba(248,113,113,0.8)', fontFamily: 'var(--font-body)' }}>Are you sure?</span>
-            <button
-              onClick={handleUnclaim}
-              disabled={unclaiming}
-              style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#dc2626', color: 'white', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', cursor: unclaiming ? 'not-allowed' : 'pointer' }}
-            >
-              {unclaiming ? 'Unclaiming…' : 'Yes, unclaim'}
-            </button>
-            <button
-              onClick={() => setUnclaimConfirm(false)}
-              style={{ padding: '9px 16px', borderRadius: 8, border: `1.5px solid ${D.border}`, background: D.card2, color: D.mid, fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-body)', cursor: 'pointer' }}
-            >
-              Cancel
-            </button>
-            {unclaimMsg && <p style={{ fontSize: 12, color: '#dc2626', fontFamily: 'var(--font-body)', margin: 0 }}>{unclaimMsg}</p>}
-          </div>
-        )}
-      </div>
-      </div>
       </div>
     </div>
   );
