@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase, createAdminSupabase } from '@/lib/supabase';
-import { refreshGoogleToken } from '@/lib/google';
 
 export const runtime = 'nodejs';
 
@@ -9,8 +8,10 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 
-  const { practiceId } = await req.json() as { practiceId: string };
-  if (!practiceId) return NextResponse.json({ error: 'Missing practiceId' }, { status: 400 });
+  const { practiceId, searchQuery } = await req.json() as { practiceId: string; searchQuery: string };
+  if (!practiceId || !searchQuery?.trim()) {
+    return NextResponse.json({ error: 'Missing practiceId or searchQuery' }, { status: 400 });
+  }
 
   const admin = createAdminSupabase();
 
@@ -24,73 +25,75 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 403 });
   }
 
-  const { data: conn } = await admin
-    .from('google_connections')
-    .select('access_token, refresh_token, token_expires_at, google_location_id')
-    .eq('practice_id', practiceId)
-    .single();
+  const login    = process.env.DATAFORSEO_LOGIN ?? '';
+  const password = process.env.DATAFORSEO_PASSWORD ?? '';
+  const credentials = Buffer.from(`${login}:${password}`).toString('base64');
 
-  if (!conn) return NextResponse.json({ error: 'No Google connection found' }, { status: 404 });
-  if (!conn.google_location_id) return NextResponse.json({ error: 'No location selected' }, { status: 400 });
+  const dfsRes = await fetch(
+    'https://api.dataforseo.com/v3/business_data/google/reviews/live/advanced',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([{
+        keyword:       searchQuery.trim(),
+        location_code: 2826, // United Kingdom
+        language_code: 'en',
+        depth:         100,
+        sort_by:       'newest',
+      }]),
+    },
+  );
 
-  const accessToken = await refreshGoogleToken(admin, practiceId, conn);
+  if (!dfsRes.ok) {
+    const body = await dfsRes.text();
+    return NextResponse.json({ error: 'DataForSEO request failed', detail: body }, { status: 502 });
+  }
 
-  // Fetch reviews from Google — paginate up to 200
-  let nextPageToken: string | undefined;
-  let imported = 0;
-
-  do {
-    const url = new URL(`https://mybusiness.googleapis.com/v4/${conn.google_location_id}/reviews`);
-    url.searchParams.set('pageSize', '50');
-    if (nextPageToken) url.searchParams.set('pageToken', nextPageToken);
-
-    const res = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    if (!res.ok) {
-      const body = await res.text();
-      return NextResponse.json({ error: 'Failed to fetch reviews', detail: body }, { status: 502 });
-    }
-
-    const data = await res.json() as {
-      reviews?: {
-        reviewId: string;
-        reviewer?: { displayName?: string };
-        starRating?: string;
-        comment?: string;
-        createTime?: string;
+  const dfsData = await dfsRes.json() as {
+    tasks?: {
+      status_code: number;
+      status_message: string;
+      result?: {
+        place_id?: string;
+        items?: {
+          review_id: string;
+          author_name?: string;
+          rating?: { value?: number };
+          review_text?: string;
+          timestamp?: string;
+        }[];
       }[];
-      nextPageToken?: string;
-    };
+    }[];
+  };
 
-    const reviews = data.reviews ?? [];
+  const task = dfsData.tasks?.[0];
+  if (!task || task.status_code !== 20000) {
+    return NextResponse.json({ error: task?.status_message ?? 'DataForSEO task failed' }, { status: 502 });
+  }
 
-    const starMap: Record<string, number> = {
-      ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5,
-    };
+  const result = task.result?.[0];
+  const items  = result?.items ?? [];
+  const placeId = result?.place_id ?? null;
 
-    const rows = reviews.map(r => ({
-      practice_id:   practiceId,
-      source:        'google',
-      external_id:   r.reviewId,
-      reviewer_name: r.reviewer?.displayName ?? null,
-      rating:        r.starRating ? (starMap[r.starRating] ?? null) : null,
-      body:          r.comment ?? null,
-      published_at:  r.createTime ?? null,
-    }));
+  const rows = items.map(r => ({
+    practice_id:   practiceId,
+    source:        'google',
+    external_id:   r.review_id,
+    reviewer_name: r.author_name ?? null,
+    rating:        r.rating?.value ?? null,
+    body:          r.review_text ?? null,
+    published_at:  r.timestamp ?? null,
+  }));
 
-    if (rows.length > 0) {
-      await admin
-        .from('external_reviews')
-        .upsert(rows, { onConflict: 'source,external_id' });
-      imported += rows.length;
-    }
+  if (rows.length > 0) {
+    await admin
+      .from('external_reviews')
+      .upsert(rows, { onConflict: 'source,external_id' });
+  }
 
-    nextPageToken = data.nextPageToken;
-  } while (nextPageToken && imported < 200);
-
-  // Count total google reviews for this practice
   const { count } = await admin
     .from('external_reviews')
     .select('id', { count: 'exact', head: true })
@@ -99,8 +102,13 @@ export async function POST(req: NextRequest) {
 
   await admin
     .from('google_connections')
-    .update({ last_synced_at: new Date().toISOString(), review_count: count ?? imported })
-    .eq('practice_id', practiceId);
+    .upsert({
+      practice_id:     practiceId,
+      search_query:    searchQuery.trim(),
+      google_location_id: placeId,
+      last_synced_at:  new Date().toISOString(),
+      review_count:    count ?? rows.length,
+    }, { onConflict: 'practice_id' });
 
-  return NextResponse.json({ imported, total: count ?? imported });
+  return NextResponse.json({ imported: rows.length, total: count ?? rows.length });
 }

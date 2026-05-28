@@ -514,7 +514,7 @@ export default function DashboardShell({
           {tab === 'enquiries' && <EnquiriesTab practiceId={practiceId} enquiries={enquiries} />}
           {tab === 'team' && <TeamTab practiceId={practiceId} practiceSlug={practiceSlug} initialDentists={teamDentists} />}
           {tab === 'profile' && <ProfileTab practiceName={practiceName} practiceCity={practiceCity} practiceSlug={practiceSlug} practiceId={practiceId} allServices={allServices} practiceServiceIds={practiceServiceIds} initialLogoUrl={logoUrl} />}
-          {tab === 'settings' && <SettingsTab userEmail={userEmail} isOAuthUser={isOAuthUser} practiceId={practiceId} practiceSlug={practiceSlug} practiceName={practiceName} isPaid={isPaid} showGooglePicker={googleParam === 'pick_location'} />}
+          {tab === 'settings' && <SettingsTab userEmail={userEmail} isOAuthUser={isOAuthUser} practiceId={practiceId} practiceSlug={practiceSlug} practiceName={practiceName} practiceCity={practiceCity} isPaid={isPaid} />}
         </div>
       </div>
     </div>
@@ -1320,57 +1320,27 @@ function ProfileTab({ practiceName, practiceCity, practiceSlug, practiceId, allS
 }
 
 // ── Google Business Profile connection ───────────────────────────────────────
-function GoogleConnectionSection({ practiceId, showPickerOnMount }: { practiceId: string; showPickerOnMount: boolean }) {
-  type Conn = { google_location_id: string | null; google_location_name: string | null; last_synced_at: string | null; review_count: number };
-  type Loc  = { id: string; name: string; address: string };
-
-  const [conn, setConn]             = useState<Conn | null | 'loading'>('loading');
-  const [locations, setLocations]   = useState<Loc[] | null>(null);
-  const [locLoading, setLocLoading] = useState(false);
-  const [locError, setLocError]     = useState<string | null>(null);
-  const [saving, setSaving]         = useState(false);
-  const [syncing, setSyncing]       = useState(false);
-  const [syncMsg, setSyncMsg]       = useState<string | null>(null);
+function GoogleConnectionSection({ practiceId, defaultSearchQuery }: { practiceId: string; defaultSearchQuery: string }) {
+  const [searchQuery, setSearchQuery]   = useState(defaultSearchQuery);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+  const [reviewCount, setReviewCount]   = useState(0);
+  const [syncing, setSyncing]           = useState(false);
+  const [syncMsg, setSyncMsg]           = useState<string | null>(null);
+  const [loaded, setLoaded]             = useState(false);
 
   useEffect(() => {
     fetch(`/api/google-business/connection?practiceId=${practiceId}`)
       .then(r => r.json())
-      .then(d => setConn(d.connection ?? null))
-      .catch(() => setConn(null));
+      .then(d => {
+        if (d.connection) {
+          setLastSyncedAt(d.connection.last_synced_at ?? null);
+          setReviewCount(d.connection.review_count ?? 0);
+          if (d.connection.search_query) setSearchQuery(d.connection.search_query);
+        }
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
   }, [practiceId]);
-
-  useEffect(() => {
-    if (showPickerOnMount && conn && conn !== 'loading' && conn.google_location_id == null) {
-      loadLocations();
-    }
-  }, [showPickerOnMount, conn]);
-
-  async function loadLocations() {
-    setLocLoading(true);
-    setLocError(null);
-    try {
-      const res = await fetch(`/api/google-business/locations?practiceId=${practiceId}`);
-      const data = await res.json();
-      if (!res.ok) { setLocError(data.error ?? 'Failed to load locations'); return; }
-      setLocations(data.locations ?? []);
-    } finally {
-      setLocLoading(false);
-    }
-  }
-
-  async function selectLocation(loc: Loc) {
-    setSaving(true);
-    const res = await fetch('/api/google-business/save-location', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ practiceId, locationId: loc.id, locationName: loc.name }),
-    });
-    if (res.ok) {
-      setConn(c => c && c !== 'loading' ? { ...c, google_location_id: loc.id, google_location_name: loc.name } : c);
-      setLocations(null);
-    }
-    setSaving(false);
-  }
 
   async function syncReviews() {
     setSyncing(true);
@@ -1378,23 +1348,24 @@ function GoogleConnectionSection({ practiceId, showPickerOnMount }: { practiceId
     const res = await fetch('/api/google-business/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ practiceId }),
+      body: JSON.stringify({ practiceId, searchQuery }),
     });
     const data = await res.json();
     if (res.ok) {
-      setSyncMsg(`Synced — ${data.imported} reviews imported`);
-      setConn(c => c && c !== 'loading' ? { ...c, last_synced_at: new Date().toISOString(), review_count: data.total } : c);
+      setSyncMsg(`Imported ${data.imported} reviews`);
+      setLastSyncedAt(new Date().toISOString());
+      setReviewCount(data.total ?? data.imported);
     } else {
-      setSyncMsg(data.error ?? 'Sync failed');
+      setSyncMsg(data.error ?? 'Import failed');
     }
     setSyncing(false);
   }
 
-  if (conn === 'loading') return null;
+  if (!loaded) return null;
 
   return (
     <div style={{ background: D.card, border: `1px solid ${D.border}`, borderRadius: 12, padding: '24px 28px', marginBottom: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
         <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(66,133,244,0.12)', border: '1px solid rgba(66,133,244,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -1403,108 +1374,52 @@ function GoogleConnectionSection({ practiceId, showPickerOnMount }: { practiceId
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
           </svg>
         </div>
-        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: D.text, margin: 0, letterSpacing: '-0.01em' }}>Google Business Profile</h3>
+        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: D.text, margin: 0, letterSpacing: '-0.01em' }}>Google Reviews</h3>
       </div>
 
-      {!conn ? (
-        /* Not connected */
-        <div>
-          <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.6, margin: '0 0 16px' }}>
-            Connect your Google Business Profile to import reviews for intelligence analysis. Google reviews are used only in your dashboard — they are never shown publicly on SmileProof.
-          </p>
-          <a
-            href={`/api/auth/google-business/connect?practiceId=${practiceId}`}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 20px', borderRadius: 8, background: '#4285F4', color: 'white', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', textDecoration: 'none' }}
-          >
-            <ExternalLink size={13} strokeWidth={1.5} />
-            Connect Google Business
-          </a>
+      <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', lineHeight: 1.6, margin: '0 0 16px' }}>
+        Import your Google reviews for intelligence analysis. They are used only in your dashboard — never shown publicly on SmileProof.
+      </p>
+
+      <div style={{ marginBottom: 14 }}>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: D.soft, fontFamily: 'var(--font-body)', marginBottom: 5 }}>
+          Search query
+        </label>
+        <input
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="e.g. Smith Dental London"
+          style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: `1.5px solid ${D.border2}`, fontSize: 13, fontFamily: 'var(--font-body)', outline: 'none', boxSizing: 'border-box', background: D.card2, color: D.text }}
+        />
+        <p style={{ fontSize: 11, color: D.faint, fontFamily: 'var(--font-body)', margin: '5px 0 0' }}>
+          Edit if your practice name on Google differs from SmileProof.
+        </p>
+      </div>
+
+      {lastSyncedAt && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '7px 10px', background: D.accentPale, border: '1px solid rgba(52,211,153,0.2)', borderRadius: 8 }}>
+          <CheckCircle size={12} strokeWidth={1.5} style={{ color: D.accent, flexShrink: 0 }} />
+          <span style={{ fontSize: 12, color: D.accent, fontFamily: 'var(--font-body)' }}>
+            Last imported: {new Date(lastSyncedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+            {reviewCount > 0 && ` · ${reviewCount} reviews`}
+          </span>
         </div>
-      ) : conn.google_location_id == null ? (
-        /* Connected but no location selected */
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, padding: '8px 12px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 8 }}>
-            <AlertTriangle size={13} strokeWidth={1.5} style={{ color: '#fbbf24', flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: '#fde68a', fontFamily: 'var(--font-body)' }}>Connected — select a location to finish setup</span>
-          </div>
+      )}
 
-          {!locations && (
-            <button
-              onClick={loadLocations}
-              disabled={locLoading}
-              style={{ padding: '9px 20px', borderRadius: 8, border: `1.5px solid ${D.border}`, background: D.card2, color: D.mid, fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', cursor: 'pointer' }}
-            >
-              {locLoading ? 'Loading locations…' : 'Pick a location'}
-            </button>
-          )}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <button
+        onClick={syncReviews}
+        disabled={syncing || !searchQuery.trim()}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 8, border: `1.5px solid ${D.border}`, background: D.card2, color: D.mid, fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', cursor: (syncing || !searchQuery.trim()) ? 'not-allowed' : 'pointer', opacity: !searchQuery.trim() ? 0.5 : 1 }}
+      >
+        <RefreshCw size={13} strokeWidth={1.5} style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
+        {syncing ? 'Importing…' : lastSyncedAt ? 'Re-import reviews' : 'Import Google reviews'}
+      </button>
 
-          {locError && <p style={{ fontSize: 12, color: '#f87171', fontFamily: 'var(--font-body)', marginTop: 8 }}>{locError}</p>}
-
-          {locations && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: D.soft, fontFamily: 'var(--font-body)', margin: '0 0 4px' }}>Select your practice location:</p>
-              {locations.length === 0 ? (
-                <p style={{ fontSize: 13, color: D.faint, fontFamily: 'var(--font-body)' }}>No locations found on this account.</p>
-              ) : (
-                locations.map(loc => (
-                  <button
-                    key={loc.id}
-                    onClick={() => selectLocation(loc)}
-                    disabled={saving}
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '11px 14px', borderRadius: 9, border: `1.5px solid ${D.border}`, background: D.card2, cursor: 'pointer', textAlign: 'left', gap: 2, opacity: saving ? 0.6 : 1 }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(66,133,244,0.5)'; e.currentTarget.style.background = 'rgba(66,133,244,0.06)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = D.border; e.currentTarget.style.background = D.card2; }}
-                  >
-                    <span style={{ fontSize: 13, fontWeight: 600, color: D.text, fontFamily: 'var(--font-body)' }}>{loc.name}</span>
-                    {loc.address && <span style={{ fontSize: 12, color: D.soft, fontFamily: 'var(--font-body)' }}>{loc.address}</span>}
-                  </button>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-      ) : (
-        /* Connected with location */
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, padding: '8px 12px', background: D.accentPale, border: '1px solid rgba(52,211,153,0.2)', borderRadius: 8 }}>
-            <CheckCircle size={13} strokeWidth={1.5} style={{ color: D.accent, flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: D.accent, fontFamily: 'var(--font-body)' }}>{conn.google_location_name}</div>
-              {conn.last_synced_at && (
-                <div style={{ fontSize: 11, color: D.soft, fontFamily: 'var(--font-body)', marginTop: 1 }}>
-                  Last synced: {new Date(conn.last_synced_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  {conn.review_count > 0 && ` · ${conn.review_count} reviews`}
-                </div>
-              )}
-              {!conn.last_synced_at && (
-                <div style={{ fontSize: 11, color: D.soft, fontFamily: 'var(--font-body)', marginTop: 1 }}>Not synced yet</div>
-              )}
-            </div>
-          </div>
-
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button
-              onClick={syncReviews}
-              disabled={syncing}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 8, border: `1.5px solid ${D.border}`, background: D.card2, color: D.mid, fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', cursor: syncing ? 'not-allowed' : 'pointer' }}
-            >
-              <RefreshCw size={13} strokeWidth={1.5} style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
-              {syncing ? 'Syncing…' : 'Sync reviews'}
-            </button>
-            <button
-              onClick={() => { setConn(c => c && c !== 'loading' ? { ...c, google_location_id: null, google_location_name: null } : c); setLocations(null); loadLocations(); }}
-              style={{ fontSize: 12, color: D.faint, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', padding: '4px 8px' }}
-            >
-              Change location
-            </button>
-          </div>
-          {syncMsg && (
-            <p style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: syncMsg.startsWith('Synced') ? D.accent : '#f87171', marginTop: 10 }}>
-              {syncMsg}
-            </p>
-          )}
-        </div>
+      {syncMsg && (
+        <p style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: syncMsg.startsWith('Imported') ? D.accent : '#f87171', marginTop: 10 }}>
+          {syncMsg}
+        </p>
       )}
     </div>
   );
@@ -1563,10 +1478,9 @@ function BillingSection({ isPaid, practiceSlug }: { isPaid: boolean; practiceSlu
 }
 
 // ── Settings tab ──────────────────────────────────────────────────────────────
-function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practiceName, isPaid, showGooglePicker }: {
+function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practiceName, practiceCity, isPaid }: {
   userEmail: string; isOAuthUser: boolean;
-  practiceId: string; practiceSlug: string; practiceName: string; isPaid: boolean;
-  showGooglePicker: boolean;
+  practiceId: string; practiceSlug: string; practiceName: string; practiceCity: string; isPaid: boolean;
 }) {
   const [pwCurrent, setPwCurrent] = useState('');
   const [pwNew, setPwNew] = useState('');
@@ -1641,8 +1555,8 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
       <div>
       {/* Billing */}
       <BillingSection isPaid={isPaid} practiceSlug={practiceSlug} />
-      {/* Google Business Profile */}
-      <GoogleConnectionSection practiceId={practiceId} showPickerOnMount={showGooglePicker} />
+      {/* Google Reviews */}
+      <GoogleConnectionSection practiceId={practiceId} defaultSearchQuery={`${practiceName} ${practiceCity}`} />
       {/* Account */}
       <Section title="Account">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, background: D.card2, marginBottom: 16, border: `1px solid ${D.border}` }}>
