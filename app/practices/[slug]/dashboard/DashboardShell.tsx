@@ -1325,6 +1325,7 @@ function GoogleConnectionSection({ practiceId, defaultSearchQuery }: { practiceI
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [reviewCount, setReviewCount]   = useState(0);
   const [syncing, setSyncing]           = useState(false);
+  const [syncPhase, setSyncPhase]       = useState<'idle' | 'submitting' | 'waiting'>('idle');
   const [syncMsg, setSyncMsg]           = useState<string | null>(null);
   const [loaded, setLoaded]             = useState(false);
 
@@ -1345,20 +1346,50 @@ function GoogleConnectionSection({ practiceId, defaultSearchQuery }: { practiceI
   async function syncReviews() {
     setSyncing(true);
     setSyncMsg(null);
-    const res = await fetch('/api/google-business/sync', {
+    setSyncPhase('submitting');
+
+    const postRes = await fetch('/api/google-business/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ practiceId, searchQuery }),
     });
-    const data = await res.json();
-    if (res.ok) {
-      setSyncMsg(`Imported ${data.imported} reviews`);
-      setLastSyncedAt(new Date().toISOString());
-      setReviewCount(data.total ?? data.imported);
-    } else {
-      setSyncMsg(data.error ?? 'Import failed');
+    const postData = await postRes.json();
+    if (!postRes.ok) {
+      setSyncMsg(postData.error ?? 'Failed to submit import');
+      setSyncing(false); setSyncPhase('idle');
+      return;
     }
-    setSyncing(false);
+
+    const requestId = postData.requestId as string;
+    setSyncPhase('waiting');
+
+    let attempts = 0;
+    const poll = async (): Promise<void> => {
+      attempts++;
+      if (attempts > 24) {
+        setSyncMsg('Import is taking longer than expected — try again in a few minutes.');
+        setSyncing(false); setSyncPhase('idle');
+        return;
+      }
+      const statusRes = await fetch(
+        `/api/google-business/sync-status?requestId=${requestId}&practiceId=${practiceId}`,
+      );
+      const statusData = await statusRes.json();
+      if (!statusRes.ok) {
+        setSyncMsg(statusData.error ?? 'Status check failed');
+        setSyncing(false); setSyncPhase('idle');
+        return;
+      }
+      if (statusData.status === 'complete') {
+        setSyncMsg(`Imported ${statusData.imported} reviews`);
+        setLastSyncedAt(new Date().toISOString());
+        setReviewCount(statusData.total ?? statusData.imported);
+        setSyncing(false); setSyncPhase('idle');
+        return;
+      }
+      setTimeout(poll, 5000);
+    };
+    setTimeout(poll, 8000);
   }
 
   if (!loaded) return null;
@@ -1413,7 +1444,7 @@ function GoogleConnectionSection({ practiceId, defaultSearchQuery }: { practiceI
         style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 8, border: `1.5px solid ${D.border}`, background: D.card2, color: D.mid, fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', cursor: (syncing || !searchQuery.trim()) ? 'not-allowed' : 'pointer', opacity: !searchQuery.trim() ? 0.5 : 1 }}
       >
         <RefreshCw size={13} strokeWidth={1.5} style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
-        {syncing ? 'Importing…' : lastSyncedAt ? 'Re-import reviews' : 'Import Google reviews'}
+        {syncPhase === 'submitting' ? 'Submitting…' : syncPhase === 'waiting' ? 'Fetching reviews…' : lastSyncedAt ? 'Re-import reviews' : 'Import Google reviews'}
       </button>
 
       {syncMsg && (

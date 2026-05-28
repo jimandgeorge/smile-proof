@@ -261,7 +261,7 @@ export async function generateOpportunityInsights(
     }
   }
 
-  const { data: reviews } = await admin
+  const { data: nativeReviews } = await admin
     .from('reviews')
     .select('rating_overall, title, body')
     .eq('practice_id', practiceId)
@@ -269,19 +269,38 @@ export async function generateOpportunityInsights(
     .order('created_at', { ascending: false })
     .limit(50);
 
-  if (!reviews || reviews.length < 2) {
+  const { data: googleReviews } = await admin
+    .from('external_reviews')
+    .select('rating, body')
+    .eq('practice_id', practiceId)
+    .eq('source', 'google')
+    .not('body', 'is', null)
+    .order('published_at', { ascending: false })
+    .limit(100);
+
+  type NativeReview = { rating_overall: number | null; title: string | null; body: string };
+  type GoogleReview = { rating: number | null; body: string | null };
+  type UnifiedReview = { rating: number | null; title: string | null; body: string; source: 'native' | 'google' };
+
+  const unified: UnifiedReview[] = [
+    ...(nativeReviews ?? []).map((r: NativeReview) => ({ rating: r.rating_overall, title: r.title, body: r.body, source: 'native' as const })),
+    ...(googleReviews ?? []).map((r: GoogleReview) => ({ rating: r.rating, title: null, body: r.body!, source: 'google' as const })),
+  ];
+
+  if (unified.length < 2) {
     return { error: 'At least 2 published reviews are needed to generate insights.' };
   }
 
-  const reviewText = reviews
+  const reviewText = unified
     .map((r, i) => {
       const title = r.title ? `Title: "${r.title}" · ` : '';
       const body = r.body.length > 400 ? r.body.slice(0, 400) + '…' : r.body;
-      return `[${i + 1}] Rating: ${r.rating_overall}/5 · ${title}"${body}"`;
+      const src = r.source === 'google' ? ' [Google]' : '';
+      return `[${i + 1}] Rating: ${r.rating ?? '?'}/5${src} · ${title}"${body}"`;
     })
     .join('\n\n');
 
-  const prompt = `You are a practice intelligence analyst reviewing ${reviews.length} patient reviews for "${practice.name}", a UK dental practice.
+  const prompt = `You are a practice intelligence analyst reviewing ${unified.length} patient reviews for "${practice.name}", a UK dental practice.
 
 Produce a structured JSON analysis. Return ONLY valid JSON — no markdown, no explanation.
 
@@ -332,7 +351,7 @@ ${reviewText}`;
     .upsert({
       practice_id: practiceId,
       generated_at: now,
-      review_count: reviews.length,
+      review_count: unified.length,
       strengths: parsed.strengths ?? [],
       weaknesses: parsed.weaknesses ?? [],
       opportunities: parsed.opportunities ?? [],
@@ -393,7 +412,7 @@ export async function generatePracticeIntelligence(
     }
   }
 
-  const { data: reviews } = await admin
+  const { data: nativeReviews2 } = await admin
     .from('reviews')
     .select('rating_overall, title, body')
     .eq('practice_id', practiceId)
@@ -401,25 +420,44 @@ export async function generatePracticeIntelligence(
     .order('created_at', { ascending: false })
     .limit(50);
 
-  if (!reviews || reviews.length < 2) {
+  const { data: googleReviews2 } = await admin
+    .from('external_reviews')
+    .select('rating, body')
+    .eq('practice_id', practiceId)
+    .eq('source', 'google')
+    .not('body', 'is', null)
+    .order('published_at', { ascending: false })
+    .limit(100);
+
+  type NR2 = { rating_overall: number | null; title: string | null; body: string };
+  type GR2 = { rating: number | null; body: string | null };
+  type UR2 = { rating: number | null; title: string | null; body: string; source: 'native' | 'google' };
+
+  const unified2: UR2[] = [
+    ...(nativeReviews2 ?? []).map((r: NR2) => ({ rating: r.rating_overall, title: r.title, body: r.body, source: 'native' as const })),
+    ...(googleReviews2 ?? []).map((r: GR2) => ({ rating: r.rating, title: null, body: r.body!, source: 'google' as const })),
+  ];
+
+  if (unified2.length < 2) {
     return { error: 'At least 2 published reviews are needed to generate a report.' };
   }
 
-  const reviewText = reviews
+  const reviewText = unified2
     .map((r, i) => {
       const title = r.title ? `Title: "${r.title}" · ` : '';
       const body = r.body.length > 400 ? r.body.slice(0, 400) + '…' : r.body;
-      return `[${i + 1}] Rating ${r.rating_overall}/5 · ${title}"${body}"`;
+      const src = r.source === 'google' ? ' [Google]' : '';
+      return `[${i + 1}] Rating ${r.rating ?? '?'}/5${src} · ${title}"${body}"`;
     })
     .join('\n\n');
 
-  const confidenceNote = reviews.length < 5
-    ? `IMPORTANT: Only ${reviews.length} reviews — use hedged language ("appears to", "in the available reviews"). Do not state patterns as definitive facts.`
-    : reviews.length < 15
-    ? `Note: ${reviews.length} reviews — patterns are forming but may not be fully representative yet.`
+  const confidenceNote = unified2.length < 5
+    ? `IMPORTANT: Only ${unified2.length} reviews — use hedged language ("appears to", "in the available reviews"). Do not state patterns as definitive facts.`
+    : unified2.length < 15
+    ? `Note: ${unified2.length} reviews — patterns are forming but may not be fully representative yet.`
     : '';
 
-  const prompt = `Analyse ${reviews.length} patient reviews for "${practice.name}", a UK dental practice. Return a single JSON object.
+  const prompt = `Analyse ${unified2.length} patient reviews for "${practice.name}", a UK dental practice. Return a single JSON object.
 
 Return ONLY valid JSON — no markdown, no preamble.
 ${confidenceNote}
@@ -477,7 +515,7 @@ ${reviewText}`;
     .upsert({
       practice_id:        practiceId,
       generated_at:       now,
-      review_count:       reviews.length,
+      review_count:       unified2.length,
       management_summary: parsed.management_summary ?? null,
       themes:             parsed.themes ?? [],
       strengths:          parsed.strengths ?? [],
