@@ -1117,7 +1117,7 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
               <button
                 type="submit"
                 disabled={pwSaving}
-                style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: pwSaving ? D.faint : D.accent, color: '#0d0d12', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', cursor: pwSaving ? 'not-allowed' : 'pointer' }}
+                style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: pwSaving ? D.faint : D.accent, color: '#0d0d12', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', cursor: pwSaving ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
               >
                 {pwSaving ? 'Saving…' : 'Update password'}
               </button>
@@ -1125,7 +1125,7 @@ function SettingsTab({ userEmail, isOAuthUser, practiceId, practiceSlug, practic
                 type="button"
                 onClick={handleSendReset}
                 disabled={pwSaving}
-                style={{ padding: '9px 16px', borderRadius: 8, border: `1.5px solid ${D.border}`, background: D.card2, color: D.mid, fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-body)', cursor: 'pointer' }}
+                style={{ padding: '9px 16px', borderRadius: 8, border: `1.5px solid ${D.border}`, background: D.card2, color: D.mid, fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-body)', cursor: 'pointer', whiteSpace: 'nowrap' }}
               >
                 Email reset link
               </button>
