@@ -1366,7 +1366,7 @@ function GoogleConnectionSection({ practiceId, defaultSearchQuery }: { practiceI
     let attempts = 0;
     const poll = async (): Promise<void> => {
       attempts++;
-      if (attempts > 24) {
+      if (attempts > 60) {
         setSyncMsg('Import is taking longer than expected — try again in a few minutes.');
         setSyncing(false); setSyncPhase('idle');
         return;
