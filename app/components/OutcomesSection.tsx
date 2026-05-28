@@ -1,7 +1,7 @@
 const outcomes = [
   {
     title: 'Improve patient trust',
-    body: 'Verified, moderated patient reviews build authentic credibility — the kind no marketing spend can manufacture.',
+    body: 'AI analysis of patient feedback pinpoints exactly where your practice excels — and where to improve — giving your team the insight to deliver consistently better care.',
     icon: <svg key={0} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>,
   },
   {
@@ -15,8 +15,8 @@ const outcomes = [
     icon: <svg key={2} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
   },
   {
-    title: 'Improve reputation visibility',
-    body: 'A consistent stream of verified reviews strengthens your online presence and helps you stand out in a competitive local market.',
+    title: 'Strengthen your Google presence',
+    body: 'Deep AI analysis of your Google Reviews helps you understand what patients are saying, respond strategically, and stand out in a competitive local market.',
     icon: <svg key={3} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>,
   },
   {

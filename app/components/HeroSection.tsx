@@ -59,24 +59,24 @@ export default function HeroSection() {
             </p>
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-              <Link href="/contact" style={{
+              <Link href="/auth/signup" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 padding: '12px 22px', borderRadius: 9,
                 background: '#34d399', color: '#07070e',
                 fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-body)',
                 textDecoration: 'none', letterSpacing: '-0.01em',
               }}>
-                Book a demo
+                Get started free
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
               </Link>
-              <Link href="/for-dentists" style={{
+              <Link href="/pricing" style={{
                 display: 'inline-flex', alignItems: 'center',
                 padding: '12px 22px', borderRadius: 9,
                 background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
                 color: 'rgba(237,238,245,0.72)', fontSize: 14, fontWeight: 600,
                 fontFamily: 'var(--font-body)', textDecoration: 'none',
               }}>
-                Explore SmileProof
+                View pricing
               </Link>
             </div>
 
@@ -152,9 +152,8 @@ function DashboardPreview() {
             </div>
             {[
               { label: 'Practice Health', active: true },
-              { label: 'Reviews', active: false },
               { label: 'Intelligence', active: false },
-              { label: 'Get Reviews', active: false },
+              { label: 'Profile', active: false },
               { label: 'Settings', active: false },
             ].map(({ label, active }) => (
               <div key={label} style={{
@@ -184,7 +183,7 @@ function DashboardPreview() {
                   <span style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 800, color: 'white', letterSpacing: '-0.04em', lineHeight: 1 }}>4.8</span>
                   <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-body)' }}>/5</span>
                 </div>
-                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-body)', marginTop: 1 }}>32 SmileProof reviews</div>
+                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-body)', marginTop: 1 }}>86 Google reviews</div>
               </div>
               <div style={{ display: 'flex', gap: 14, paddingLeft: 14, borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
                 {[{ l: 'This month', v: '4', c: 'white' }, { l: 'Response', v: '91%', c: '#4ade80' }].map(({ l, v, c }) => (
@@ -211,8 +210,7 @@ function DashboardPreview() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: '#edeef5' }}>4.6</span>
                 <span style={{ fontSize: 8.5, color: '#fbbf24', letterSpacing: 0 }}>★★★★★</span>
-                <span style={{ fontSize: 9, color: 'rgba(237,238,245,0.3)', fontFamily: 'var(--font-body)' }}>86 reviews</span>
-                <span style={{ fontSize: 8.5, color: 'rgba(237,238,245,0.2)', fontFamily: 'var(--font-body)', fontStyle: 'italic' }}>intel only</span>
+                <span style={{ fontSize: 9, color: 'rgba(237,238,245,0.3)', fontFamily: 'var(--font-body)' }}>86 reviews · AI analysed</span>
               </div>
             </div>
 
