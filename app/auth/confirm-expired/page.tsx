@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Mail, AlertCircle, CheckCircle } from 'lucide-react';
-import { createClient } from '@/lib/supabase';
 
 export default function ConfirmExpiredPage() {
   const [email, setEmail] = useState('');
@@ -16,10 +15,14 @@ export default function ConfirmExpiredPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.resend({ type: 'signup', email });
-    if (error) {
-      setError(error.message);
+    const res = await fetch('/api/auth/resend-confirmation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error ?? 'Something went wrong. Please try again.');
     } else {
       setSent(true);
     }
