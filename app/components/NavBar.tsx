@@ -1,25 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import BrandLogo from './BrandLogo';
-import { createClient } from '@/lib/supabase';
 
 export default function NavBar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setLoggedIn(!!session?.user);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
 
   if (
     pathname.startsWith('/auth/') ||
@@ -81,62 +70,39 @@ export default function NavBar() {
             {/* Separator */}
             <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.12)', margin: '0 8px' }} />
 
-            {loggedIn ? (
-              <>
-                <Link
-                  href="/dashboard"
-                  style={linkStyle}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(237,238,245,0.9)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(237,238,245,0.6)')}
-                >
-                  My dashboard
-                </Link>
-                <a
-                  href="/auth/logout"
-                  style={linkStyle}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(237,238,245,0.9)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(237,238,245,0.6)')}
-                >
-                  Log out
-                </a>
-              </>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Link
-                  href="/auth/login"
-                  style={linkStyle}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(237,238,245,0.9)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(237,238,245,0.6)')}
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/auth/signup"
-                  style={{
-                    fontFamily: 'var(--font-body)',
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: '#edeef5',
-                    textDecoration: 'none',
-                    padding: '6px 14px',
-                    borderRadius: 6,
-                    border: '1px solid rgba(255,255,255,0.22)',
-                    background: 'rgba(255,255,255,0.04)',
-                    transition: 'border-color 0.15s, background 0.15s',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.22)';
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                  }}
-                >
-                  Sign up
-                </Link>
-              </div>
-            )}
+            <Link
+              href="/auth/login"
+              style={linkStyle}
+              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(237,238,245,0.9)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(237,238,245,0.6)')}
+            >
+              Log in
+            </Link>
+            <Link
+              href="/contact"
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 14,
+                fontWeight: 500,
+                color: '#edeef5',
+                textDecoration: 'none',
+                padding: '6px 14px',
+                borderRadius: 6,
+                border: '1px solid rgba(255,255,255,0.22)',
+                background: 'rgba(255,255,255,0.04)',
+                transition: 'border-color 0.15s, background 0.15s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.22)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+              }}
+            >
+              Book a Demo
+            </Link>
           </nav>
 
           {/* Mobile hamburger */}
@@ -165,7 +131,7 @@ export default function NavBar() {
           {[
             { href: '/pricing', label: 'Pricing' },
             { href: '/contact', label: 'Contact' },
-            ...(loggedIn ? [{ href: '/dashboard', label: 'My dashboard' }] : []),
+            { href: '/auth/login', label: 'Log in' },
           ].map(({ href, label }) => (
             <Link
               key={href}
@@ -177,32 +143,13 @@ export default function NavBar() {
             </Link>
           ))}
           <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '8px 0' }} />
-          {loggedIn ? (
-            <a
-              href="/auth/logout"
-              style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'rgba(237,238,245,0.65)', textDecoration: 'none', padding: '11px 12px', borderRadius: 8 }}
-              onClick={() => setMenuOpen(false)}
-            >
-              Log out
-            </a>
-          ) : (
-            <>
-              <Link
-                href="/auth/login"
-                style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'rgba(237,238,245,0.65)', textDecoration: 'none', padding: '11px 12px', borderRadius: 8 }}
-                onClick={() => setMenuOpen(false)}
-              >
-                Log in
-              </Link>
-              <Link
-                href="/auth/signup"
-                style={{ fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 600, color: '#edeef5', textDecoration: 'none', padding: '11px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 4 }}
-                onClick={() => setMenuOpen(false)}
-              >
-                Sign up
-              </Link>
-            </>
-          )}
+          <Link
+            href="/contact"
+            style={{ fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 600, color: '#edeef5', textDecoration: 'none', padding: '11px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 4 }}
+            onClick={() => setMenuOpen(false)}
+          >
+            Book a Demo
+          </Link>
         </div>
       )}
     </>
