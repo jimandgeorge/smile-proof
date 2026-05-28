@@ -256,11 +256,11 @@ export default function PricingPage() {
           Ready to get started?
         </h2>
         <p style={{ fontSize: 15, color: C.soft, lineHeight: 1.7, fontFamily: 'var(--font-body)', margin: '0 auto 36px', maxWidth: 400 }}>
-          Claim your practice free and upgrade when you're ready.
+          14-day free trial. No credit card required. £99/mo after.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/auth/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 28px', borderRadius: 10, background: C.accent, color: '#07070e', fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-body)', textDecoration: 'none', letterSpacing: '-0.01em' }}>
-            Get started free
+            Start free trial
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
           </Link>
           <Link href="/contact" style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 28px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border2}`, color: C.soft, fontSize: 14, fontWeight: 600, fontFamily: 'var(--font-body)', textDecoration: 'none' }}>

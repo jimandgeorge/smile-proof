@@ -140,7 +140,7 @@ export default function SignUpPage() {
                 Create your account.
               </h1>
               <p style={{ fontSize: 14, color: 'rgba(237,238,245,0.45)', margin: '0 0 32px', fontFamily: 'var(--font-body)' }}>
-                Claim your practice and start your free intelligence dashboard.
+                Start your 14-day free trial. Full access from day one.
               </p>
 
               <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

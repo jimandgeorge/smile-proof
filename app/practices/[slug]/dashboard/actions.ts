@@ -30,8 +30,7 @@ export type OpportunityInsightData = {
   category_scores: OpportunityCategoryScores;
 };
 
-const OPPORTUNITIES_COOLDOWN_FREE_MS = 6 * 60 * 60 * 1000;  // 6 hours
-const OPPORTUNITIES_COOLDOWN_PAID_MS = 60 * 60 * 1000;       // 1 hour
+const OPPORTUNITIES_COOLDOWN_MS = 60 * 60 * 1000;  // 1 hour
 
 export async function generateOpportunityInsights(
   accessToken: string,
@@ -44,14 +43,11 @@ export async function generateOpportunityInsights(
   const admin = createAdminSupabase();
   const { data: practice } = await admin
     .from('practices')
-    .select('name, claimed_by_user_id, subscription_status')
+    .select('name, claimed_by_user_id')
     .eq('id', practiceId)
     .single();
 
   if (!practice || practice.claimed_by_user_id !== user.id) return { error: 'You do not own this practice.' };
-
-  const isPaid = practice.subscription_status === 'active';
-  const cooldownMs = isPaid ? OPPORTUNITIES_COOLDOWN_PAID_MS : OPPORTUNITIES_COOLDOWN_FREE_MS;
 
   // Check cooldown against last generation
   const { data: existing } = await admin
@@ -62,8 +58,8 @@ export async function generateOpportunityInsights(
 
   if (existing?.generated_at) {
     const elapsed = Date.now() - new Date(existing.generated_at).getTime();
-    if (elapsed < cooldownMs) {
-      const hoursLeft = Math.ceil((cooldownMs - elapsed) / 3600000);
+    if (elapsed < OPPORTUNITIES_COOLDOWN_MS) {
+      const hoursLeft = Math.ceil((OPPORTUNITIES_COOLDOWN_MS - elapsed) / 3600000);
       return { error: `Insights were generated recently. Try again in ${hoursLeft} hour${hoursLeft !== 1 ? 's' : ''}.` };
     }
   }
@@ -184,14 +180,11 @@ export async function generatePracticeIntelligence(
   const admin = createAdminSupabase();
   const { data: practice } = await admin
     .from('practices')
-    .select('name, claimed_by_user_id, subscription_status')
+    .select('name, claimed_by_user_id')
     .eq('id', practiceId)
     .single();
 
   if (!practice || practice.claimed_by_user_id !== user.id) return { error: 'You do not own this practice.' };
-
-  const isPaid = practice.subscription_status === 'active';
-  const cooldownMs = isPaid ? OPPORTUNITIES_COOLDOWN_PAID_MS : OPPORTUNITIES_COOLDOWN_FREE_MS;
 
   const { data: existing } = await admin
     .from('practice_opportunity_insights')
@@ -201,8 +194,8 @@ export async function generatePracticeIntelligence(
 
   if (existing?.generated_at) {
     const elapsed = Date.now() - new Date(existing.generated_at).getTime();
-    if (elapsed < cooldownMs) {
-      const hoursLeft = Math.ceil((cooldownMs - elapsed) / 3600000);
+    if (elapsed < OPPORTUNITIES_COOLDOWN_MS) {
+      const hoursLeft = Math.ceil((OPPORTUNITIES_COOLDOWN_MS - elapsed) / 3600000);
       return { error: `Report was generated recently. Try again in ${hoursLeft} hour${hoursLeft !== 1 ? 's' : ''}.` };
     }
   }

@@ -45,7 +45,7 @@ const FAQS = [
   },
   {
     q: 'How does pricing work?',
-    a: 'Claiming your practice is free. Pro unlocks AI intelligence reports, local benchmarking, and profile analytics.',
+    a: 'Start with a 14-day free trial — full access to all features. £99/mo after the trial ends.',
     href: '/pricing',
   },
   {

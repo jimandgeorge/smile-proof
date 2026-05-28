@@ -70,7 +70,7 @@ export default function HeroSection() {
               fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-body)',
               textDecoration: 'none', letterSpacing: '-0.01em',
             }}>
-              Get started free
+              Start free trial
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </Link>
             <Link href="/pricing" style={{
