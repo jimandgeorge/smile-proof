@@ -31,10 +31,10 @@ export default function ProblemSection() {
         <div style={{ maxWidth: 560, marginBottom: 52 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(237,238,245,0.3)', fontFamily: 'var(--font-body)', marginBottom: 14 }}>The problem</div>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(26px, 3vw, 40px)', fontWeight: 800, color: '#edeef5', lineHeight: 1.12, letterSpacing: '-0.03em', margin: '0 0 14px' }}>
-            Most review platforms stop at star ratings.
+            Patient feedback is operational data.
           </h2>
           <p style={{ fontSize: 15, color: 'rgba(237,238,245,0.48)', lineHeight: 1.68, fontFamily: 'var(--font-body)', margin: 0 }}>
-            Practices already collect patient reviews — but most struggle to identify recurring themes, operational weaknesses, and the factors influencing patient trust and treatment acceptance. SmileProof helps practices move beyond ratings by turning patient feedback into actionable intelligence.
+            Most practices already receive valuable patient feedback — but turning that information into meaningful operational insight is difficult. SmileProof analyses patient sentiment to help practices identify recurring concerns, monitor reputation trends, improve patient trust, and make more informed operational decisions.
           </p>
         </div>
 
