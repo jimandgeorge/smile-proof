@@ -5,9 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import PracticeIntelligenceTab from './PracticeIntelligenceTab';
 import type { OpportunityInsightData } from './actions';
-import { updatePracticeServices } from './actions';
 import { AccessTokenContext } from './token-context';
-import { Settings, LogOut, Home, Star, User, ArrowRight, Upload, CheckCircle, Lock, RefreshCw, Mail } from 'lucide-react';
+import { Settings, LogOut, Home, Star, User, Upload, CheckCircle, Lock, RefreshCw, Mail } from 'lucide-react';
 
 const D = {
   bg: '#0d0d12', sidebar: '#09090d', card: '#13131a', card2: '#17171f',
@@ -38,7 +37,6 @@ function SectionDivider({ label }: { label?: string }) {
   );
 }
 
-type ServiceDef = { id: string; slug: string; name: string; category: string; sort_order: number };
 type DimensionRank = { label: string; rank: number; total: number; score: number | null };
 
 type Props = {
@@ -50,8 +48,6 @@ type Props = {
   profileViews30d: number; profileViewsPrev30d: number;
   cityRank: number; cityTotal: number;
   dimensionRanks: DimensionRank[];
-  allServices: ServiceDef[];
-  practiceServiceIds: string[];
   opportunityInsights: OpportunityInsightData | null;
   googleReviewCount: number;
   googleAvgRating: number | null;
@@ -173,7 +169,6 @@ export default function DashboardShell({
   isPaid,
   profileViews30d, profileViewsPrev30d,
   cityRank, cityTotal, dimensionRanks,
-  allServices, practiceServiceIds,
   opportunityInsights,
   googleReviewCount, googleAvgRating,
   initialAccessToken,
@@ -318,7 +313,7 @@ export default function DashboardShell({
               initialInsights={opportunityInsights}
             />
           )}
-          {tab === 'profile' && <ProfileTab practiceName={practiceName} practiceCity={practiceCity} practiceSlug={practiceSlug} practiceId={practiceId} allServices={allServices} practiceServiceIds={practiceServiceIds} initialLogoUrl={logoUrl} />}
+          {tab === 'profile' && <ProfileTab practiceName={practiceName} practiceSlug={practiceSlug} practiceId={practiceId} initialLogoUrl={logoUrl} />}
           {tab === 'settings' && <SettingsTab userEmail={userEmail} isOAuthUser={isOAuthUser} practiceId={practiceId} practiceSlug={practiceSlug} practiceName={practiceName} practiceCity={practiceCity} isPaid={isPaid} />}
         </div>
       </div>
@@ -689,46 +684,16 @@ function OverviewTab({
   );
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  availability:  'Availability',
-  funding:       'NHS / Funding',
-  orthodontics:  'Orthodontics',
-  cosmetic:      'Cosmetic',
-  restorative:   'Restorative',
-  accessibility: 'Accessibility',
-};
-
 // ── Profile tab ───────────────────────────────────────────────────────────────
-function ProfileTab({ practiceName, practiceCity, practiceSlug, practiceId, allServices, practiceServiceIds, initialLogoUrl }: {
-  practiceName: string; practiceCity: string; practiceSlug: string; practiceId: string;
-  allServices: ServiceDef[]; practiceServiceIds: string[];
+function ProfileTab({ practiceName, practiceSlug, practiceId, initialLogoUrl }: {
+  practiceName: string; practiceSlug: string; practiceId: string;
   initialLogoUrl: string | null;
 }) {
-  const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set(practiceServiceIds));
-  const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(initialLogoUrl);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoMsg, setLogoMsg] = useState<string | null>(null);
-  const accessToken = useContext(AccessTokenContext);
-
-  async function handleSaveServices() {
-    setSaving(true);
-    setSaveMsg(null);
-    const result = await updatePracticeServices(accessToken, practiceId, practiceSlug, Array.from(selectedServices));
-    setSaveMsg(result.error ?? 'Saved');
-    setSaving(false);
-  }
-
-  function toggleService(id: string) {
-    setSelectedServices(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
 
   function handleLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -763,118 +728,43 @@ function ProfileTab({ practiceName, practiceCity, practiceSlug, practiceId, allS
     }
   }
 
-  const grouped = allServices.reduce<Record<string, ServiceDef[]>>((acc, s) => {
-    (acc[s.category] ??= []).push(s);
-    return acc;
-  }, {});
-
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'start' }}>
-      <div>
-
-      {/* Logo upload */}
-      <div style={{ marginBottom: 32 }}>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: D.text, margin: '0 0 6px', letterSpacing: '-0.02em' }}>
-          Practice logo
-        </h2>
-        <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: '0 0 16px', lineHeight: 1.6 }}>
-          Upload your practice logo — it appears on your dashboard.
+    <div style={{ maxWidth: 480 }}>
+      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: D.text, margin: '0 0 6px', letterSpacing: '-0.02em' }}>
+        Practice logo
+      </h2>
+      <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: '0 0 20px', lineHeight: 1.6 }}>
+        Upload your practice logo — it appears on your dashboard.
+      </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ width: 80, height: 80, borderRadius: 16, border: `1.5px solid ${D.border}`, background: D.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+          {(logoPreview ?? logoUrl)
+            ? <img src={logoPreview ?? logoUrl!} alt="Logo preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <span style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: D.accent }}>{practiceName.charAt(0).toUpperCase()}</span>
+          }
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 8, border: `1.5px solid ${D.border}`, background: D.card2, cursor: 'pointer', fontSize: 13, fontWeight: 500, color: D.mid, fontFamily: 'var(--font-body)' }}>
+            <Upload size={14} strokeWidth={1.5} />
+            {logoFile ? 'Change image' : 'Choose image'}
+            <input type="file" accept="image/*" onChange={handleLogoSelect} style={{ display: 'none' }} />
+          </label>
+          {logoFile && (
+            <button
+              onClick={handleLogoUpload}
+              disabled={logoUploading}
+              style={{ padding: '9px 18px', borderRadius: 8, border: 'none', background: logoUploading ? D.faint : D.accent, color: '#0d0d12', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', cursor: logoUploading ? 'not-allowed' : 'pointer' }}
+            >
+              {logoUploading ? 'Uploading…' : 'Save logo'}
+            </button>
+          )}
+        </div>
+      </div>
+      {logoMsg && (
+        <p style={{ marginTop: 10, fontSize: 12, fontFamily: 'var(--font-body)', color: logoMsg === 'Logo saved' ? D.accent : '#f87171' }}>
+          {logoMsg === 'Logo saved' ? '✓ Logo saved' : logoMsg}
         </p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 72, height: 72, borderRadius: 14, border: `1.5px solid ${D.border}`, background: D.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-            {(logoPreview ?? logoUrl)
-              ? <img src={logoPreview ?? logoUrl!} alt="Logo preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <span style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, color: D.accent }}>{practiceName.charAt(0).toUpperCase()}</span>
-            }
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: `1.5px solid ${D.border}`, background: D.card2, cursor: 'pointer', fontSize: 13, fontWeight: 500, color: D.mid, fontFamily: 'var(--font-body)' }}>
-              <Upload size={14} strokeWidth={1.5} />
-              {logoFile ? 'Change image' : 'Choose image'}
-              <input type="file" accept="image/*" onChange={handleLogoSelect} style={{ display: 'none' }} />
-            </label>
-            {logoFile && (
-              <button
-                onClick={handleLogoUpload}
-                disabled={logoUploading}
-                style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: logoUploading ? D.faint : D.accent, color: '#0d0d12', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', cursor: logoUploading ? 'not-allowed' : 'pointer' }}
-              >
-                {logoUploading ? 'Uploading…' : 'Save logo'}
-              </button>
-            )}
-          </div>
-        </div>
-        {logoMsg && (
-          <p style={{ marginTop: 8, fontSize: 12, fontFamily: 'var(--font-body)', color: logoMsg === 'Logo saved' ? D.accent : '#f87171' }}>
-            {logoMsg === 'Logo saved' ? '✓ Logo saved' : logoMsg}
-          </p>
-        )}
-      </div>
-
-      </div>
-
-      <div>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 16 }}>
-          <div>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 700, color: D.text, margin: '0 0 4px', letterSpacing: '-0.02em' }}>Services offered</h3>
-            <p style={{ fontSize: 13, color: D.soft, fontFamily: 'var(--font-body)', margin: 0, lineHeight: 1.5 }}>
-              Tell us what your practice offers — used to surface you in relevant intelligence benchmarks.
-            </p>
-          </div>
-          <button
-            onClick={handleSaveServices}
-            disabled={saving}
-            style={{
-              flexShrink: 0, padding: '9px 20px', borderRadius: 8,
-              background: saving ? D.faint : D.accent,
-              color: '#0d0d12', border: 'none', fontSize: 13, fontWeight: 600,
-              fontFamily: 'var(--font-body)', cursor: saving ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {saving ? 'Saving…' : 'Save services'}
-          </button>
-        </div>
-
-        {saveMsg && (
-          <p style={{ fontSize: 12, color: saveMsg === 'Saved' ? D.accent : '#f87171', fontFamily: 'var(--font-body)', marginBottom: 12 }}>
-            {saveMsg === 'Saved' ? '✓ Services saved' : saveMsg}
-          </p>
-        )}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          {Object.entries(grouped).map(([category, services]) => (
-            <div key={category}>
-              <MicroLabel text={CATEGORY_LABELS[category] ?? category} color={D.soft} />
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {services.map(s => {
-                  const checked = selectedServices.has(s.id);
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() => toggleService(s.id)}
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        padding: '6px 12px', borderRadius: 20, cursor: 'pointer',
-                        border: `1.5px solid ${checked ? 'rgba(52,211,153,0.3)' : D.border}`,
-                        background: checked ? D.accentPale : D.card2,
-                        color: checked ? D.accent : D.soft,
-                        fontSize: 13, fontWeight: checked ? 600 : 400,
-                        fontFamily: 'var(--font-body)',
-                        transition: 'all 0.12s',
-                      }}
-                    >
-                      {checked && (
-                        <CheckCircle size={11} strokeWidth={1.5} style={{ color: D.accent }} />
-                      )}
-                      {s.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

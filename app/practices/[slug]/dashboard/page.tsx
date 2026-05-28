@@ -72,8 +72,6 @@ export default async function DashboardPage({ params }: Params) {
     cityPracticesRes,
     views30dRes,
     viewsPrev30dRes,
-    allServicesRes,
-    practiceServicesRes,
     opportunityInsightsRes,
     googleReviewsRes,
   ] = await Promise.all([
@@ -81,8 +79,6 @@ export default async function DashboardPage({ params }: Params) {
     admin.from('practices').select('id').eq('city', (practice as any).city),
     admin.from('practice_page_views').select('id', { count: 'exact', head: true }).eq('practice_id', practice.id).gte('viewed_at', thirtyDaysAgo.toISOString()),
     admin.from('practice_page_views').select('id', { count: 'exact', head: true }).eq('practice_id', practice.id).gte('viewed_at', sixtyDaysAgo.toISOString()).lt('viewed_at', thirtyDaysAgo.toISOString()),
-    admin.from('services').select('id, slug, name, category, sort_order').order('sort_order'),
-    admin.from('practice_services').select('service_id').eq('practice_id', practice.id),
     admin.from('practice_opportunity_insights').select('*').eq('practice_id', practice.id).maybeSingle(),
     admin.from('external_reviews').select('rating').eq('practice_id', practice.id).eq('source', 'google').not('rating', 'is', null),
   ]);
@@ -123,9 +119,6 @@ export default async function DashboardPage({ params }: Params) {
     }
   }
 
-  const allServices = (allServicesRes.data ?? []) as { id: string; slug: string; name: string; category: string; sort_order: number }[];
-  const practiceServiceIds = (practiceServicesRes.data ?? []).map((ps: any) => ps.service_id as string);
-
   const googleRatings = (googleReviewsRes.data ?? []).map((r: any) => r.rating as number);
   const googleReviewCount = googleRatings.length;
   const googleAvgRating = googleReviewCount > 0
@@ -164,8 +157,6 @@ export default async function DashboardPage({ params }: Params) {
       cityRank={cityRank}
       cityTotal={cityTotal}
       dimensionRanks={dimensionRanks}
-      allServices={allServices}
-      practiceServiceIds={practiceServiceIds}
       opportunityInsights={opportunityInsights}
       googleReviewCount={googleReviewCount}
       googleAvgRating={googleAvgRating}
