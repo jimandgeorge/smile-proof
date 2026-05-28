@@ -1337,37 +1337,22 @@ function GoogleConnectionSection({ practiceId, defaultSearchQuery }: { practiceI
           setLastSyncedAt(d.connection.last_synced_at ?? null);
           setReviewCount(d.connection.review_count ?? 0);
           if (d.connection.search_query) setSearchQuery(d.connection.search_query);
+          if (d.connection.pending_request_id) {
+            setSyncing(true);
+            setSyncPhase('waiting');
+            resumePoll(d.connection.pending_request_id);
+          }
         }
         setLoaded(true);
       })
       .catch(() => setLoaded(true));
-  }, [practiceId]);
+  }, [practiceId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function syncReviews() {
-    setSyncing(true);
-    setSyncMsg(null);
-    setSyncPhase('submitting');
-
-    const postRes = await fetch('/api/google-business/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ practiceId, searchQuery }),
-    });
-    const postData = await postRes.json();
-    if (!postRes.ok) {
-      setSyncMsg(postData.error ?? 'Failed to submit import');
-      setSyncing(false); setSyncPhase('idle');
-      return;
-    }
-
-    const requestId = postData.requestId as string;
-    setSyncPhase('waiting');
-
-    let attempts = 0;
+  function resumePoll(requestId: string, attempts = 0) {
     const poll = async (): Promise<void> => {
       attempts++;
-      if (attempts > 60) {
-        setSyncMsg('Import is taking longer than expected — try again in a few minutes.');
+      if (attempts > 120) {
+        setSyncMsg('Import is taking longer than expected — check back in a few minutes.');
         setSyncing(false); setSyncPhase('idle');
         return;
       }
@@ -1387,9 +1372,30 @@ function GoogleConnectionSection({ practiceId, defaultSearchQuery }: { practiceI
         setSyncing(false); setSyncPhase('idle');
         return;
       }
-      setTimeout(poll, 5000);
+      setTimeout(poll, 10000);
     };
-    setTimeout(poll, 8000);
+    setTimeout(poll, 5000);
+  }
+
+  async function syncReviews() {
+    setSyncing(true);
+    setSyncMsg(null);
+    setSyncPhase('submitting');
+
+    const postRes = await fetch('/api/google-business/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ practiceId, searchQuery }),
+    });
+    const postData = await postRes.json();
+    if (!postRes.ok) {
+      setSyncMsg(postData.error ?? 'Failed to submit import');
+      setSyncing(false); setSyncPhase('idle');
+      return;
+    }
+
+    setSyncPhase('waiting');
+    resumePoll(postData.requestId as string);
   }
 
   if (!loaded) return null;

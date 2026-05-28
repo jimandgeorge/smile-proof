@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
   const { data: conn } = await admin
     .from('google_connections')
-    .select('last_synced_at, review_count, search_query')
+    .select('last_synced_at, review_count, search_query, pending_request_id')
     .eq('practice_id', practiceId)
     .single();
 

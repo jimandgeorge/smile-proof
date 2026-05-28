@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
 
   await admin
     .from('google_connections')
-    .upsert({ practice_id: practiceId, search_query: searchQuery.trim() }, { onConflict: 'practice_id' });
+    .upsert({ practice_id: practiceId, search_query: searchQuery.trim(), pending_request_id: taskId }, { onConflict: 'practice_id' });
 
   return NextResponse.json({ requestId: taskId, status: 'pending' });
 }

@@ -111,9 +111,10 @@ export async function GET(req: NextRequest) {
   await admin
     .from('google_connections')
     .upsert({
-      practice_id:    practiceId,
-      last_synced_at: new Date().toISOString(),
-      review_count:   count ?? rows.length,
+      practice_id:        practiceId,
+      last_synced_at:     new Date().toISOString(),
+      review_count:       count ?? rows.length,
+      pending_request_id: null,
     }, { onConflict: 'practice_id' });
 
   return NextResponse.json({ status: 'complete', imported: rows.length, total: count ?? rows.length });
