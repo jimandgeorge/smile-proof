@@ -3,7 +3,11 @@ import { createServerSupabase, createAdminSupabase } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
 
-function apiKey() { return process.env.OUTSCRAPER_API_KEY ?? ''; }
+function authHeader() {
+  const login    = process.env.DATAFORSEO_LOGIN    ?? '';
+  const password = process.env.DATAFORSEO_PASSWORD ?? '';
+  return `Basic ${Buffer.from(`${login}:${password}`).toString('base64')}`;
+}
 
 export async function GET(req: NextRequest) {
   const supabase = await createServerSupabase();
@@ -26,10 +30,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 403 });
   }
 
-  // Check Outscraper request status
   const statusRes = await fetch(
-    `https://api.app.outscraper.com/requests/${requestId}`,
-    { headers: { 'X-API-KEY': apiKey() } },
+    `https://api.dataforseo.com/v3/business_data/google/reviews/task_get/advanced/${requestId}`,
+    { headers: { 'Authorization': authHeader() } },
   );
 
   if (!statusRes.ok) {
@@ -37,38 +40,39 @@ export async function GET(req: NextRequest) {
   }
 
   const statusData = await statusRes.json() as {
-    id: string;
-    status: string;
-    data?: { place_id?: string; reviews_data?: {
-      review_id: string;
-      author_title?: string;
-      review_rating?: number;
-      review_text?: string;
-      review_datetime?: string;
-    }[] }[][];
+    tasks?: {
+      status_code: number;
+      result?: {
+        items?: {
+          review_id: string;
+          author_name?: string;
+          rating?: { value?: number };
+          review_text?: string;
+          timestamp?: string;
+        }[];
+      }[];
+    }[];
   };
 
-  if (statusData.status !== 'Success') {
+  const task = statusData.tasks?.[0];
+  if (!task || task.status_code !== 20000) {
     return NextResponse.json({ status: 'pending' });
   }
 
-  // Process results
-  const business = statusData.data?.[0]?.[0];
-  const reviews  = business?.reviews_data ?? [];
-  const placeId  = business?.place_id ?? null;
+  const items = task.result?.[0]?.items ?? [];
 
-  if (reviews.length === 0) {
+  if (items.length === 0) {
     return NextResponse.json({ status: 'complete', imported: 0, total: 0 });
   }
 
-  const rows = reviews.map(r => ({
+  const rows = items.map(r => ({
     practice_id:   practiceId,
     source:        'google',
     external_id:   r.review_id,
-    reviewer_name: r.author_title ?? null,
-    rating:        r.review_rating ?? null,
+    reviewer_name: r.author_name ?? null,
+    rating:        r.rating?.value ?? null,
     body:          r.review_text ?? null,
-    published_at:  r.review_datetime ?? null,
+    published_at:  r.timestamp ?? null,
   }));
 
   await admin
@@ -84,10 +88,9 @@ export async function GET(req: NextRequest) {
   await admin
     .from('google_connections')
     .upsert({
-      practice_id:        practiceId,
-      google_location_id: placeId,
-      last_synced_at:     new Date().toISOString(),
-      review_count:       count ?? rows.length,
+      practice_id:    practiceId,
+      last_synced_at: new Date().toISOString(),
+      review_count:   count ?? rows.length,
     }, { onConflict: 'practice_id' });
 
   return NextResponse.json({ status: 'complete', imported: rows.length, total: count ?? rows.length });
