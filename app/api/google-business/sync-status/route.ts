@@ -36,7 +36,8 @@ export async function GET(req: NextRequest) {
   );
 
   if (!statusRes.ok) {
-    return NextResponse.json({ error: 'Failed to check status' }, { status: 502 });
+    const body = await statusRes.text();
+    return NextResponse.json({ error: 'Failed to check status', httpStatus: statusRes.status, detail: body }, { status: 502 });
   }
 
   const statusData = await statusRes.json() as {
