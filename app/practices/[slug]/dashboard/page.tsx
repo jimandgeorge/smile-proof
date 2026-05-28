@@ -88,6 +88,7 @@ export default async function DashboardPage({ params }: Params) {
     enquiriesRes,
     teamDentistsRes,
     opportunityInsightsRes,
+    googleReviewsRes,
   ] = await Promise.all([
     admin.from('practice_rating_summary').select('*').eq('practice_id', practice.id).maybeSingle(),
     admin.from('reviews').select(`
@@ -107,6 +108,7 @@ export default async function DashboardPage({ params }: Params) {
     admin.from('practice_enquiries').select('id, name, email, treatment_interest, message, created_at, read_at').eq('practice_id', practice.id).order('created_at', { ascending: false }).limit(100),
     admin.from('practice_dentists').select('dentist_id, dentists(id, full_name, gdc_number, specialisms, slug)').eq('practice_id', practice.id).eq('active', true),
     admin.from('practice_opportunity_insights').select('*').eq('practice_id', practice.id).maybeSingle(),
+    admin.from('external_reviews').select('rating').eq('practice_id', practice.id).eq('source', 'google').not('rating', 'is', null),
   ]);
 
   const summary = summaryRes.data;
@@ -214,6 +216,12 @@ if (responseRate < 50 && published.length >= 3) {
       slug: d.slug as string,
     }));
 
+  const googleRatings = (googleReviewsRes.data ?? []).map((r: any) => r.rating as number);
+  const googleReviewCount = googleRatings.length;
+  const googleAvgRating = googleReviewCount > 0
+    ? Math.round((googleRatings.reduce((s, r) => s + r, 0) / googleReviewCount) * 10) / 10
+    : null;
+
   const rawOpp = opportunityInsightsRes.data;
   const opportunityInsights = rawOpp ? {
     id:                 rawOpp.id as string,
@@ -264,6 +272,8 @@ if (responseRate < 50 && published.length >= 3) {
       enquiries={enquiries}
       teamDentists={teamDentists}
       opportunityInsights={opportunityInsights}
+      googleReviewCount={googleReviewCount}
+      googleAvgRating={googleAvgRating}
       initialAccessToken={session?.access_token ?? ''}
     />
   );
