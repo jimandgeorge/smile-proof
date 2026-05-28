@@ -31,14 +31,53 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 403 });
   }
 
-  // Submit review task to DataForSEO
+  // Step 1: find the Google place_id via business listings
+  const listingsRes = await fetch(
+    'https://api.dataforseo.com/v3/business_data/google/business_listings/live/advanced',
+    {
+      method: 'POST',
+      headers: { Authorization: dfsAuth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify([{
+        keyword:       searchQuery.trim(),
+        location_code: 2826,
+        language_code: 'en',
+        limit:         1,
+      }]),
+    },
+  );
+
+  const listingsData = await listingsRes.json() as {
+    tasks?: {
+      status_code: number;
+      status_message: string;
+      result?: { items?: { place_id?: string; title?: string }[] }[];
+    }[];
+  };
+
+  const listingTask = listingsData.tasks?.[0];
+  if (!listingTask || listingTask.status_code !== 20000) {
+    return NextResponse.json(
+      { error: 'Failed to find business listing', detail: listingTask?.status_message },
+      { status: 502 },
+    );
+  }
+
+  const placeId = listingTask.result?.[0]?.items?.[0]?.place_id;
+  if (!placeId) {
+    return NextResponse.json(
+      { error: `No Google listing found for "${searchQuery}" — try a more specific search query` },
+      { status: 404 },
+    );
+  }
+
+  // Step 2: submit review task with place_id
   const postRes = await fetch(
     'https://api.dataforseo.com/v3/business_data/google/reviews/task_post',
     {
       method: 'POST',
       headers: { Authorization: dfsAuth(), 'Content-Type': 'application/json' },
       body: JSON.stringify([{
-        keyword:       searchQuery.trim(),
+        place_id:      placeId,
         location_code: 2826,
         language_code: 'en',
         depth:         100,
