@@ -43,7 +43,9 @@ export async function POST(req: NextRequest) {
 
   if (!res.ok) {
     const body = await res.text();
-    return NextResponse.json({ error: 'Outscraper request failed', detail: body }, { status: 502 });
+    const key = apiKey();
+    const keyDebug = key.length === 0 ? 'EMPTY' : `${key.slice(0, 4)}...${key.slice(-4)} (len ${key.length})`;
+    return NextResponse.json({ error: 'Outscraper request failed', detail: body, keyDebug }, { status: 502 });
   }
 
   const data = await res.json() as { id?: string; status?: string };
